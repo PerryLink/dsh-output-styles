@@ -1,0 +1,25 @@
+# Sample patch rows for `dsh-output-styles`. When installed through
+# `dsh plugin --profile <name> add dsh-output-styles`, the CLI writes an
+# equivalent insert row into the profile's own cordis.patch.yml — apply this
+# file only when composing by hand (for example as a `--patch` overlay).
+#
+# The plugin needs a kv storage backend routed for the `output_style` domain:
+# the web profile composes `storage` + `storage-json` + `storage-domain` in
+# box. For a headless profile, add those three rows before this one.
+
+- insert:
+    - id: output-styles
+      name: 'dsh-output-styles'
+      # config:                     # schema defaults shown for reference
+      #   stylesDir: ''             # '' = the package's bundled styles/ directory
+      #   maxStyleChars: 4000
+      #   defaultStyle: ''          # '' = new sessions get no style
+      #   compatJson: true
+      #   sectionOrder: 90
+      #   truncationMarker: "\n\n[style truncated]"
+
+    # Optional invariant companion (envelope-level checks; the main plugin
+    # already registers library-aware checks when an `invariants` service is
+    # composed, so this row is only for profiles that disable the main row).
+    - id: output-styles-invariant
+      name: 'dsh-output-styles/invariant'
