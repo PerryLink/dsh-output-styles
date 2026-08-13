@@ -4,6 +4,11 @@
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerryLink/dsh-output-styles.git"
+  },
+  "homepage": "https://github.com/PerryLink/dsh-output-styles#readme",
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
   },

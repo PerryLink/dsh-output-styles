@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Self-containment check
+        run: pnpm run verify:self-contained
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Pack tarball
+        run: pnpm pack --pack-destination artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dsh-output-styles
+          path: artifacts/*.tgz

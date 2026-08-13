@@ -1,0 +1,6 @@
+# Keep line endings canonical across platforms.
+* text=auto eol=lf
+
+# Binary formats stay untouched.
+*.tgz binary
+*.zstd binary
