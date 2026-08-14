@@ -61,6 +61,18 @@ describe('style session projection', () => {
           whenToUse: expect.stringContaining('Reports'),
         },
         {
+          value: 'learning',
+          name: 'learning',
+          description: expect.stringContaining('Collaborative'),
+          whenToUse: expect.stringContaining('Pairing'),
+        },
+        {
+          value: 'proactive',
+          name: 'proactive',
+          description: expect.stringContaining('Execute immediately'),
+          whenToUse: expect.stringContaining('Routine'),
+        },
+        {
           value: 'step-by-step',
           name: 'step-by-step',
           description: expect.stringContaining('Numbered'),

@@ -1,4 +1,11 @@
-/** Simplified Chinese dictionary (the key-set source of truth). */
+/**
+ * Simplified Chinese dictionary (the key-set source of truth).
+ *
+ * Only `zh` and `en` are shipped: the DSH Web locale system (dsh-client-locale
+ * rc.6) exposes exactly the `zh`/`en` locale pair in its settings row, so
+ * further dictionaries would be dead weight the framework can never select.
+ * When a future harness release ships more locales, extend this pair.
+ */
 export const zh = {
   'option.off': '关闭（默认）',
   'option.offDetail': '恢复项目默认输出风格',

@@ -1,8 +1,10 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
+  "sideEffects": false,
+  "packageManager": "pnpm@11.7.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -48,6 +50,7 @@
     "src",
     "styles",
     "cordis.patch.yml",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md",
     "README.zh.md",

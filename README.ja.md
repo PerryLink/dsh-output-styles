@@ -22,12 +22,12 @@
 
 | | |
 |---|---|
-| 🗂️ **スタイルライブラリ** | スタイルごとに 1 つの Markdown ファイル（`styles/*.md`）。frontmatter にメタデータ、本文がモデルへの指示です。`name` は既定でファイル名になり、空白を含めます（`Diagrams first`）。 |
+| 🗂️ **スタイルライブラリ** | スタイルごとに 1 つの Markdown ファイル（`styles/*.md`）。frontmatter にメタデータ、本文がモデルへの指示です。`name` は既定でファイル名になり、空白を含めます（`Diagrams first`）。同梱の組み込みスタイルは 6 種で、Claude Code と同等の `proactive` と `learning` を含みます。 |
 | ⌨️ **`/style` コマンド** | 引数なしでスタイル一覧（説明付き）と現在の選択を表示。`/style <name>` で切り替え、`/style off` でプロジェクトのデフォルトを復元します。`/style` より後の残り全体がスタイル名です。 |
 | 💾 **セッション単位の永続化** | 選択は `output_style` ストレージドメインに sessionId をキーとして保持され、2 つのセッションが干渉することはなく、選択は再起動後も残ります。 |
 | 🧩 **システムプロンプト注入** | `systemPrompt.section()` の貢献（order 90）が、毎回の組み立てで現在のセッションのスタイル本文を注入します。本文は設定可能なバジェットで切り詰められます。 |
 | 🎭 **Claude Code `keep-coding-instructions`** | `keep-coding-instructions: false`（Claude Code と同じ既定）のスタイルはシステムプロンプト全体を置き換えます——ソフトウェアエンジニアリングから離れるスタイル向けです。 |
-| 📌 **強制スタイル** | `force: true` はセッションの選択を無視して無条件にスタイルを適用します。強制スタイルが 2 つあると読み込みに失敗します。 |
+| 📌 **強制スタイル** | Claude Code の `force-for-plugin`（エイリアス `force`）はセッションの選択を無視して無条件にスタイルを適用します。強制スタイルが 2 つあると読み込みに失敗します。 |
 | 🔁 **Claude Code 互換性** | `outputStyles` JSON コレクション（`{ name, description, prompt }`）を読み込みます。単一エントリまたは `settings.json` 形式の配列に対応し、解析不能なエントリは警告付きでスキップします。 |
 | 📚 **ディレクトリの階層化** | `stylesDir` はリストで、後方のディレクトリが前方のものを上書きします（同梱の `styles/` が最下層で、`includeBuiltins: false` で無効化）。 |
 | 🔄 **ホットリロード** | スタイルファイルの変更は再起動なしで反映されます（`watchStyles: false` で無効化）。 |
@@ -67,6 +67,8 @@ You > /style
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
       explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
       formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
       step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
@@ -134,7 +136,7 @@ frontmatter フィールド：
 | `description` | —（必須） | 一覧とピッカーに表示される 1 文。 |
 | `whenToUse` | — | 一覧に追記される任意の利用ガイダンス。 |
 | `keep-coding-instructions` | `false` | `true` のときハーネスのプロンプト（アイデンティティ、persona、ツールガイダンス）を保持し、`false` のとき完全に置き換えます（Claude Code のセマンティクス）。 |
-| `force` | `false` | セッションの選択を無視して無条件に適用します。設定できるのは最大 1 つのスタイルです。 |
+| `force-for-plugin` | `false` | Claude Code 公式フィールド：セッションの選択を無視して無条件に適用します。`force` はエイリアスで、設定できるのは最大 1 つのスタイルです。 |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON（<code>compatJson: true</code>）</summary>
@@ -143,7 +145,7 @@ frontmatter フィールド：
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-レガシーの `settings.json` 配列（`[{ … }, { … }]`）はそのまま読み込まれ、不正なエントリは警告付きでスキップされます。
+エントリは Claude Code が書き込むとおりに `keep-coding-instructions` と `force-for-plugin` を受け付けます。レガシーの `settings.json` 配列（`[{ … }, { … }]`）はそのまま読み込まれ、不正なエントリは警告付きでスキップされます。
 
 </details>
 
@@ -159,7 +161,7 @@ frontmatter フィールド：
 
 ## 🖱️ Web ピッカー
 
-`dsh.client` エントリは、ホストの `/style` コマンドの引数なし呼び出しをポップアップピッカーで装飾します：「off」行 + ライブラリのスタイルごとに 1 行（`description · whenToUse`）で、アクティブな行がマークされます。選択するとコマンド Remote を通じて `/style <name>` が送信されるため、どの切り替えもホストの永続的なコマンドライフサイクルを経由し、`style` 投影が唯一の表示事実であり続けます。
+`dsh.client` エントリは、ホストの `/style` コマンドの引数なし呼び出しをポップアップピッカーで装飾します：「off」行 + ライブラリのスタイルごとに 1 行（`description · whenToUse`）で、アクティブな行がマークされます。選択するとコマンド Remote を通じて `/style <name>` が送信されるため、どの切り替えもホストの永続的なコマンドライフサイクルを経由し、`style` 投影が唯一の表示事実であり続けます。ピッカーの文言は Web UI が同梱する `zh`/`en` の言語ペアに従います。
 
 ## 🔍 競合チェック
 
@@ -170,7 +172,7 @@ frontmatter フィールド：
 | | Claude Code | dsh-output-styles |
 |---|---|---|
 | スタイルファイル | ユーザー/プロジェクト/マネージド階層の `.claude/output-styles` | `stylesDir` ディレクトリ + 同梱の `styles/`。後方のディレクトリが優先 |
-| カスタムスタイル | Markdown、frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 同じフィールド（`force` = `force-for-plugin`）+ `whenToUse` |
+| カスタムスタイル | Markdown、frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 同じフィールド（`force-for-plugin` をそのまま受け付け、`force` はエイリアス）+ `whenToUse` |
 | レガシー JSON | `settings.json` 内の `outputStyles` 配列 | そのまま読み込み（`compatJson: true`） |
 | 反映タイミング | `/clear` 後または新しいセッション | 即時——システムプロンプトはリクエストごとに再構築 |
 | サブエージェント | スタイルは適用されない | 同じ——サブエージェントのセッションは独自のプロンプトを保持 |
@@ -181,7 +183,7 @@ frontmatter フィールド：
 ```sh
 pnpm install
 pnpm run typecheck   # 両方の tsc プロジェクト
-pnpm test            # vitest — 87 テスト
+pnpm test            # vitest — 92 テスト
 pnpm run build       # lib/ 成果物（ホスト + クライアント bundle）
 pnpm pack            # dsh plugin add 用の tarball
 ```

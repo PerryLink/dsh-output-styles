@@ -77,6 +77,8 @@ describe('/style command dispatch', () => {
     expect(text).toContain('output style off')
     expect(text).toContain('concise — Terse, direct answers — minimal prose, no preamble.')
     expect(text).toContain('(Daily coding work, tool-heavy sessions, or when prompt length matters.)')
+    expect(text).toContain('proactive — Execute immediately, assume reasonable defaults, and prefer action over planning.')
+    expect(text).toContain('learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user.')
     expect(text).toContain('step-by-step — Numbered reasoning steps with explicit intermediate results.')
     await harness.dispose()
   })
@@ -104,18 +106,27 @@ describe('/style command dispatch', () => {
     await harness.dispose()
   })
 
+  it('switches to the Claude Code-parity proactive built-in and injects its body', async () => {
+    const harness = await createStyleHarness()
+    const session = harness.makeSession()
+    const execution = await harness.runStyle(session, '/style proactive')
+    expect(execution?.result).toEqual({ kind: 'success', text: 'switched to proactive' })
+    expect(await harness.sectionText(session)).toContain('Prefer action over planning')
+    await harness.dispose()
+  })
+
   it('rejects unknown style names with an error listing available styles', async () => {
     const harness = await createStyleHarness()
     const session = harness.makeSession()
     const unknown = await harness.runStyle(session, '/style nope')
     expect(unknown?.result).toEqual({
       kind: 'error',
-      text: 'unknown output style "nope" (available: concise, explanatory, formal, step-by-step)',
+      text: 'unknown output style "nope" (available: concise, explanatory, formal, learning, proactive, step-by-step)',
     })
     const multi = await harness.runStyle(session, '/style concise extra')
     expect(multi?.result).toEqual({
       kind: 'error',
-      text: 'unknown output style "concise extra" (available: concise, explanatory, formal, step-by-step)',
+      text: 'unknown output style "concise extra" (available: concise, explanatory, formal, learning, proactive, step-by-step)',
     })
     expect(await harness.sectionText(session)).toBe('')
     await harness.dispose()

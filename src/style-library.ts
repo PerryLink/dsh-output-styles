@@ -55,7 +55,11 @@ export interface OutputStyle {
    * Claude Code.
    */
   readonly keepCodingInstructions: boolean
-  /** Apply this style unconditionally, overriding any session selection. */
+  /**
+   * Apply this style unconditionally, overriding any session selection.
+   * Declared through Claude Code's `force-for-plugin` field (`force` is
+   * accepted as an alias).
+   */
   readonly force: boolean
 }
 
@@ -212,6 +216,7 @@ const FRONTMATTER_KEYS = new Set([
   'whenToUse',
   'keep-coding-instructions',
   'force',
+  'force-for-plugin',
 ])
 
 /** Validate one frontmatter block into {@link StyleFields}. */
@@ -252,17 +257,30 @@ function parseFrontmatter(file: string, frontmatter: string): { fields?: StyleFi
   }, oddity)
 }
 
-/** Read the two shared boolean flags, defaulting each to false. */
+/**
+ * Read the shared boolean flags, defaulting each to false. `force-for-plugin`
+ * is the Claude Code field name (both in frontmatter and in `outputStyles`
+ * JSON); `force` is this package's alias for it, kept so styles written
+ * against the original plugin keep loading. When both appear they must
+ * agree — a disagreement is ambiguous, so the file is skipped.
+ */
 function booleanFields(record: Record<string, unknown>, source: string): { keepCodingInstructions: boolean; force: boolean; problem?: string } {
   const keep = record['keep-coding-instructions']
   if (keep !== undefined && typeof keep !== 'boolean') {
     return { keepCodingInstructions: false, force: false, problem: `${source} keep-coding-instructions must be a boolean when present` }
   }
-  const force = record['force']
-  if (force !== undefined && typeof force !== 'boolean') {
+  const forceAlias = record['force']
+  if (forceAlias !== undefined && typeof forceAlias !== 'boolean') {
     return { keepCodingInstructions: false, force: false, problem: `${source} force must be a boolean when present` }
   }
-  return { keepCodingInstructions: keep ?? false, force: force ?? false }
+  const forceForPlugin = record['force-for-plugin']
+  if (forceForPlugin !== undefined && typeof forceForPlugin !== 'boolean') {
+    return { keepCodingInstructions: false, force: false, problem: `${source} force-for-plugin must be a boolean when present` }
+  }
+  if (forceAlias !== undefined && forceForPlugin !== undefined && forceAlias !== forceForPlugin) {
+    return { keepCodingInstructions: false, force: false, problem: `${source} force and force-for-plugin disagree; drop one of them` }
+  }
+  return { keepCodingInstructions: keep ?? false, force: forceForPlugin ?? forceAlias ?? false }
 }
 
 /**

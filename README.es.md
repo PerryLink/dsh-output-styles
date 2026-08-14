@@ -22,12 +22,12 @@
 
 | | |
 |---|---|
-| 🗂️ **Biblioteca de estilos** | Un archivo Markdown por estilo (`styles/*.md`); frontmatter para los metadatos, cuerpo = la directiva del modelo. `name` toma por defecto el nombre del archivo y puede contener espacios (`Diagrams first`). |
+| 🗂️ **Biblioteca de estilos** | Un archivo Markdown por estilo (`styles/*.md`); frontmatter para los metadatos, cuerpo = la directiva del modelo. `name` toma por defecto el nombre del archivo y puede contener espacios (`Diagrams first`). Se incluyen seis estilos integrados, entre ellos `proactive` y `learning`, en paridad con Claude Code. |
 | ⌨️ **Comando `/style`** | Sin argumentos lista los estilos (con descripciones) + la selección actual; `/style <name>` cambia; `/style off` restaura el valor por defecto del proyecto. Todo el resto tras `/style` es el nombre del estilo. |
 | 💾 **Persistencia por sesión** | La elección vive en el dominio de almacenamiento `output_style`, con clave sessionId: dos sesiones nunca interfieren y la elección sobrevive a los reinicios. |
 | 🧩 **Inyección en el system prompt** | Una contribución `systemPrompt.section()` (orden 90) inyecta el cuerpo del estilo de la sesión actual en cada ensamblado; los cuerpos se truncan según un presupuesto configurable. |
 | 🎭 **`keep-coding-instructions` de Claude Code** | Los estilos con `keep-coding-instructions: false` (el valor por defecto, como Claude Code) reemplazan todo el system prompt — para estilos que dejan atrás la ingeniería de software. |
-| 📌 **Estilos forzados** | `force: true` aplica un estilo incondicionalmente, anulando cualquier selección de sesión; dos estilos forzados hacen fallar la carga. |
+| 📌 **Estilos forzados** | El campo `force-for-plugin` de Claude Code (alias `force`) aplica un estilo incondicionalmente, anulando cualquier selección de sesión; dos estilos forzados hacen fallar la carga. |
 | 🔁 **Compatibilidad con Claude Code** | Carga colecciones JSON `outputStyles` (`{ name, description, prompt }`), entradas individuales o matrices estilo `settings.json`; las entradas no analizables se omiten con un aviso. |
 | 📚 **Directorios en capas** | `stylesDir` es una lista; los directorios posteriores anulan los anteriores (el `styles/` incluido es la capa más baja; desactívalo con `includeBuiltins: false`). |
 | 🔄 **Recarga en caliente** | Los cambios en los archivos de estilo se detectan sin reiniciar (`watchStyles: false` para desactivarlo). |
@@ -67,6 +67,8 @@ You > /style
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
       explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
       formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
       step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
@@ -134,7 +136,7 @@ Campos del frontmatter:
 | `description` | — (obligatorio) | Una frase mostrada en los listados y en el selector. |
 | `whenToUse` | — | Guía opcional añadida a los listados. |
 | `keep-coding-instructions` | `false` | Conserva el prompt del harness (identidad, persona, guía de herramientas) cuando es `true`; lo reemplaza por completo cuando es `false` (semántica de Claude Code). |
-| `force` | `false` | Se aplica incondicionalmente, anulando cualquier selección de sesión; como máximo un estilo puede activarlo. |
+| `force-for-plugin` | `false` | Campo oficial de Claude Code: se aplica incondicionalmente, anulando cualquier selección de sesión; `force` es un alias y como máximo un estilo puede activarlo. |
 
 <details>
 <summary>JSON de Claude Code <code>outputStyles</code> (<code>compatJson: true</code>)</summary>
@@ -143,7 +145,7 @@ Campos del frontmatter:
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-Las matrices heredadas de `settings.json` (`[{ … }, { … }]`) se cargan tal cual; las entradas incorrectas se omiten con un aviso.
+Las entradas aceptan `keep-coding-instructions` y `force-for-plugin` exactamente como los escribe Claude Code. Las matrices heredadas de `settings.json` (`[{ … }, { … }]`) se cargan tal cual; las entradas incorrectas se omiten con un aviso.
 
 </details>
 
@@ -159,7 +161,7 @@ Las matrices heredadas de `settings.json` (`[{ … }, { … }]`) se cargan tal c
 
 ## 🖱️ Selector web
 
-La entrada `dsh.client` decora la invocación sin argumentos del comando `/style` del host con un selector emergente: una fila «off» más una fila por estilo de la biblioteca (`description · whenToUse`), con la fila activa marcada. Al elegir se envía `/style <name>` a través del Remote de comandos, de modo que cada cambio conserva el ciclo de vida duradero de comandos del host y la proyección `style` sigue siendo el único dato mostrado.
+La entrada `dsh.client` decora la invocación sin argumentos del comando `/style` del host con un selector emergente: una fila «off» más una fila por estilo de la biblioteca (`description · whenToUse`), con la fila activa marcada. Al elegir se envía `/style <name>` a través del Remote de comandos, de modo que cada cambio conserva el ciclo de vida duradero de comandos del host y la proyección `style` sigue siendo el único dato mostrado. Los textos del selector siguen el par de idiomas `zh`/`en` que incluye la Web UI.
 
 ## 🔍 Verificación de conflictos
 
@@ -170,7 +172,7 @@ Se contrastó con el ecosistema DSH antes del desarrollo (instantánea 2026-08):
 | | Claude Code | dsh-output-styles |
 |---|---|---|
 | Archivos de estilo | `.claude/output-styles` en los niveles usuario/proyecto/gestionado | Directorios `stylesDir` + `styles/` incluido, gana el directorio posterior |
-| Estilos personalizados | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Los mismos campos (`force` = `force-for-plugin`) + `whenToUse` |
+| Estilos personalizados | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Los mismos campos (`force-for-plugin` aceptado literalmente, `force` como alias) + `whenToUse` |
 | JSON heredado | Matriz `outputStyles` en `settings.json` | Se carga tal cual (`compatJson: true`) |
 | Entrada en vigor | Tras `/clear` o una sesión nueva | Inmediatamente — el system prompt se reensambla en cada petición |
 | Subagentes | Los estilos no se aplican | Igual — las sesiones de los subagentes mantienen sus propios prompts |
@@ -181,7 +183,7 @@ Se contrastó con el ecosistema DSH antes del desarrollo (instantánea 2026-08):
 ```sh
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
-pnpm test            # vitest — 87 pruebas
+pnpm test            # vitest — 92 pruebas
 pnpm run build       # artefactos lib/ (bundles de host + cliente)
 pnpm pack            # tarball para dsh plugin add
 ```

@@ -179,22 +179,68 @@ describe('loadStyleLibrary', () => {
     expect(styles.get('forced')?.force).toBe(true)
   })
 
-  it('rejects non-boolean keep-coding-instructions and force', () => {
+  it('reads Claude Code force-for-plugin in frontmatter and outputStyles JSON', () => {
+    const mdDir = makeStyleDir({
+      'plugin.md': '---\nname: plugin-md\ndescription: x.\nforce-for-plugin: true\n---\nBody.',
+    })
+    const jsonDir = makeStyleDir({
+      'plugin.json': JSON.stringify({ name: 'plugin-json', description: 'x.', prompt: 'b', 'force-for-plugin': true }),
+    })
+    const warnings: string[] = []
+    const mdStyles = loadStyleLibrary([mdDir], { compatJson: false }, message => { warnings.push(message) })
+    const jsonStyles = loadStyleLibrary([jsonDir], { compatJson: true }, message => { warnings.push(message) })
+    expect(warnings).toEqual([])
+    expect(mdStyles.get('plugin-md')?.force).toBe(true)
+    expect(jsonStyles.get('plugin-json')?.force).toBe(true)
+  })
+
+  it('accepts force and force-for-plugin together when they agree', () => {
+    const dir = makeStyleDir({
+      'both.md': '---\nname: both\ndescription: x.\nforce: true\nforce-for-plugin: true\n---\nBody.',
+    })
+    const warnings: string[] = []
+    const styles = loadStyleLibrary([dir], { compatJson: false }, message => { warnings.push(message) })
+    expect(warnings).toEqual([])
+    expect(styles.get('both')?.force).toBe(true)
+  })
+
+  it('skips a style whose force and force-for-plugin disagree', () => {
+    const dir = makeStyleDir({
+      'split.md': '---\nname: split\ndescription: x.\nforce: true\nforce-for-plugin: false\n---\nBody.',
+    })
+    const warnings: string[] = []
+    const styles = loadStyleLibrary([dir], { compatJson: false }, message => { warnings.push(message) })
+    expect(styles.size).toBe(0)
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toMatch(/split\.md.*force and force-for-plugin disagree/)
+  })
+
+  it('rejects non-boolean keep-coding-instructions, force, and force-for-plugin', () => {
     const dir = makeStyleDir({
       'bad-keep.md': '---\nname: bad-keep\ndescription: x.\nkeep-coding-instructions: yes\n---\nBody.',
       'bad-force.md': '---\nname: bad-force\ndescription: x.\nforce: 1\n---\nBody.',
+      'bad-force-plugin.md': '---\nname: bad-force-plugin\ndescription: x.\nforce-for-plugin: 1\n---\nBody.',
     })
     const warnings: string[] = []
     const styles = loadStyleLibrary([dir], { compatJson: false }, message => { warnings.push(message) })
     expect(styles.size).toBe(0)
     expect(warnings.join('\n')).toMatch(/bad-keep\.md.*keep-coding-instructions must be a boolean/)
     expect(warnings.join('\n')).toMatch(/bad-force\.md.*force must be a boolean/)
+    expect(warnings.join('\n')).toMatch(/bad-force-plugin\.md.*force-for-plugin must be a boolean/)
   })
 
   it('throws when two styles declare force', () => {
     const dir = makeStyleDir({
       'one.md': '---\nname: one\ndescription: a.\nforce: true\n---\na',
       'two.md': '---\nname: two\ndescription: b.\nforce: true\n---\nb',
+    })
+    expect(() => loadStyleLibrary([dir], { compatJson: false }, () => {})).toThrow(/both declare force/)
+  })
+
+  it('throws when two styles declare force-for-plugin', () => {
+    const dir = makeStyleDir({
+      'one.md': '---\nname: one\ndescription: a.\nforce-for-plugin: true\n---\na',
+      'two.md': '---\nname: two\ndescription: b.\nforce-for-plugin: true\n---\nb',
     })
     expect(() => loadStyleLibrary([dir], { compatJson: false }, () => {})).toThrow(/both declare force/)
   })

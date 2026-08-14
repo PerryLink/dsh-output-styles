@@ -22,12 +22,12 @@
 
 | | |
 |---|---|
-| 🗂️ **Style library** | One Markdown file per style (`styles/*.md`); frontmatter for metadata, body = the model directive. `name` defaults to the file name and may contain spaces (`Diagrams first`). |
+| 🗂️ **Style library** | One Markdown file per style (`styles/*.md`); frontmatter for metadata, body = the model directive. `name` defaults to the file name and may contain spaces (`Diagrams first`). Six built-ins ship in the box, including Claude Code-parity `proactive` and `learning`. |
 | ⌨️ **`/style` command** | No argument lists styles (with descriptions) + current selection; `/style <name>` switches; `/style off` restores the project default. The whole remainder after `/style` is the style name. |
 | 💾 **Session-scoped persistence** | The choice lives in the `output_style` storage domain, keyed by sessionId — two sessions never interfere, and the choice survives restarts. |
 | 🧩 **System-prompt injection** | A `systemPrompt.section()` contribution (order 90) injects the current session's style body at every assembly; bodies are truncated at a configurable budget. |
 | 🎭 **Claude Code `keep-coding-instructions`** | Styles with `keep-coding-instructions: false` (the default, like Claude Code) replace the whole system prompt — for styles that leave software engineering behind. |
-| 📌 **Forced styles** | `force: true` applies a style unconditionally, overriding any session selection; two forced styles fail the load. |
+| 📌 **Forced styles** | Claude Code's `force-for-plugin` (alias `force`) applies a style unconditionally, overriding any session selection; two forced styles fail the load. |
 | 🔁 **Claude Code compatibility** | Loads `outputStyles` JSON collections (`{ name, description, prompt }`), single entries or `settings.json`-style arrays; unparseable entries are skipped with a warning. |
 | 📚 **Layered directories** | `stylesDir` is a list; later directories override earlier ones (bundled `styles/` is the lowest layer, disable with `includeBuiltins: false`). |
 | 🔄 **Hot reload** | Style-file changes are picked up without restarting (`watchStyles: false` to opt out). |
@@ -67,6 +67,8 @@ You > /style
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
       explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
       formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
       step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
@@ -134,7 +136,7 @@ Frontmatter fields:
 | `description` | — (required) | One sentence shown in listings and the picker. |
 | `whenToUse` | — | Optional guidance appended to listings. |
 | `keep-coding-instructions` | `false` | Keep the harness prompt (identity, persona, tool guidance) when `true`; replace it entirely when `false` (Claude Code semantics). |
-| `force` | `false` | Apply unconditionally, overriding any session selection; at most one style may set it. |
+| `force-for-plugin` | `false` | Claude Code's field: apply unconditionally, overriding any session selection; `force` is accepted as an alias, and at most one style may set it. |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON (<code>compatJson: true</code>)</summary>
@@ -143,7 +145,7 @@ Frontmatter fields:
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-Legacy `settings.json` arrays (`[{ … }, { … }]`) load as-is; bad entries are skipped with a warning.
+Entries accept `keep-coding-instructions` and `force-for-plugin` exactly as Claude Code writes them. Legacy `settings.json` arrays (`[{ … }, { … }]`) load as-is; bad entries are skipped with a warning.
 
 </details>
 
@@ -159,7 +161,7 @@ Legacy `settings.json` arrays (`[{ … }, { … }]`) load as-is; bad entries are
 
 ## 🖱️ Web picker
 
-The `dsh.client` entry decorates the host `/style` command's bare invocation with a popup picker: an "off" row plus one row per library style (`description · whenToUse`), the active row marked. Picking submits `/style <name>` through the command Remote, so every switch keeps the host's durable command lifecycle and the `style` projection stays the single displayed fact.
+The `dsh.client` entry decorates the host `/style` command's bare invocation with a popup picker: an "off" row plus one row per library style (`description · whenToUse`), the active row marked. Picking submits `/style <name>` through the command Remote, so every switch keeps the host's durable command lifecycle and the `style` projection stays the single displayed fact. The picker follows the Web UI's shipped `zh`/`en` locale pair.
 
 ## 🔍 Conflict check
 
@@ -170,7 +172,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 | | Claude Code | dsh-output-styles |
 |---|---|---|
 | Style files | `.claude/output-styles` at user/project/managed levels | `stylesDir` directories + bundled `styles/`, later directory wins |
-| Custom styles | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Same fields (`force` = `force-for-plugin`) + `whenToUse` |
+| Custom styles | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Same fields (`force-for-plugin` accepted verbatim, `force` as alias) + `whenToUse` |
 | Legacy JSON | `outputStyles` array in `settings.json` | Loaded verbatim (`compatJson: true`) |
 | Taking effect | After `/clear` or a new session | Immediately — the system prompt re-assembles per request |
 | Subagents | Styles do not apply | Same — subagent sessions keep their own prompts |
@@ -181,7 +183,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 87 tests
+pnpm test            # vitest — 92 tests
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add
 ```

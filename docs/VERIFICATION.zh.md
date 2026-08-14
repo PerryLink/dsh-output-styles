@@ -1,6 +1,6 @@
 # 验证记录（dsh-output-styles）
 
-> 本文档记录交付验证的实测命令与输出。运行环境：Windows + Node 22 + pnpm 11；宿主为已安装的 `@deepseek-ai/dsh` CLI `0.1.0-rc.6`（`dsh --version` 输出 `0.1.0-rc.6`）。版本：0.2.0。
+> 本文档记录交付验证的实测命令与输出。运行环境：Windows + Node 22 + pnpm 11；宿主为已安装的 `@deepseek-ai/dsh` CLI `0.1.0-rc.6`（`dsh --version` 输出 `0.1.0-rc.6`）。版本：0.3.0（第 7 节为 0.3.0 增量验证；第 1–6 节为 0.2.0 基线记录）。
 
 ## 1. 单元与集成测试
 
@@ -91,3 +91,81 @@ harness identity alongside style: true
 - 真实 API 复测（第 4 节）需要 `DEEPSEEK_API_KEY`；无 key 时组装级集成测试是模型可见路径的回归保障，真实 API 手动复测步骤不变。
 - 风格不作用于子代理会话（与 Claude Code 语义一致，README「与 Claude Code 的差异」表明确记录）。
 - settings 提供方未配置时项目默认回落 `defaultStyle`；settings 值在风格热加载后变为悬空名时静默降级为无风格（与悬空会话选择同策略）。
+
+## 7. 0.3.0 增量验证
+
+### 7.1 单元与集成测试
+
+```text
+$ pnpm test
+ ✓ tests/config.spec.ts (8 tests)
+ ✓ tests/style-command.spec.ts (10 tests)
+ ✓ tests/invariant.spec.ts (9 tests)
+ ✓ tests/style-library.spec.ts (28 tests)
+ ✓ tests/commands-projections.spec.ts (7 tests)
+ ✓ tests/runtime.spec.ts (24 tests)
+ ✓ tests/client.spec.ts (6 tests)
+ Test Files  7 passed (7)
+      Tests  92 passed (92)
+```
+
+`pnpm run typecheck`（两个 tsc 工程）、`pnpm run build`、`pnpm run verify:self-contained` 均通过。
+
+### 7.2 Claude Code `force-for-plugin` 兼容
+
+对照 [Claude Code 官方 output-styles 文档](https://code.claude.com/docs/en/output-styles.md)（frontmatter 表确认 `force-for-plugin` 为官方字段）补齐 0.2.0 文档已声称但实现缺失的字段：
+
+- frontmatter 与 `outputStyles` JSON 两条路径均原样接受 `force-for-plugin`（新测试：`reads Claude Code force-for-plugin in frontmatter and outputStyles JSON`）。
+- `force` 保留为别名；两者同时出现且一致时正常加载，冲突时整文件跳过并警告（`force and force-for-plugin disagree`）。
+- 非布尔 `force-for-plugin` 跳过并警告；两个强制风格（无论用哪个字段）加载期抛错（复用既有双 force 检查）。
+- `FRONTMATTER_KEYS` 收录 `force-for-plugin`，未知键告警不再误报。
+
+### 7.3 内置风格对齐 Claude Code
+
+官方内置为 Default/Proactive/Explanatory/Learning；新增 `styles/proactive.md` 与 `styles/learning.md`，内置库现为六风格（`concise`, `explanatory`, `formal`, `learning`, `proactive`, `step-by-step`，按文件名字典序）：
+
+- 列表、错误提示 `available:`、`style` 投影 options 均同步为六风格（runtime/commands-projections 断言已更新）。
+- 新增切换用例：`/style proactive` → `switched to proactive` 且注入正文含 `Prefer action over planning`。
+
+### 7.4 客户端选择器本地化结论（研究后否决）
+
+曾计划为选择器补 ja/ko/es 字典。研读宿主 `dsh-client-locale`（rc.6）后否决：其 `LocaleId` 联合类型与设置行为仅 `zh`/`en`（`LOCALE_IDS = ['zh','en']`），语言行只暴露这两个选项，注册更多字典是永远无法被选中的死代码。选择器保持 `zh`/`en`，`src/client/locales.ts` 记录该决策供后续宿主版本扩展；README 五语承诺限定为文档。
+
+### 7.5 工程元数据
+
+- `package.json`：版本 0.3.0；新增 `packageManager: pnpm@11.7.0`（与 CI 一致）、`sideEffects: false`（供打包器摇树）。
+- 新增 `CHANGELOG.md`（Keep a Changelog 格式，0.1.0/0.2.0/0.3.0 三节）。
+- 五份 README 同步：`force-for-plugin` 字段表与差异表、六内置风格、演示列表、测试数（92）。
+
+### 7.6 真实 CLI bundle 装载复测
+
+```text
+$ pnpm pack                                   # dsh-output-styles-0.3.0.tgz
+$ env:DSH_HOME = <临时目录>
+$ dsh plugin --profile scratch add ./dsh-output-styles-0.3.0.tgz
+Packages: +9 ... Done                        # bundle 补丁层随包安装
+$ dsh --profile scratch --dump-config
+# == dsh-output-styles
+- id: storage
+  name: '@deepseek-ai/dsh-storage'
+- id: storage-json
+  name: '@deepseek-ai/dsh-storage-json'
+- id: storage-domain
+  name: '@deepseek-ai/dsh-storage-domain'
+- id: output-styles
+  name: dsh-output-styles
+```
+
+补丁层装载与 0.2.0 行为一致。进一步做了 0.2.0 未做的宿主启动级验证：
+
+```text
+$ dsh --profile scratch --help        # 无 storage 配置时快速失败：
+Error: ... entry storage-json ... invalid config: $.root missing required value
+$ （profile cordis.patch.yml 补 storage-json.root 与 storage-domain.backend: json）
+$ dsh --profile scratch --help        # 加载器阶段全部通过，进入应用空闲（无 FAILED）
+$ （把插件行改为非法 config: maxStyleChars: 0，验证 schema 在真实组合中生效）
+Error: dsh: plugin tree failed to load: ... entry output-styles (dsh-output-styles): invalid config:
+  - $.maxStyleChars expected number >= 1 but got 0 (at maxStyleChars)
+```
+
+即：0.3.0 tarball 经真实 rc.6 CLI 安装、补丁层组合、启动加载器逐行应用全部通过；插件的 Schemastery schema 在真实组合中生效（非法配置按插件自身的校验信息拒绝启动）。模型可见注入路径（systemPrompt 组装）由第 7.1 节组装级集成测试覆盖，真实 API 复测边界与第 6 节一致。

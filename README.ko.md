@@ -22,12 +22,12 @@
 
 | | |
 |---|---|
-| 🗂️ **스타일 라이브러리** | 스타일당 Markdown 파일 하나(`styles/*.md`). frontmatter에 메타데이터를, 본문은 모델 지시문입니다. `name`은 기본값이 파일명이며 공백을 포함할 수 있습니다(`Diagrams first`). |
+| 🗂️ **스타일 라이브러리** | 스타일당 Markdown 파일 하나(`styles/*.md`). frontmatter에 메타데이터를, 본문은 모델 지시문입니다. `name`은 기본값이 파일명이며 공백을 포함할 수 있습니다(`Diagrams first`). 내장 스타일 6종이 함께 제공되며, Claude Code와 동등한 `proactive`와 `learning`을 포함합니다. |
 | ⌨️ **`/style` 명령** | 인자 없이 실행하면 스타일 목록(설명 포함) + 현재 선택을 표시합니다. `/style <name>`으로 전환하고 `/style off`로 프로젝트 기본값을 복원합니다. `/style` 뒤의 나머지 전체가 스타일 이름입니다. |
 | 💾 **세션 범위 영속화** | 선택은 `output_style` 저장소 도메인에 sessionId를 키로 저장되어, 두 세션이 서로 간섭하지 않고 선택은 재시작 후에도 유지됩니다. |
 | 🧩 **시스템 프롬프트 주입** | `systemPrompt.section()` 기여(order 90)가 매 조립마다 현재 세션의 스타일 본문을 주입합니다. 본문은 설정 가능한 예산으로 잘립니다. |
 | 🎭 **Claude Code `keep-coding-instructions`** | `keep-coding-instructions: false`(Claude Code와 같은 기본값)인 스타일은 시스템 프롬프트 전체를 교체합니다 —— 소프트웨어 엔지니어링에서 벗어나는 스타일용입니다. |
-| 📌 **강제 스타일** | `force: true`는 세션 선택을 무시하고 무조건 스타일을 적용합니다. 강제 스타일이 둘이면 로드가 실패합니다. |
+| 📌 **강제 스타일** | Claude Code의 `force-for-plugin`(별칭 `force`)이 세션 선택을 무시하고 무조건 스타일을 적용합니다. 강제 스타일이 둘이면 로드가 실패합니다. |
 | 🔁 **Claude Code 호환성** | `outputStyles` JSON 컬렉션(`{ name, description, prompt }`)을 로드하며, 단일 항목 또는 `settings.json` 스타일 배열을 지원합니다. 해석 불가 항목은 경고와 함께 건너뜁니다. |
 | 📚 **계층화된 디렉터리** | `stylesDir`은 목록이며 뒤쪽 디렉터리가 앞쪽을 재정의합니다(내장 `styles/`가 최하위 계층, `includeBuiltins: false`로 비활성화). |
 | 🔄 **핫 리로드** | 스타일 파일 변경이 재시작 없이 반영됩니다(`watchStyles: false`로 해제). |
@@ -67,6 +67,8 @@ You > /style
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
       explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
       formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
       step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
@@ -134,7 +136,7 @@ frontmatter 필드:
 | `description` | —(필수) | 목록과 피커에 표시되는 한 문장. |
 | `whenToUse` | — | 목록에 덧붙이는 선택적 안내. |
 | `keep-coding-instructions` | `false` | `true`면 하네스 프롬프트(정체성, persona, 도구 지침)를 유지하고, `false`면 완전히 교체합니다(Claude Code 의미론). |
-| `force` | `false` | 세션 선택을 무시하고 무조건 적용합니다. 최대 한 스타일만 설정할 수 있습니다. |
+| `force-for-plugin` | `false` | Claude Code 공식 필드: 세션 선택을 무시하고 무조건 적용합니다. `force`는 별칭이며 최대 한 스타일만 설정할 수 있습니다. |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON(<code>compatJson: true</code>)</summary>
@@ -143,7 +145,7 @@ frontmatter 필드:
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-레거시 `settings.json` 배열(`[{ … }, { … }]`)은 그대로 로드되고, 잘못된 항목은 경고와 함께 건너뜁니다.
+항목은 Claude Code가 쓰는 그대로 `keep-coding-instructions`와 `force-for-plugin` 필드를 받습니다. 레거시 `settings.json` 배열(`[{ … }, { … }]`)은 그대로 로드되고, 잘못된 항목은 경고와 함께 건너뜁니다.
 
 </details>
 
@@ -159,7 +161,7 @@ frontmatter 필드:
 
 ## 🖱️ 웹 피커
 
-`dsh.client` 항목은 호스트 `/style` 명령의 인자 없는 호출을 팝업 피커로 꾸밉니다: 「off」 행 + 라이브러리 스타일별 한 행(`description · whenToUse`), 활성 행이 표시됩니다. 선택하면 명령 Remote를 통해 `/style <name>`을 제출하므로, 모든 전환이 호스트의 영구적인 명령 수명 주기를 유지하고 `style` 프로젝션이 유일하게 표시되는 사실로 남습니다.
+`dsh.client` 항목은 호스트 `/style` 명령의 인자 없는 호출을 팝업 피커로 꾸밉니다: 「off」 행 + 라이브러리 스타일별 한 행(`description · whenToUse`), 활성 행이 표시됩니다. 선택하면 명령 Remote를 통해 `/style <name>`을 제출하므로, 모든 전환이 호스트의 영구적인 명령 수명 주기를 유지하고 `style` 프로젝션이 유일하게 표시되는 사실로 남습니다. 피커 문구는 Web UI에 내장된 `zh`/`en` 언어 쌍을 따릅니다.
 
 ## 🔍 충돌 검사
 
@@ -170,7 +172,7 @@ frontmatter 필드:
 | | Claude Code | dsh-output-styles |
 |---|---|---|
 | 스타일 파일 | 사용자/프로젝트/관리 계층의 `.claude/output-styles` | `stylesDir` 디렉터리 + 내장 `styles/`, 뒤쪽 디렉터리가 우선 |
-| 사용자 정의 스타일 | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 동일 필드(`force` = `force-for-plugin`) + `whenToUse` |
+| 사용자 정의 스타일 | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 동일 필드(`force-for-plugin` 그대로 수용, `force`는 별칭) + `whenToUse` |
 | 레거시 JSON | `settings.json`의 `outputStyles` 배열 | 그대로 로드(`compatJson: true`) |
 | 적용 시점 | `/clear` 후 또는 새 세션 | 즉시 — 시스템 프롬프트가 요청마다 재조립 |
 | 하위 에이전트 | 스타일 미적용 | 동일 — 하위 에이전트 세션은 자체 프롬프트 유지 |
@@ -181,7 +183,7 @@ frontmatter 필드:
 ```sh
 pnpm install
 pnpm run typecheck   # 두 tsc 프로젝트
-pnpm test            # vitest — 87 테스트
+pnpm test            # vitest — 92 테스트
 pnpm run build       # lib/ 산출물(호스트 + 클라이언트 번들)
 pnpm pack            # dsh plugin add용 tarball
 ```

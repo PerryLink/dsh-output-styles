@@ -22,12 +22,12 @@
 
 | | |
 |---|---|
-| 🗂️ **风格库** | 每个风格一个 Markdown 文件（`styles/*.md`）；frontmatter 存元数据，正文即模型指令。`name` 缺省继承文件名，且可含空格（如 `Diagrams first`）。 |
+| 🗂️ **风格库** | 每个风格一个 Markdown 文件（`styles/*.md`）；frontmatter 存元数据，正文即模型指令。`name` 缺省继承文件名，且可含空格（如 `Diagrams first`）。内置六种风格，含与 Claude Code 对齐的 `proactive` 与 `learning`。 |
 | ⌨️ **`/style` 命令** | 无参列出全部风格（含描述）与当前选择；`/style <name>` 切换；`/style off` 恢复项目默认。`/style` 之后的整段文本即风格名。 |
 | 💾 **会话级持久化** | 选择保存在 `output_style` 存储域，按 sessionId 隔离——会话互不干扰，重启后保留。 |
 | 🧩 **系统提示注入** | `systemPrompt.section()` 贡献（order 90）在每次组装时注入当前会话的风格正文；正文按可配置预算截断。 |
 | 🎭 **Claude Code `keep-coding-instructions`** | `keep-coding-instructions: false`（缺省，与 Claude Code 一致）的风格**替换整个系统提示**——适合彻底离开软件工程的风格。 |
-| 📌 **强制风格** | `force: true` 无条件生效，覆盖任何会话选择；两个强制风格会在加载期报错。 |
+| 📌 **强制风格** | Claude Code 的 `force-for-plugin`（别名 `force`）无条件生效，覆盖任何会话选择；两个强制风格会在加载期报错。 |
 | 🔁 **Claude Code 兼容** | 加载 `outputStyles` JSON 集合（`{ name, description, prompt }`），支持单对象与 `settings.json` 式数组；坏条目逐个跳过并警告。 |
 | 📚 **目录分层** | `stylesDir` 是目录列表，后者覆盖前者（内置 `styles/` 是最低层，`includeBuiltins: false` 可排除）。 |
 | 🔄 **热加载** | 风格文件改动即时生效，无需重启（`watchStyles: false` 可关闭）。 |
@@ -67,6 +67,8 @@ You > /style
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
       explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
       formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
       step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
@@ -134,7 +136,7 @@ frontmatter 字段：
 | `description` | ——（必填） | 列表与选择器里展示的一句话。 |
 | `whenToUse` | —— | 可选适用场景说明，追加到列表。 |
 | `keep-coding-instructions` | `false` | `true` 保留宿主提示（身份、persona、工具指引）；`false` 整体替换（Claude Code 语义）。 |
-| `force` | `false` | 无条件生效，覆盖会话选择；最多一个风格可设置。 |
+| `force-for-plugin` | `false` | Claude Code 官方字段：无条件生效，覆盖会话选择；`force` 为其别名，最多一个风格可设置。 |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON（<code>compatJson: true</code>）</summary>
@@ -143,7 +145,7 @@ frontmatter 字段：
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-旧版 `settings.json` 的数组形式（`[{ … }, { … }]`）原样加载；坏条目逐个跳过并警告。
+条目按 Claude Code 原样接受 `keep-coding-instructions` 与 `force-for-plugin` 字段。旧版 `settings.json` 的数组形式（`[{ … }, { … }]`）原样加载；坏条目逐个跳过并警告。
 
 </details>
 
@@ -159,7 +161,7 @@ frontmatter 字段：
 
 ## 🖱️ Web 选择器
 
-`dsh.client` 入口把宿主 `/style` 命令的裸调用装饰成弹窗选择器：「off」行 + 每风格一行（`描述 · 适用场景`），当前行高亮。选中即通过命令 Remote 提交 `/style <name>`，因此每次切换都保留宿主的持久命令生命周期，`style` 投影始终是唯一展示事实。
+`dsh.client` 入口把宿主 `/style` 命令的裸调用装饰成弹窗选择器：「off」行 + 每风格一行（`描述 · 适用场景`），当前行高亮。选中即通过命令 Remote 提交 `/style <name>`，因此每次切换都保留宿主的持久命令生命周期，`style` 投影始终是唯一展示事实。选择器文案跟随 Web UI 内置的 `zh`/`en` 语言对。
 
 ## 🔍 生态冲突检查
 
@@ -170,7 +172,7 @@ frontmatter 字段：
 | | Claude Code | dsh-output-styles |
 |---|---|---|
 | 风格文件 | 用户/项目/托管层级的 `.claude/output-styles` | `stylesDir` 目录 + 内置 `styles/`，后目录胜出 |
-| 自定义风格 | Markdown，frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 同字段（`force` 对应 `force-for-plugin`）+ `whenToUse` |
+| 自定义风格 | Markdown，frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 同字段（`force-for-plugin` 原样接受，`force` 为别名）+ `whenToUse` |
 | 旧版 JSON | `settings.json` 里的 `outputStyles` 数组 | 原样加载（`compatJson: true`） |
 | 生效时机 | `/clear` 或新会话后 | 立即生效——系统提示每次请求重组 |
 | 子代理 | 风格不适用 | 一致——子代理会话保持各自提示 |
@@ -181,7 +183,7 @@ frontmatter 字段：
 ```sh
 pnpm install
 pnpm run typecheck   # 两个 tsc 工程
-pnpm test            # vitest —— 87 个测试
+pnpm test            # vitest —— 92 个测试
 pnpm run build       # lib/ 产物（宿主 + 客户端两个 bundle）
 pnpm pack            # 供 dsh plugin add 使用的 tarball
 ```
