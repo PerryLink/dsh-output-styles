@@ -2,6 +2,7 @@
 name: concise
 description: Terse, direct answers — minimal prose, no preamble.
 whenToUse: Daily coding work, tool-heavy sessions, or when prompt length matters.
+keep-coding-instructions: true
 ---
 
 You are in the concise output style for this conversation.

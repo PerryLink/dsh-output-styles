@@ -52,11 +52,11 @@ describe('installInvariant checks', () => {
     expect(fail).toHaveBeenCalledWith(expect.stringContaining('not in the style library'))
   })
 
-  it('rejects non-kebab style names on the durable boundary', () => {
+  it('rejects malformed style names on the durable boundary', () => {
     const { ctx, fail } = install({ knownStyles: () => undefined })
     ctx.emit('domain/changed', {
       domain: 'output_style', table: 'selection', key: 's-1', operation: 'put',
-      value: { style: 'Bad Name', source: { kind: 'plugin', plugin: 'dsh-output-styles' } },
+      value: { style: 'bad name!', source: { kind: 'plugin', plugin: 'dsh-output-styles' } },
     })
     expect(fail).toHaveBeenCalledWith(expect.stringContaining('invalid style'))
   })

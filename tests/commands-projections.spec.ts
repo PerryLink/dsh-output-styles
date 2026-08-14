@@ -42,8 +42,30 @@ describe('style session projection', () => {
     const snapshot0 = harness.ctx.sessionProjections.snapshot(session)
     expect(snapshot0.values.style).toEqual({
       options: [
-        { value: 'concise', name: 'concise', description: expect.stringContaining('Terse') },
-        { value: 'step-by-step', name: 'step-by-step', description: expect.stringContaining('Numbered') },
+        {
+          value: 'concise',
+          name: 'concise',
+          description: expect.stringContaining('Terse'),
+          whenToUse: expect.stringContaining('Daily coding work'),
+        },
+        {
+          value: 'explanatory',
+          name: 'explanatory',
+          description: expect.stringContaining('Insights'),
+          whenToUse: expect.stringContaining('Learning'),
+        },
+        {
+          value: 'formal',
+          name: 'formal',
+          description: expect.stringContaining('Formal'),
+          whenToUse: expect.stringContaining('Reports'),
+        },
+        {
+          value: 'step-by-step',
+          name: 'step-by-step',
+          description: expect.stringContaining('Numbered'),
+          whenToUse: expect.stringContaining('Debugging'),
+        },
       ],
       currentValue: null,
     })
@@ -77,7 +99,7 @@ describe('style session projection', () => {
     const session = harness.makeSession()
     await harness.runStyle(session, '/style concise')
     const checkpoint = harness.ctx.sessionProjections.checkpoint(session)
-    expect(checkpoint['style']).toMatchObject({ ver: 1, val: { current: 'concise' } })
+    expect(checkpoint['style']).toMatchObject({ ver: 2, val: { current: 'concise', pending: null } })
     const restored = harness.ctx.sessionProjections.restore(checkpoint, session.events, 0)
     expect(restored.snapshot.values.style?.currentValue).toBe('concise')
     await harness.dispose()

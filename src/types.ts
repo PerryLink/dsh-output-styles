@@ -24,7 +24,7 @@ export const STYLE_SOURCE = { kind: 'plugin', plugin: 'dsh-output-styles' } as c
 
 /** One durable per-session selection record. */
 export const styleSelectionSchema = zod.object({
-  /** Selected style name; a kebab-case name present in the style library at write time. */
+  /** Selected style name; a name present in the style library at write time. */
   style: zod.string().min(1),
   /** Producer marker; always this plugin's own {@link STYLE_SOURCE}. */
   source: zod.object({
@@ -56,6 +56,8 @@ export interface StyleOption {
   name: string
   /** One user-facing sentence on what the style does. */
   description: string
+  /** Optional guidance on when the style is useful; shown in pickers and listings. */
+  whenToUse?: string | undefined
 }
 
 /** Whole wire value of the `style` session projection. */
@@ -72,6 +74,7 @@ export const styleSelectionViewSchema = zod.object({
     value: zod.string().min(1),
     name: zod.string().min(1),
     description: zod.string().min(1),
+    whenToUse: zod.string().min(1).optional(),
   })),
   currentValue: zod.string().min(1).nullable(),
 })

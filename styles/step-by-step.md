@@ -2,6 +2,7 @@
 name: step-by-step
 description: Numbered reasoning steps with explicit intermediate results.
 whenToUse: Debugging, design decisions, or when the user asks to see the reasoning.
+keep-coding-instructions: true
 ---
 
 You are in the step-by-step output style for this conversation.

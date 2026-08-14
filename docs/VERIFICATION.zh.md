@@ -1,59 +1,61 @@
 # 验证记录（dsh-output-styles）
 
-> 本文档记录交付验证的实测命令与输出。运行环境：Windows + Node 22 + pnpm 11；宿主为已安装的 `@deepseek-ai/dsh` CLI `0.1.0-rc.6`（`dsh --version` 输出 `0.1.0-rc.6`）。
+> 本文档记录交付验证的实测命令与输出。运行环境：Windows + Node 22 + pnpm 11；宿主为已安装的 `@deepseek-ai/dsh` CLI `0.1.0-rc.6`（`dsh --version` 输出 `0.1.0-rc.6`）。版本：0.2.0。
 
 ## 1. 单元与集成测试
 
 ```text
 $ pnpm test
- ✓ tests/config.spec.ts (6 tests)
+ ✓ tests/config.spec.ts (9 tests)
+ ✓ tests/style-command.spec.ts (10 tests)
  ✓ tests/invariant.spec.ts (9 tests)
- ✓ tests/style-command.spec.ts (7 tests)
- ✓ tests/style-library.spec.ts (13 tests)
+ ✓ tests/style-library.spec.ts (24 tests)
  ✓ tests/commands-projections.spec.ts (7 tests)
- ✓ tests/runtime.spec.ts (11 tests)
- Test Files  6 passed (6)
-      Tests  53 passed (53)
+ ✓ tests/runtime.spec.ts (23 tests)
+ ✓ tests/client.spec.ts (6 tests)
+ Test Files  7 passed (7)
+      Tests  87 passed (87)
 ```
 
-覆盖：风格解析（md/json、坏文件跳过、重名/保留字抛错）、`/style` 分派（无参/切换/off/未知名/多 token）、截断与预算、会话隔离、HMR 配置热更新（fiber 释放后重挂载无残留、持久化选择保留、storageDomain 缺失时待激活并在服务出现后自动激活）、`style` 投影折叠与 checkpoint 往返、不变量检查。集成用例用 npm 发布的 `@deepseek-ai/dsh-*@0.1.0-rc.6` 真实宿主服务组装（sessions / systemPrompt / commands / storage / storage-json / storage-domain / sessionProjections）。
+覆盖：风格解析（md/json 单对象与数组集合、坏文件/坏条目跳过、重名/保留字/双 force 抛错、`name` 缺省继承文件名、多词名、`keep-coding-instructions`/`force` 字段）、`/style` 分派（无参带描述列表/整段文本切换/off/未知名）、码点安全截断与预算、多目录分层（后者覆盖前者、`includeBuiltins`）、fs.watch 热加载（新文件生效、破坏 defaultStyle 时保留旧库）、settings 项目默认（回落、会话选择优先、非法名拒写）、`keep-coding-instructions: false` 整段替换系统提示、force 覆盖、会话隔离、HMR 配置热更新、`style` 投影按 command/done 成功折叠（checkpoint v2 往返、失败命令不改变状态）、不变量检查、Web 客户端选择器（装饰注册、投影选项、整行提交、Remote 失败浮出）。
 
-`pnpm run typecheck`、`pnpm run build`、`pnpm run verify:self-contained` 均通过。
+集成用例用 npm 发布的 `@deepseek-ai/dsh-*@0.1.0-rc.6` 真实宿主/客户端服务组装（sessions / systemPrompt / commands / storage / storage-json / storage-domain / sessionProjections / settings；客户端 commandUi / sessions / remote / locale 为结构型测试替身）。
 
-## 2. 打包与干净 profile 装载
+`pnpm run typecheck`（两个 tsc 工程）、`pnpm run build`（宿主 + 客户端两个 bundle）、`pnpm run verify:self-contained`（44 个文本文件）均通过。
+
+## 2. 打包与 bundle 补丁层装载（0.2.0 新能力）
 
 ```text
 $ pnpm pack
 Tarball Contents（节选）: package.json, LICENSE, lib/index.js, lib/invariant.js, lib/invariant-*.js,
-lib/types/**/*.d.ts, src/**, styles/concise.md, styles/step-by-step.md, cordis.patch.yml,
-README.md, README.zh.md, README.ja.md, README.ko.md, README.es.md, docs/
+lib/client.js, lib/types/**/*.d.ts, src/**, styles/{concise,explanatory,formal,step-by-step}.md,
+cordis.patch.yml, README.md, README.zh.md, README.ja.md, README.ko.md, README.es.md, docs/
 
-$ dsh plugin --profile styles-verify add ./dsh-output-styles-0.1.0.tgz
-dsh: warning: dsh-output-styles declares no dsh.bundle — installed as a plain dependency, not a profile layer
-```
+$ env:DSH_HOME = <临时目录>
+$ dsh plugin --profile scratch add ./dsh-output-styles-0.2.0.tgz
+Packages: +9 ... Done in 3.1s        ← 不再出现 "declares no dsh.bundle" 警告
 
-说明：`0.1.0-rc.6` 的 CLI 对纯 cordis 插件只安装依赖、不自动写行（与官方 publish.md 一致）；激活行由 profile 的 `cordis.patch.yml` 写入（本插件随包附 `cordis.patch.yml` 样例）。headless 组合需补 `storage` / `storage-json` / `storage-domain` 三行（web bundle 内建）。
-
-## 3. `--dump-config` 行生效
-
-```text
-$ dsh --profile styles-verify --dump-config
+$ dsh --profile scratch --dump-config
+# == dsh-output-styles
 - id: storage
   name: '@deepseek-ai/dsh-storage'
 - id: storage-json
   name: '@deepseek-ai/dsh-storage-json'
-    root: <DSH_HOME>/storages
 - id: storage-domain
   name: '@deepseek-ai/dsh-storage-domain'
 - id: output-styles
   name: dsh-output-styles
 ```
 
-四行全部出现在生效组合中，schema 默认 config 正常展开，启动无 FAILED。
+包清单 `dsh.bundle.patch = ./cordis.patch.yml` 生效：一条 `plugin add` 即把 storage 三行 + 插件行作为补丁层组合进 profile（按 id 插入替换同 id 行，对 web profile 幂等）。0.1.0 时代的「纯依赖安装、需手写行」摩擦消除。
+
+## 3. `--dump-config` 行生效
+
+上一步的输出即证明：四行全部出现在生效组合中，schema 默认 config 正常展开（`stylesDir: []`、`includeBuiltins: true`、`watchStyles: true`），启动无 FAILED。
 
 ## 4. headless 实测（模型可见注入与回复风格变化）
 
-同一任务，先无风格、再 `defaultStyle: concise`（真实 API、真实模型 deepseek-v4-pro）：
+0.1.0 交付时的真实 API 实测（deepseek-v4-pro）记录保留如下；0.2.0 的模型可见注入路径（`systemPrompt.section` + `system-prompt/assemble` waterfall）改动已由第 1 节的组装级集成测试覆盖，`keep-coding-instructions: false` 的整段替换断言即经真实 rc.6 `SystemPrompt.assemble` 输出验证。真实 API 复测需 `DEEPSEEK_API_KEY`，本机无 key 时按既有策略手动执行：
 
 ```text
 $ dsh --profile styles-verify "请只用一句话介绍你自己，不要客套。"
@@ -64,36 +66,28 @@ $ dsh --profile styles-verify "请只用一句话介绍你自己，不要客套�
 （concise）我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理，能直接读写文件、执行命令并检索代码来完成工程任务。
 ```
 
-会话日志取证（经宿主真实持久化包 `dsh-session-persistence-jsonl` 解码读回，`scripts/verify-session-log.mjs`）：
+会话日志取证（经宿主真实持久化包 `dsh-session-persistence-jsonl` 解码读回，`scripts/verify-session-log.mjs`，0.2.0 起按任意风格名匹配 `# Output style: <name>` 并报告宿主身份是否共存）：
 
 ```text
 == session session-3d490e6d-…（concise 运行，170 events）==
 request/header logged before dispatch: true
 style heading in logged system prompt: true
+active style name in logged prompt: concise
 style body in logged system prompt: true
---- system prompt style excerpt ---
-# Output style: concise
-
-Use the following output style for every response in this conversation:
-
-You are in the concise output style for this conversation.
-- Lead with the direct answer; skip preamble, restatements, and filler.
-…
-
-== session session-de0f3532-…（无风格运行）==
-request/header logged before dispatch: true
-style heading in logged system prompt: false
+harness identity alongside style: true
 ```
 
-即：模型可见的风格正文在派发前完整写入 `request/header`（模型可见 ⟺ 已记录），有风格会话与无风格会话可区分；风格名由 `command/run`（`/style` 命令生命周期）与 `output_style` 域记录（含 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 来源标记）重建。
+即：模型可见的风格正文在派发前完整写入 `request/header`（模型可见 ⟺ 已记录），有风格会话与无风格会话可区分；风格名由 `command/run`（`/style` 命令生命周期）与 `output_style` 域记录（含 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 来源标记）重建。`keep-coding-instructions: false` 的会话则 `harness identity alongside style: false`。
 
-## 5. Web UI 命令入口
+## 5. Web UI 入口
 
-- `styles-verify-web` profile（bundles: `@deepseek-ai/dsh-base` + `@deepseek-ai/dsh-web-app` + 插件行）启动：`dsh web: http://127.0.0.1:3199`（该行在 Loader 树整体落定后打印），启动日志 0 FAILED、0 warning —— 插件行与 Web 组合共存激活。
-- 命令发现：集成测试经真实 rc.6 命令注册表断言 `ctx.commands.list(agent)` 含 `{ name: 'style', description: 'Switch the model output style for this session', input: { hint: '<style | off>' } }` —— 这正是 Web UI 经 BFF 读取的同一注册表；`/style` 进入命令面板不依赖任何客户端插件。
-- 会话投影 `style`（`{ options, currentValue }`）供 Web UI 读取，经 `sessionProjections.snapshot`/`checkpoint` 往返验证。
+- **命令入口**：宿主 `/style` 命令经真实 rc.6 命令注册表注册（集成测试断言 `ctx.commands.list(agent)` 含 `{ name: 'style', input: { hint: '<style | off>' } }`）——这正是 Web UI 经 BFF 读取的同一注册表。
+- **选择器（0.2.0 新能力）**：`dsh-output-styles/client` 客户端行用 `commandUi.decorate` 把 `/style` 裸调用装饰成投影驱动的 popupSelect（`off` 行 + 每风格一行、当前行高亮、中英双语）；客户端入口测试断言选项构建、`/style <整段名字>`/`/style off` 整行提交与 Remote 失败浮出。实测装载：向 profile 添加 `- id: output-styles-client / name: 'dsh-output-styles/client'` 行后经 Loader 解析，随 web bundle 的客户端运行时激活。
+- **会话投影**：`style`（`{ options, currentValue, options[].whenToUse }`）供 Web UI 读取，经 `sessionProjections.snapshot`/`checkpoint` 往返验证（stateVersion 2）。
+- **项目默认**：settings 命名空间 `output-style`（`{ style }`）注册在 settings seam 上，无 settings 服务时待激活、不影响主功能（集成测试覆盖两种组合）。
 
 ## 6. 已知边界
 
-- Web 设置行（`dsh.client` 客户端插件）未实现，见 README TODO。
-- headless profile 需自行补 storage 三行（web profile 内建），README 已说明。
+- 真实 API 复测（第 4 节）需要 `DEEPSEEK_API_KEY`；无 key 时组装级集成测试是模型可见路径的回归保障，真实 API 手动复测步骤不变。
+- 风格不作用于子代理会话（与 Claude Code 语义一致，README「与 Claude Code 的差异」表明确记录）。
+- settings 提供方未配置时项目默认回落 `defaultStyle`；settings 值在风格热加载后变为悬空名时静默降级为无风格（与悬空会话选择同策略）。

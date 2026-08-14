@@ -14,6 +14,7 @@ function packageFile(packageName, relativePath) {
 const steps = [
   ['tsc', packageFile('typescript', 'bin/tsc'), ['-p', 'tsconfig.prepare.dts.json']],
   ['tsdown', packageFile('tsdown', 'dist/run.mjs'), ['--config', 'tsdown.prepare.config.ts']],
+  ['tsdown', packageFile('tsdown', 'dist/run.mjs'), ['--config', 'tsdown.prepare.client.config.ts']],
 ]
 
 rmSync(join(root, 'lib'), { recursive: true, force: true })

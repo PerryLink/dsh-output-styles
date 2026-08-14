@@ -16,46 +16,58 @@
 
 ---
 
-`/style concise` — and every reply from now on is terse. `/style step-by-step` — and the model narrates numbered steps. `/style off` — back to default. One command per session, persisted across restarts, zero changes to the agent loop.
+`/style concise` — and every reply from now on is terse. `/style step-by-step` — and the model narrates numbered steps. `/style off` — back to the project default. One command per session, persisted across restarts, zero changes to the agent loop.
 
 ## ✨ Features
 
 | | |
 |---|---|
-| 🗂️ **Style library** | One Markdown file per style (`styles/*.md`); frontmatter `name` / `description` / `whenToUse`, body = the model directive. |
-| ⌨️ **`/style` command** | No argument lists styles + current selection; `/style <name>` switches; `/style off` restores the default. Strict input validation. |
+| 🗂️ **Style library** | One Markdown file per style (`styles/*.md`); frontmatter for metadata, body = the model directive. `name` defaults to the file name and may contain spaces (`Diagrams first`). |
+| ⌨️ **`/style` command** | No argument lists styles (with descriptions) + current selection; `/style <name>` switches; `/style off` restores the project default. The whole remainder after `/style` is the style name. |
 | 💾 **Session-scoped persistence** | The choice lives in the `output_style` storage domain, keyed by sessionId — two sessions never interfere, and the choice survives restarts. |
 | 🧩 **System-prompt injection** | A `systemPrompt.section()` contribution (order 90) injects the current session's style body at every assembly; bodies are truncated at a configurable budget. |
-| 🔁 **Claude Code compatibility** | Loads `outputStyles` JSON collections (`{ name, description, prompt }`); unparseable entries are skipped with a warning. |
-| 📊 **Session projection** | A `style` projection (`{ options, currentValue }`) for the Web UI, folded from the session log. |
+| 🎭 **Claude Code `keep-coding-instructions`** | Styles with `keep-coding-instructions: false` (the default, like Claude Code) replace the whole system prompt — for styles that leave software engineering behind. |
+| 📌 **Forced styles** | `force: true` applies a style unconditionally, overriding any session selection; two forced styles fail the load. |
+| 🔁 **Claude Code compatibility** | Loads `outputStyles` JSON collections (`{ name, description, prompt }`), single entries or `settings.json`-style arrays; unparseable entries are skipped with a warning. |
+| 📚 **Layered directories** | `stylesDir` is a list; later directories override earlier ones (bundled `styles/` is the lowest layer, disable with `includeBuiltins: false`). |
+| 🔄 **Hot reload** | Style-file changes are picked up without restarting (`watchStyles: false` to opt out). |
+| ⚙️ **Project default over settings** | Sessions that never selected one fall back to `output-style.style` from the DSH settings seam, then to `defaultStyle`. |
+| 🖱️ **Web picker** | A `dsh.client` entry (`dsh-output-styles/client`) decorates the host `/style` command with a projection-backed popup picker. |
+| 📊 **Session projection** | A `style` projection (`{ options, currentValue }`) for the Web UI, folded from settled commands in the session log. |
 | 🧯 **Fail loud, skip cleanly** | Misconfiguration throws at load; a bad style file is skipped with a warning and never breaks the profile. |
 | 🌐 **Five-language docs** | EN · 中文 · 日本語 · 한국어 · Español. |
 
 ## 🚀 Quick start
 
 ```sh
-# 1. Install (web profiles work out of the box; headless needs the storage rows)
+# 1. Install — the package is a bundle layer, so one command composes
+#    storage + storage-json + storage-domain + the plugin row:
 dsh plugin --profile <name> add dsh-output-styles
 
-# 2. Add the row (plain cordis plugin — the CLI installs the dependency only)
-#    profile cordis.patch.yml:
-- insert:
-    - id: output-styles
-      name: 'dsh-output-styles'
-
-# 3. Boot and switch
+# 2. Boot and switch
 dsh --profile <name>
-/style               # → output style off (available: concise, step-by-step)
+/style               # → output style off, then one line per style
 /style concise       # → switched to concise
+/style Diagrams first  # → names with spaces work too
+/style off           # → back to the project default
 ```
 
-> **Prerequisite:** the plugin injects `storageDomain`. The web profile composes `storage` + `storage-json` + `storage-domain` in box; headless profiles add the three rows themselves (sample in [cordis.patch.yml](cordis.patch.yml)). Without them the plugin simply stays pending and activates once they appear.
+The layer is idempotent over web profiles (insert-by-id replaces same-id rows), which compose `storage` in box. For the Web picker, add the client row to the profile:
+
+```yaml
+- id: output-styles-client
+  name: 'dsh-output-styles/client'
+```
 
 ## 🎬 Demo
 
 ```
 You > /style
-      output style off (available: concise, step-by-step)
+      output style off
+      concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
+      explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
+      formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
       switched to concise
@@ -63,8 +75,6 @@ You > /style concise
 You > 请只用一句话介绍你自己。
 AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
 ```
-
-*(Real headless run, deepseek-v4-pro — before the switch the same prompt produced a full-preamble answer. Full transcripts in [docs/VERIFICATION.zh.md](docs/VERIFICATION.zh.md).)*
 
 ## 🧠 How it works
 
@@ -79,7 +89,7 @@ flowchart LR
     M -->|full system prompt| H[request/header logged]
 ```
 
-Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `request/header`, and the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record.
+Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `request/header`, and the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
 
 ## ⚙️ Configuration
 
@@ -87,12 +97,14 @@ Every tunable is a validated Schemastery `Config` field (invalid values fail the
 
 | Field | Default | Meaning |
 |---|---|---|
-| `stylesDir` | `''` | Style library directory; `''` = the bundled `styles/`, other values resolve against cwd. |
-| `maxStyleChars` | `4000` | Style-body budget (characters, ≥ 1); longer bodies are truncated with a marker. |
-| `defaultStyle` | `''` | Style for sessions that never selected one; `''` = new sessions inject nothing. |
-| `compatJson` | `true` | Load Claude Code `outputStyles` JSON entries. |
+| `stylesDir` | `[]` | Style-library directories, resolved against cwd; later entries override earlier ones. `[]` = the bundled `styles/` only. A bare string is a single-directory list. |
+| `maxStyleChars` | `4000` | Style-body budget (code points, ≥ 1); longer bodies are truncated with a marker. |
+| `defaultStyle` | `''` | Style for sessions that never selected one (and no settings default exists); `''` = no style. |
+| `compatJson` | `true` | Load Claude Code `outputStyles` JSON entries (single objects or arrays). |
 | `sectionOrder` | `90` | Order of the injected section (0 = persona, 100–199 = tool guidance). |
 | `truncationMarker` | `"\n\n[style truncated]"` | Marker appended at the truncation point. |
+| `includeBuiltins` | `true` | Include the package's bundled `styles/` as the lowest-priority layer. |
+| `watchStyles` | `true` | Reload the library when a style file changes on disk. |
 
 ## 📚 Style library
 
@@ -104,15 +116,25 @@ Every tunable is a validated Schemastery `Config` field (invalid values fail the
 name: concise
 description: Terse, direct answers — minimal prose, no preamble.
 whenToUse: Daily coding work, tool-heavy sessions, or when prompt length matters.
+keep-coding-instructions: true
 ---
 
 You are in the concise output style for this conversation.
 - Lead with the direct answer; skip preamble, restatements, and filler.
 - 回答语言跟随用户语言：中文提问用中文回答，英文提问用英文回答。
-- End when the task is done; do not add closing summaries unless asked.
 ```
 
 </details>
+
+Frontmatter fields:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `name` | file name | Switch target; letters, digits, spaces, and hyphens (no leading/trailing space; `off` is reserved). |
+| `description` | — (required) | One sentence shown in listings and the picker. |
+| `whenToUse` | — | Optional guidance appended to listings. |
+| `keep-coding-instructions` | `false` | Keep the harness prompt (identity, persona, tool guidance) when `true`; replace it entirely when `false` (Claude Code semantics). |
+| `force` | `false` | Apply unconditionally, overriding any session selection; at most one style may set it. |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON (<code>compatJson: true</code>)</summary>
@@ -121,7 +143,7 @@ You are in the concise output style for this conversation.
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-Names must be kebab-case (`^[a-z][a-z0-9-]*$`); `off` is the reserved switch target.
+Legacy `settings.json` arrays (`[{ … }, { … }]`) load as-is; bad entries are skipped with a warning.
 
 </details>
 
@@ -129,26 +151,42 @@ Names must be kebab-case (`^[a-z][a-z0-9-]*$`); `off` is the reserved switch tar
 
 | Input | Outcome |
 |---|---|
-| `/style` | List styles + current selection |
+| `/style` | List current selection + one line per style (name — description) |
 | `/style concise` | Switch (durable write), `switched to concise` |
-| `/style off` | Restore default |
+| `/style Diagrams first` | Multi-word names are the whole remainder |
+| `/style off` | Restore the project default (settings default, then `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
+
+## 🖱️ Web picker
+
+The `dsh.client` entry decorates the host `/style` command's bare invocation with a popup picker: an "off" row plus one row per library style (`description · whenToUse`), the active row marked. Picking submits `/style <name>` through the command Remote, so every switch keeps the host's durable command lifecycle and the `style` projection stays the single displayed fact.
 
 ## 🔍 Conflict check
 
 Screened against the DSH ecosystem before development (2026-08 snapshot): no `style`/`output-style` repository under [topic:dsh-plugin](https://github.com/topics/dsh-plugin), no output-style category in the four major [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin), and no entry in the [dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop). The closest neighbors — [dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md) (persona) and [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace) (output styles explicitly deferred to v0.2+) — are adjacent, not conflicting.
+
+## 🆚 Differences from Claude Code
+
+| | Claude Code | dsh-output-styles |
+|---|---|---|
+| Style files | `.claude/output-styles` at user/project/managed levels | `stylesDir` directories + bundled `styles/`, later directory wins |
+| Custom styles | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Same fields (`force` = `force-for-plugin`) + `whenToUse` |
+| Legacy JSON | `outputStyles` array in `settings.json` | Loaded verbatim (`compatJson: true`) |
+| Taking effect | After `/clear` or a new session | Immediately — the system prompt re-assembles per request |
+| Subagents | Styles do not apply | Same — subagent sessions keep their own prompts |
+| Switching | `/config` menu or `outputStyle` setting (the `/output-style` command was removed in v2.1.91) | `/style` command + Web picker + settings `output-style.style` |
 
 ## 🧪 Development
 
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 53 tests
-pnpm run build       # lib/ artifacts
+pnpm test            # vitest — 87 tests
+pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add
 ```
 
-Structure follows the [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template): `src/index.ts` (plugin metadata), `src/config.ts` (schema), `src/runtime.ts` (runtime service + activation), `src/invariant.ts` (invariants), `styles/` (built-ins).
+Structure follows the [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template): `src/index.ts` (plugin metadata), `src/config.ts` (schema), `src/runtime.ts` (runtime service + activation), `src/invariant.ts` (invariants), `src/client/` (Web picker), `styles/` (built-ins).
 
 ## 📄 License
 

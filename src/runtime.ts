@@ -9,42 +9,59 @@
  */
 
 import { fileURLToPath } from 'node:url'
+import { watch, type FSWatcher } from 'node:fs'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-commands'
 import type {} from '@deepseek-ai/dsh-session-projection'
-import type { AssembleContext } from '@deepseek-ai/dsh-system-prompt'
+import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type { Domain, DomainFacility, KvTable } from '@deepseek-ai/dsh-storage-domain'
+import z from '@deepseek-ai/schemastery'
+import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { resolveConfig, type Config } from './config.ts'
 import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegistry } from './invariant.ts'
 import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-library.ts'
 import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, type StyleFoldState } from './style-command.ts'
 import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
 
-/** Bundled style-library directory (package `styles/`), the `stylesDir` default. */
+/** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
 export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.meta.url))
 
 /** Prompt-section name; a fixed registry key a scoped composition could shadow. */
 export const STYLE_SECTION_NAME = 'output-style:selection'
 
+/** Settings namespace owning the project-level default (`outputStyle`). */
+const SETTINGS_NS = settingsNamespace('output-style')
+
+/** Coalescing delay for style-file change events; an internal implementation constant, not a deployment knob. */
+const WATCH_DEBOUNCE_MS = 250
+
 /**
- * Resolved style behavior for one session. The session's own durable
- * selection wins; sessions that never selected one fall back to the
- * configured default style, and `''` (the default) means no style at all.
+ * Resolved style behavior for one session. A forced style (frontmatter
+ * `force: true`) wins over everything; otherwise the session's own durable
+ * selection wins, sessions that never selected one fall back to the project
+ * default (settings `outputStyle`, then the configured default style), and
+ * `''` means no style at all.
  */
 export class OutputStyleRuntime {
-  /** Style library in deterministic file order. */
-  readonly styles: ReadonlyMap<string, OutputStyle>
+  private library: ReadonlyMap<string, OutputStyle>
+  private forcedStyle: OutputStyle | undefined
 
   private readonly selection: KvTable<SessionId, StyleSelection>
   private readonly defaultStyle: string
   private readonly maxStyleChars: number
   private readonly truncationMarker: string
+  private projectDefault: () => string
+
+  /** Style library in deterministic directory/file order. */
+  get styles(): ReadonlyMap<string, OutputStyle> {
+    return this.library
+  }
 
   /**
    * @param domain - the opened `output_style` domain; the caller owns `close()`.
-   * @param styles - the loaded style library.
+   * @param styles - the loaded style library (at most one `force` style).
    * @param options - resolved style budget and default.
    */
   constructor(
@@ -56,25 +73,51 @@ export class OutputStyleRuntime {
       readonly truncationMarker: string
     },
   ) {
-    this.styles = styles
+    this.library = styles
     this.selection = domain.table('selection')
     this.defaultStyle = options.defaultStyle
     this.maxStyleChars = options.maxStyleChars
     this.truncationMarker = options.truncationMarker
+    this.forcedStyle = [...styles.values()].find(style => style.force)
+    this.projectDefault = () => this.defaultStyle
   }
 
   /** Every switchable style name, in library order. */
   get names(): readonly string[] {
-    return [...this.styles.keys()]
+    return [...this.library.keys()]
+  }
+
+  /** The forced style's name, or undefined when the library declares none. */
+  get forcedName(): string | undefined {
+    return this.forcedStyle?.name
+  }
+
+  /**
+   * Atomically swap the style library (style-file hot reload). The forced
+   * style is recomputed; the caller already validated the new library.
+   * @param styles - the replacement library.
+   */
+  reload(styles: ReadonlyMap<string, OutputStyle>): void {
+    this.library = styles
+    this.forcedStyle = [...styles.values()].find(style => style.force)
+  }
+
+  /**
+   * Point the project-default resolution at a live source (the settings
+   * scope while one is attached, the composition entry otherwise).
+   * @param get - thunk returning the project default style name (`''` = none).
+   */
+  setProjectDefault(get: () => string): void {
+    this.projectDefault = get
   }
 
   /**
    * Resolve one style by name.
-   * @param name - kebab-case style name.
+   * @param name - style name.
    * @returns the style, or undefined when the library has none.
    */
   get(name: string): OutputStyle | undefined {
-    return this.styles.get(name)
+    return this.library.get(name)
   }
 
   /**
@@ -87,16 +130,18 @@ export class OutputStyleRuntime {
   }
 
   /**
-   * The style in force for a session: its own selection, else the configured
-   * default, else none. A stale selection (its style left the library) also
-   * degrades to the default.
+   * The style in force for a session: a forced library style, else the
+   * session's own selection, else the project default, else none. A stale
+   * selection or project default (its style left the library) also degrades
+   * to none.
    * @param sessionId - the session the style is resolved for.
    * @returns the effective style, or undefined when no style applies.
    */
   effectiveStyle(sessionId: SessionId): OutputStyle | undefined {
+    if (this.forcedStyle !== undefined) return this.forcedStyle
     const record = this.selectionFor(sessionId)
-    const name = record !== undefined ? record.style : this.defaultStyle
-    return name === '' ? undefined : this.styles.get(name)
+    const name = record !== undefined ? record.style : this.projectDefault()
+    return name === '' ? undefined : this.library.get(name)
   }
 
   /**
@@ -123,17 +168,29 @@ export class OutputStyleRuntime {
   }
 
   /**
-   * The `/style` no-argument listing: the current selection plus every
-   * switchable name.
+   * The `/style` no-argument listing: the current selection followed by one
+   * line per style (`name — description`, with `whenToUse` appended when set).
    * @param sessionId - the session the listing describes.
-   * @returns one line for the command result text.
+   * @returns the multi-line command result text.
    */
   listLine(sessionId: SessionId): string {
-    const available = this.names.join(', ')
     const current = this.currentName(sessionId)
-    return current === ''
-      ? `output style off (available: ${available})`
-      : `current output style: ${current} (available: ${available})`
+    const lines = [current === '' ? 'output style off' : `current output style: ${current}`]
+    for (const style of this.styles.values()) {
+      const whenToUse = style.whenToUse === undefined ? '' : ` (${style.whenToUse})`
+      lines.push(`${style.name} — ${style.description}${whenToUse}`)
+    }
+    return lines.join('\n')
+  }
+
+  /**
+   * The unknown-name error line, shared by the command handler and the direct
+   * {@link OutputStyleRuntime.select} write path.
+   * @param name - the rejected switch target.
+   * @returns the error text listing every switchable name.
+   */
+  unknownStyleLine(name: string): string {
+    return `unknown output style "${name}" (available: ${this.names.join(', ')})`
   }
 
   /**
@@ -145,7 +202,7 @@ export class OutputStyleRuntime {
    */
   async select(session: Session, name: string): Promise<void> {
     if (this.styles.get(name) === undefined) {
-      throw new Error(`dsh-output-styles: unknown output style "${name}" (available: ${this.names.join(', ')})`)
+      throw new Error(`dsh-output-styles: ${this.unknownStyleLine(name)}`)
     }
     await this.selection.put(session.id, { style: name, source: STYLE_SOURCE })
   }
@@ -170,12 +227,16 @@ export class OutputStyleRuntime {
 
 /** Build the `style` projection's wire value for one folded state. */
 function viewStyleSelection(runtime: OutputStyleRuntime, state: StyleFoldState): StyleSelectionView {
+  // The library-membership guard covers a settled selection whose style later
+  // left the library: the view degrades to "no selection" until the session
+  // switches again.
   const currentValue = state.current !== null && runtime.styles.has(state.current) ? state.current : null
   return {
     options: [...runtime.styles.entries()].map(([value, style]) => ({
       value,
       name: style.name,
       description: style.description,
+      ...style.whenToUse === undefined ? {} : { whenToUse: style.whenToUse },
     })),
     currentValue,
   }
@@ -203,13 +264,13 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   }
   const resolved = resolveConfig(config, DEFAULT_STYLES_DIR)
   const styles = loadStyleLibrary(
-    resolved.stylesDir,
+    resolved.stylesDirs,
     { compatJson: resolved.compatJson },
     message => { ctx.logger.warn(`dsh-output-styles: ${message}`) },
   )
   if (resolved.defaultStyle !== '' && !styles.has(resolved.defaultStyle)) {
     throw new Error(
-      `dsh-output-styles: defaultStyle "${resolved.defaultStyle}" names no style in ${resolved.stylesDir} `
+      `dsh-output-styles: defaultStyle "${resolved.defaultStyle}" names no style in ${resolved.stylesDirs.join(', ')} `
       + `(available: ${[...styles.keys()].join(', ') || 'none'})`,
     )
   }
@@ -217,14 +278,103 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   ctx.effect(() => () => domain.close())
   const runtime = new OutputStyleRuntime(domain, styles, resolved)
 
+  // Style-file hot reload: watch every library directory and atomically swap
+  // the runtime library after a coalescing delay. A reload that would break
+  // the configured default or otherwise fail keeps the previous library.
+  if (resolved.watchStyles) {
+    let timer: NodeJS.Timeout | undefined
+    const reload = (): void => {
+      try {
+        const next = loadStyleLibrary(
+          resolved.stylesDirs,
+          { compatJson: resolved.compatJson },
+          message => { ctx.logger.warn(`dsh-output-styles: ${message}`) },
+        )
+        if (resolved.defaultStyle !== '' && !next.has(resolved.defaultStyle)) {
+          ctx.logger.warn(`dsh-output-styles: style file change removed defaultStyle "${resolved.defaultStyle}"; keeping the previous library`)
+          return
+        }
+        runtime.reload(next)
+      } catch (error) {
+        ctx.logger.warn(`dsh-output-styles: style file change not applied: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    const schedule = (): void => {
+      if (timer !== undefined) return
+      timer = setTimeout(() => {
+        timer = undefined
+        reload()
+      }, WATCH_DEBOUNCE_MS)
+    }
+    ctx.effect(() => {
+      const watchers: FSWatcher[] = []
+      for (const dir of resolved.stylesDirs) {
+        try {
+          watchers.push(watch(dir, { persistent: false }, () => { schedule() }))
+        } catch (error) {
+          ctx.logger.warn(`dsh-output-styles: cannot watch style directory ${dir}: ${error instanceof Error ? error.message : String(error)}`)
+        }
+      }
+      return () => {
+        if (timer !== undefined) clearTimeout(timer)
+        for (const watcher of watchers) watcher.close()
+      }
+    })
+  }
+
+  // Project-level default over the settings seam: sessions that never
+  // selected a style fall back to `output-style.style` (user settings layer,
+  // then the composition defaultStyle). Stays inactive until a settings
+  // provider is composed; the settings namespace validates names against the
+  // live library at write time.
+  installSettingsSection(
+    ctx,
+    SETTINGS_NS,
+    z.object({ style: z.string().default('') }),
+    { style: resolved.defaultStyle },
+    {
+      setSource: current => { runtime.setProjectDefault(() => current().style) },
+      onChange: () => {},
+      validate: value => {
+        if (value.style !== '' && !runtime.styles.has(value.style)) {
+          throw new Error(
+            `dsh-output-styles: settings outputStyle "${value.style}" names no style `
+            + `(available: ${[...runtime.styles.keys()].join(', ') || 'none'})`,
+          )
+        }
+      },
+    },
+  )
+
   ctx.systemPrompt.section({
     name: STYLE_SECTION_NAME,
     order: resolved.sectionOrder,
     text: (context: AssembleContext) => {
       const agent = context.agent
       if (agent === undefined) return ''
+      const style = runtime.effectiveStyle(agent.session.id)
+      // A keep-coding-instructions: false style owns the whole prompt: the
+      // assembly waterfall below rebuilds the section list, so this section
+      // stays silent instead of double-injecting.
+      if (style === undefined || !style.keepCodingInstructions) return ''
       return runtime.promptText(agent.session.id)
     },
+  })
+
+  // Claude Code keep-coding-instructions: false — the active style replaces
+  // the whole system prompt. The waterfall runs after downstream
+  // contributions resolve (tools, contexts, and variables still assemble),
+  // then swaps in a single style section.
+  ctx.on('system-prompt/assemble', async (_assembly: PromptAssembly, context: AssembleContext, next) => {
+    const out = await next()
+    const agent = context.agent
+    if (agent === undefined) return out
+    const style = runtime.effectiveStyle(agent.session.id)
+    if (style === undefined || style.keepCodingInstructions) return out
+    return {
+      ...out,
+      sections: [{ name: STYLE_SECTION_NAME, text: runtime.promptText(agent.session.id) }],
+    }
   })
 
   // The /style command: the one write path a web client uses. The child
@@ -239,20 +389,20 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       handler: async ({ agent, rawInput }) => {
         const input = parseStyleInput(rawInput)
         if (input.kind === 'none') {
-          if (rawInput.trim() === '') {
-            return { kind: 'success', text: runtime.listLine(agent.session.id) }
-          }
-          return {
-            kind: 'error',
-            text: `unknown output style "${rawInput.trim()}" (style names are single tokens; available: ${runtime.names.join(', ')})`,
-          }
+          return { kind: 'success', text: runtime.listLine(agent.session.id) }
         }
         if (input.kind === 'off') {
           await runtime.turnOff(agent.session)
-          return { kind: 'success', text: 'output style off' }
+          const forced = runtime.forcedName
+          return {
+            kind: 'success',
+            text: forced === undefined
+              ? 'output style off'
+              : `output style off (style "${forced}" remains in force)`,
+          }
         }
         if (runtime.get(input.name) === undefined) {
-          return { kind: 'error', text: `unknown output style "${input.name}" (available: ${runtime.names.join(', ')})` }
+          return { kind: 'error', text: runtime.unknownStyleLine(input.name) }
         }
         await runtime.select(agent.session, input.name)
         return { kind: 'success', text: `switched to ${input.name}` }
@@ -270,7 +420,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       init: () => EMPTY_STYLE_STATE,
       apply: applyStyleEvent,
       view: state => viewStyleSelection(runtime, state),
-      stateVersion: 1,
+      stateVersion: 2,
     })
   })
 

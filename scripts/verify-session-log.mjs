@@ -25,11 +25,16 @@ for (const header of headers.slice(0, 2)) {
   const requestHeaders = events.filter(event => event.type === 'request/header')
   const last = requestHeaders.at(-1)
   const system = last?.type === 'request/header' ? last.data.header.system ?? '' : ''
+  const styleMatch = system.match(/# Output style: ([^\n]+)/)
   console.log(`== session ${header.id} (${events.length} events, ${requestHeaders.length} request/header) ==`)
   console.log(`request/header logged before dispatch: ${last !== undefined}`)
-  console.log(`style heading in logged system prompt: ${system.includes('# Output style: concise')}`)
+  console.log(`style heading in logged system prompt: ${styleMatch !== null}`)
+  if (styleMatch !== null) console.log(`active style name in logged prompt: ${styleMatch[1]}`)
   console.log(`style body in logged system prompt: ${system.includes('保持简洁')}`)
-  if (system.includes('# Output style:')) {
+  // keep-coding-instructions: false — the style replaces the whole prompt, so
+  // the harness identity is absent while a style heading is present.
+  console.log(`harness identity alongside style: ${system.includes('DeepSeek Harness')}`)
+  if (styleMatch !== null) {
     const start = system.indexOf('# Output style:')
     console.log(`--- system prompt style excerpt ---\n${system.slice(start, start + 240)}`)
   }

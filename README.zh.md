@@ -2,7 +2,7 @@
 
 # 🎨 dsh-output-styles
 
-**Claude Code `outputStyles` 的 DeepSeek Harness 等价能力** —— 运行时按会话切换模型输出风格，持久化保存。
+**DeepSeek Harness 版的 Claude Code `outputStyles`** —— 在运行时、按会话、持久地切换模型输出风格。
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml/badge.svg)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
@@ -16,44 +16,58 @@
 
 ---
 
-`/style concise` —— 之后的每次回复都简洁直给；`/style step-by-step` —— 模型改为按步骤叙述推理；`/style off` —— 恢复默认。每个会话一条命令，重启不丢，不动 agent loop。
+`/style concise` —— 从此之后每条回复都简洁。`/style step-by-step` —— 模型按编号步骤叙述推理。`/style off` —— 回到项目默认。每会话一条命令、重启后依然生效、零 agent-loop 改动。
 
-## ✨ 功能
+## ✨ 特性
 
-- **风格库**：`styles/*.md`，每文件一个风格（frontmatter `name`/`description`/`whenToUse`，正文即注入模型的风格指令）。
-- **`/style` 斜杠命令**：无参列出可用风格与当前选择；`/style <name>` 切换；`/style off` 恢复默认；参数严格校验（空输入/多 token/未知名分别处理）。
-- **会话级持久化**：经 `ctx.storageDomain` 的 `output_style` 域按 sessionId 存 `{ style, source }`，`source` 携带来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }`；两个会话互不影响，选择跨重启保留。
-- **系统提示词注入**：经 `ctx.systemPrompt.section()` 注册名为 `output-style:selection`、默认 order 90 的提示词段，每次组装读取当前会话选择；正文按 `maxStyleChars`（默认 4000 字符）截断并在截断处加标记。
-- **Claude Code 兼容**：`compatJson: true`（默认）时加载 `styles/*.json` 的 `outputStyles` 收藏格式（`{ "name", "description", "prompt" }`），转换为内部风格对象；无法解析的 JSON 跳过并警告。
-- **会话投影**：注册 `style` 投影单元（`{ options, currentValue }`）供 Web UI 显示当前风格；折叠只镜像日志中被实际接受的切换。
-- **响亮失败、干净跳过**：配置错误加载期抛错；单个风格文件解析失败只警告跳过，不影响插件加载。
-- **五语文档**：EN · 中文 · 日本語 · 한국어 · Español。
+| | |
+|---|---|
+| 🗂️ **风格库** | 每个风格一个 Markdown 文件（`styles/*.md`）；frontmatter 存元数据，正文即模型指令。`name` 缺省继承文件名，且可含空格（如 `Diagrams first`）。 |
+| ⌨️ **`/style` 命令** | 无参列出全部风格（含描述）与当前选择；`/style <name>` 切换；`/style off` 恢复项目默认。`/style` 之后的整段文本即风格名。 |
+| 💾 **会话级持久化** | 选择保存在 `output_style` 存储域，按 sessionId 隔离——会话互不干扰，重启后保留。 |
+| 🧩 **系统提示注入** | `systemPrompt.section()` 贡献（order 90）在每次组装时注入当前会话的风格正文；正文按可配置预算截断。 |
+| 🎭 **Claude Code `keep-coding-instructions`** | `keep-coding-instructions: false`（缺省，与 Claude Code 一致）的风格**替换整个系统提示**——适合彻底离开软件工程的风格。 |
+| 📌 **强制风格** | `force: true` 无条件生效，覆盖任何会话选择；两个强制风格会在加载期报错。 |
+| 🔁 **Claude Code 兼容** | 加载 `outputStyles` JSON 集合（`{ name, description, prompt }`），支持单对象与 `settings.json` 式数组；坏条目逐个跳过并警告。 |
+| 📚 **目录分层** | `stylesDir` 是目录列表，后者覆盖前者（内置 `styles/` 是最低层，`includeBuiltins: false` 可排除）。 |
+| 🔄 **热加载** | 风格文件改动即时生效，无需重启（`watchStyles: false` 可关闭）。 |
+| ⚙️ **settings 项目默认** | 从未选择过的会话依次回落到 settings 的 `output-style.style`、再回落 `defaultStyle`。 |
+| 🖱️ **Web 选择器** | `dsh.client` 入口（`dsh-output-styles/client`）把宿主 `/style` 命令装饰成投影驱动的弹窗选择器。 |
+| 📊 **会话投影** | `style` 投影（`{ options, currentValue }`）供 Web UI 使用，按会话日志中**已成功落定**的命令折叠。 |
+| 🧯 **失效即响、坏件干净跳过** | 配置错误加载期抛错；坏风格文件跳过并警告，绝不拖垮 profile。 |
+| 🌐 **五语文档** | EN · 中文 · 日本語 · 한국어 · Español。 |
 
 ## 🚀 快速开始
 
 ```sh
-# 1. 安装（web profile 开箱即用；headless 需补 storage 行）
+# 1. 安装——本包是 bundle 补丁层，一条命令即组合好
+#    storage + storage-json + storage-domain + 插件行：
 dsh plugin --profile <name> add dsh-output-styles
 
-# 2. 写激活行（纯 cordis 插件：CLI 只装依赖不写行）
-#    profile 的 cordis.patch.yml：
-- insert:
-    - id: output-styles
-      name: 'dsh-output-styles'
-
-# 3. 启动并切换
+# 2. 启动并切换
 dsh --profile <name>
-/style               # → output style off (available: concise, step-by-step)
+/style               # → 当前状态 + 每风格一行
 /style concise       # → switched to concise
+/style Diagrams first  # → 含空格的名字同样可用
+/style off           # → 回到项目默认
 ```
 
-> **前置条件：`ctx.storageDomain`。** 插件经 `inject: ['storageDomain']` 声明依赖：组合中没有存储域设施（`@deepseek-ai/dsh-storage-domain`，且 `output_style` 域能路由到带 kv facet 的后端）时，插件保持待激活，补上存储行后自动激活。web profile 内建 `storage` + `storage-json`（`backend: json`）+ `storage-domain` 三行；headless profile 自行补三行（样例见 [cordis.patch.yml](cordis.patch.yml)）。
+该补丁层对 web profile 幂等（按 id 插入会替换同 id 行），web profile 本就内建 storage 三行。使用 Web 选择器时，向 profile 添加客户端行：
+
+```yaml
+- id: output-styles-client
+  name: 'dsh-output-styles/client'
+```
 
 ## 🎬 演示
 
 ```
 You > /style
-      output style off (available: concise, step-by-step)
+      output style off
+      concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
+      explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
+      formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
 
 You > /style concise
       switched to concise
@@ -62,39 +76,37 @@ You > 请只用一句话介绍你自己。
 AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
 ```
 
-*(真实 headless 运行、deepseek-v4-pro；切换前同一提示词给出的是带开场白的完整自我介绍。完整实录见 [docs/VERIFICATION.zh.md](docs/VERIFICATION.zh.md)。)*
-
 ## 🧠 工作原理
 
 ```mermaid
 flowchart LR
     U[输入 /style concise] --> C[命令注册表]
-    C -->|command/run 落日志| L[(会话日志)]
-    C -->|put {style, source}| D[(output_style 域)]
+    C -->|记录 command/run| L[(会话日志)]
+    C -->|写入 {style, source}| D[(output_style 域)]
     D --> R[OutputStyleRuntime]
-    R -->|每次组装注入正文| S[systemPrompt 段 order 90]
+    R -->|每次组装注入正文| S[systemPrompt 节 order 90]
     S --> M[模型请求]
-    M -->|完整系统提示词| H[request/header 落日志]
+    M -->|完整系统提示| H[记录 request/header]
 ```
 
-模型可见的一切都能从会话日志重建 —— 不新增会话事件类型、不改 agent-loop：风格名来自 `command/run`，模型实际收到的文本来自 `request/header`（`header.system` 含完整渲染后的系统提示词），名称与来源标记随域记录持久化。
+模型所见的一切都能从会话日志重建——无需新增会话事件类型、不改 agent-loop。风格名来自 `command/run`，注入的确切文本来自 `request/header`，来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录存储。风格只作用于主会话；子代理会话保持各自的提示（与 Claude Code 一致）。
 
 ## ⚙️ 配置
 
-全部可调参数进 `Config`（Schemastery schema，加载期校验，非法值响亮失败），改 `cordis.yml` 即可、无需改代码：
+所有可调项都是带校验的 Schemastery `Config` 字段（非法值加载即失败）：
 
 | 字段 | 默认 | 含义 |
 |---|---|---|
-| `stylesDir` | `''` | 风格库目录；`''` = 包内 `styles/`，其他值相对进程 cwd 解析。 |
-| `maxStyleChars` | `4000` | 风格正文预算（字符数，≥1）；超预算在截断处追加标记。 |
-| `defaultStyle` | `''` | 从未选择过风格的会话回退到的风格；`''` = 新会话默认不注入。 |
-| `compatJson` | `true` | 是否加载 Claude Code `outputStyles` JSON 收藏格式。 |
-| `sectionOrder` | `90` | 注入段顺序（0 为 persona，100–199 为工具指引）。 |
-| `truncationMarker` | `"\n\n[style truncated]"` | 截断标记文本。 |
+| `stylesDir` | `[]` | 风格库目录列表，相对 cwd 解析；后者覆盖前者。`[]` = 仅内置 `styles/`。裸字符串视为单目录列表。 |
+| `maxStyleChars` | `4000` | 风格正文预算（码点，≥ 1）；超长正文截断并加标记。 |
+| `defaultStyle` | `''` | 从未选择过的会话（且无 settings 默认）使用的风格；`''` = 不注入。 |
+| `compatJson` | `true` | 加载 Claude Code `outputStyles` JSON 条目（单对象或数组）。 |
+| `sectionOrder` | `90` | 注入节顺序（0 = persona，100–199 = 工具指引）。 |
+| `truncationMarker` | `"\n\n[style truncated]"` | 截断点追加的标记。 |
+| `includeBuiltins` | `true` | 将包内置 `styles/` 作为最低优先级层纳入。 |
+| `watchStyles` | `true` | 风格文件在磁盘上变化时重载风格库。 |
 
-`defaultStyle` 指向库中不存在的名字、风格重名、或某风格名为保留字 `off`，均加载期抛错（歧义必须响亮失败）。
-
-## 📚 风格库格式
+## 📚 风格库
 
 <details>
 <summary><code>styles/concise.md</code></summary>
@@ -104,15 +116,25 @@ flowchart LR
 name: concise
 description: Terse, direct answers — minimal prose, no preamble.
 whenToUse: Daily coding work, tool-heavy sessions, or when prompt length matters.
+keep-coding-instructions: true
 ---
 
 You are in the concise output style for this conversation.
 - Lead with the direct answer; skip preamble, restatements, and filler.
 - 回答语言跟随用户语言：中文提问用中文回答，英文提问用英文回答。
-- End when the task is done; do not add closing summaries unless asked.
 ```
 
 </details>
+
+frontmatter 字段：
+
+| 字段 | 默认 | 含义 |
+|---|---|---|
+| `name` | 文件名 | 切换目标；字母、数字、空格、连字符（首尾无空白；`off` 为保留字）。 |
+| `description` | ——（必填） | 列表与选择器里展示的一句话。 |
+| `whenToUse` | —— | 可选适用场景说明，追加到列表。 |
+| `keep-coding-instructions` | `false` | `true` 保留宿主提示（身份、persona、工具指引）；`false` 整体替换（Claude Code 语义）。 |
+| `force` | `false` | 无条件生效，覆盖会话选择；最多一个风格可设置。 |
 
 <details>
 <summary>Claude Code <code>outputStyles</code> JSON（<code>compatJson: true</code>）</summary>
@@ -121,7 +143,7 @@ You are in the concise output style for this conversation.
 { "name": "explain", "description": "Explain like a teacher.", "prompt": "Teach in small steps." }
 ```
 
-`name` 必须 kebab-case（`^[a-z][a-z0-9-]*$`）；`off` 为保留切换目标。
+旧版 `settings.json` 的数组形式（`[{ … }, { … }]`）原样加载；坏条目逐个跳过并警告。
 
 </details>
 
@@ -129,36 +151,44 @@ You are in the concise output style for this conversation.
 
 | 输入 | 结果 |
 |---|---|
-| `/style` | 列出可用风格与当前选择 |
-| `/style concise` | 切换（写域记录），`switched to concise` |
-| `/style off` | 删除选择，恢复默认 |
+| `/style` | 列出当前选择 + 每风格一行（名称 — 描述） |
+| `/style concise` | 切换（持久写入），`switched to concise` |
+| `/style Diagrams first` | 含空格的风格名 = `/style` 后的整段文本 |
+| `/style off` | 恢复项目默认（先 settings 默认，后 `defaultStyle`） |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
 
-## 🔍 冲突排查结论（2026-08 快照）
+## 🖱️ Web 选择器
 
-- **GitHub `topic:dsh-plugin`**：无 `dsh-output-styles` 同名仓库；最接近的是 [dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md)（persona 注入）与 [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace)（明确把 output styles 列为 v0.2+ 未支持项）—— 相邻能力，不冲突。
-- **awesome 列表**：[awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 等四大列表均无 output-style 类目。
-- **dsh-hub catalog**：[dsh-hub-workshop](https://github.com/omdsh-dev/dsh-hub-workshop) 的 `catalog.json`（189 条目）无 `style`/`output-style` 条目；本插件若收录应归 `kind: extension`。
+`dsh.client` 入口把宿主 `/style` 命令的裸调用装饰成弹窗选择器：「off」行 + 每风格一行（`描述 · 适用场景`），当前行高亮。选中即通过命令 Remote 提交 `/style <name>`，因此每次切换都保留宿主的持久命令生命周期，`style` 投影始终是唯一展示事实。
 
-## 🧠 模型可见 ⟺ 已记录
+## 🔍 生态冲突检查
 
-注入的风格正文是模型可见内容。本插件**不新增会话事件类型**：`command/run`（`name: 'style'` + 原文 `args`）记录切换意图，`request/header` 在派发前记录完整渲染后的系统提示词（含风格标题与正文），`output_style` 域记录携带 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 来源标记。为何不按 `SessionEventMap` 扩展规范新增事件：仓库外插件的事件类型不在 `KNOWN_SESSION_EVENT_TYPES` 内，且 `Session.append` 不暴露 `ignorable` 信封字段 —— 落盘后宿主恢复会话时会拒绝读取自己的日志，复用已有日志记录是仓库外插件唯一自洽的路径。
+开发前对 DSH 生态做了筛查（2026-08 快照）：[topic:dsh-plugin](https://github.com/topics/dsh-plugin) 下没有 `style`/`output-style` 仓库，四大 [awesome 列表](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 没有 output-style 分类，[dsh-hub 目录](https://github.com/omdsh-dev/dsh-hub-workshop) 亦无条目。最接近的邻居——[dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md)（persona）与 [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace)（明确将输出风格推迟到 v0.2+）——相邻而不冲突。
+
+## 🆚 与 Claude Code 的差异
+
+| | Claude Code | dsh-output-styles |
+|---|---|---|
+| 风格文件 | 用户/项目/托管层级的 `.claude/output-styles` | `stylesDir` 目录 + 内置 `styles/`，后目录胜出 |
+| 自定义风格 | Markdown，frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 同字段（`force` 对应 `force-for-plugin`）+ `whenToUse` |
+| 旧版 JSON | `settings.json` 里的 `outputStyles` 数组 | 原样加载（`compatJson: true`） |
+| 生效时机 | `/clear` 或新会话后 | 立即生效——系统提示每次请求重组 |
+| 子代理 | 风格不适用 | 一致——子代理会话保持各自提示 |
+| 切换方式 | `/config` 菜单或 `outputStyle` 设置（`/output-style` 命令已在 v2.1.91 移除） | `/style` 命令 + Web 选择器 + settings `output-style.style` |
 
 ## 🧪 开发
 
 ```sh
 pnpm install
-pnpm run typecheck   # 两个 tsc 项目
-pnpm test            # vitest — 53 用例
-pnpm run build       # lib/ 产物
-pnpm pack            # tarball，dsh plugin add 直接装
+pnpm run typecheck   # 两个 tsc 工程
+pnpm test            # vitest —— 87 个测试
+pnpm run build       # lib/ 产物（宿主 + 客户端两个 bundle）
+pnpm pack            # 供 dsh plugin add 使用的 tarball
 ```
 
-结构按 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)：`src/index.ts`（插件元数据）、`src/config.ts`（schema）、`src/runtime.ts`（运行时服务与激活）、`src/invariant.ts`（不变量）、`styles/`（内置风格）。
+结构遵循 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)：`src/index.ts`（插件元数据）、`src/config.ts`（schema）、`src/runtime.ts`（运行时服务与激活）、`src/invariant.ts`（不变量）、`src/client/`（Web 选择器）、`styles/`（内置风格）。
 
-单元测试覆盖：风格解析（md/json、坏文件跳过、重名/保留字抛错）、命令分派（无参/切换/off/未知名/多 token）、截断与预算、会话隔离、HMR 配置热更新（fiber 释放后重挂载无残留、持久化选择保留、storageDomain 缺失时待激活并在服务出现后自动激活）、投影折叠与 checkpoint 往返、不变量检查。验证实录见 [docs/VERIFICATION.zh.md](docs/VERIFICATION.zh.md)。
-
-## 📄 许可
+## 📄 License
 
 [Apache-2.0](LICENSE) © 2026 dsh-output-styles contributors
 

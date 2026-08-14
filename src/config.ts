@@ -14,17 +14,22 @@ import { resolve } from 'node:path'
 /** Plugin configuration supplied by the profile composition. */
 export interface Config {
   /**
-   * Directory holding the style library (`*.md`, and with {@link Config.compatJson}
-   * also `*.json`). The empty string selects the package's bundled `styles/`
-   * directory; any other value resolves against the process working directory.
+   * Directories holding the style library (`*.md`, and with {@link Config.compatJson}
+   * also `*.json`). Each entry resolves against the process working directory.
+   * Later directories override earlier ones on a same-named style; the bundled
+   * `styles/` directory participates as the lowest-priority entry unless
+   * {@link Config.includeBuiltins} is false. An empty list means the bundled
+   * library only (or none, with `includeBuiltins: false`). A bare string is
+   * accepted as a single-directory list.
    */
-  stylesDir?: string
+  stylesDir?: string | string[]
   /** Style-body budget in characters; longer bodies are truncated at the budget with a marker. */
   maxStyleChars?: number
   /**
-   * Style injected into sessions that never selected one. The empty string
-   * (default) means new sessions get no style — the session's own selection,
-   * made through `/style`, is always what wins for a session that has one.
+   * Style injected into sessions that never selected one (and no project
+   * settings default exists). The empty string (default) means new sessions
+   * get no style — the session's own selection, made through `/style`, is
+   * always what wins for a session that has one.
    */
   defaultStyle?: string
   /** Load Claude Code `outputStyles` JSON entries (`{ name, description, prompt }`) beside Markdown styles. */
@@ -33,12 +38,16 @@ export interface Config {
   sectionOrder?: number
   /** Marker appended at the truncation point when a style body exceeds {@link Config.maxStyleChars}. */
   truncationMarker?: string
+  /** Include the package's bundled `styles/` directory in the library. */
+  includeBuiltins?: boolean
+  /** Reload the library when a style file changes on disk (default true). */
+  watchStyles?: boolean
 }
 
 /** Configuration after defaults have been resolved. */
 export interface ResolvedConfig {
-  /** Absolute directory holding the style library. */
-  stylesDir: string
+  /** Absolute style-library directories, lowest priority first (bundled styles first when included). */
+  stylesDirs: string[]
   /** Style-body budget in characters; at least 1. */
   maxStyleChars: number
   /** Style injected into sessions that never selected one; `''` means none. */
@@ -49,16 +58,22 @@ export interface ResolvedConfig {
   sectionOrder: number
   /** Marker appended at the truncation point. */
   truncationMarker: string
+  /** Whether the bundled `styles/` directory participates. */
+  includeBuiltins: boolean
+  /** Whether the library reloads on style-file changes. */
+  watchStyles: boolean
 }
 
 /** Loader-visible configuration schema and defaults. */
 export const Config: z<Config> = z.object({
-  stylesDir: z.string().default(''),
+  stylesDir: z.union([z.string(), z.array(z.string())]).default([]),
   maxStyleChars: z.number().min(1).default(4000),
   defaultStyle: z.string().default(''),
   compatJson: z.boolean().default(true),
   sectionOrder: z.number().default(90),
   truncationMarker: z.string().default('\n\n[style truncated]'),
+  includeBuiltins: z.boolean().default(true),
+  watchStyles: z.boolean().default(true),
 })
 
 /**
@@ -66,7 +81,7 @@ export const Config: z<Config> = z.object({
  * and fail loud on values the schema cannot express (a non-finite section
  * order).
  * @param config - Partial serialized configuration.
- * @param defaultStylesDir - Absolute directory used when `stylesDir` is empty.
+ * @param defaultStylesDir - Absolute bundled directory used when built-ins are included.
  * @returns Configuration with every default applied.
  */
 export function resolveConfig(config: Config, defaultStylesDir: string): ResolvedConfig {
@@ -78,15 +93,18 @@ export function resolveConfig(config: Config, defaultStylesDir: string): Resolve
   if (!Number.isFinite(sectionOrder)) {
     throw new Error(`dsh-output-styles: sectionOrder must be a finite number, got ${String(config.sectionOrder)}`)
   }
-  const stylesDir = config.stylesDir === undefined || config.stylesDir === ''
-    ? defaultStylesDir
-    : resolve(config.stylesDir)
+  const includeBuiltins = config.includeBuiltins ?? true
+  const rawDirs = Array.isArray(config.stylesDir) ? config.stylesDir : config.stylesDir === undefined || config.stylesDir === '' ? [] : [config.stylesDir]
+  const customDirs = rawDirs.map(dir => resolve(dir))
+  const stylesDirs = includeBuiltins ? [defaultStylesDir, ...customDirs] : customDirs
   return {
-    stylesDir,
+    stylesDirs,
     maxStyleChars,
     defaultStyle: config.defaultStyle ?? '',
     compatJson: config.compatJson ?? true,
     sectionOrder,
     truncationMarker: config.truncationMarker ?? '\n\n[style truncated]',
+    includeBuiltins,
+    watchStyles: config.watchStyles ?? true,
   }
 }

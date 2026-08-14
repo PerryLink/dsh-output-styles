@@ -30,6 +30,7 @@ export {
 } from './style-command.ts'
 export type { StyleFoldState, StyleInput } from './style-command.ts'
 export {
+  isValidStyleName,
   loadStyleLibrary,
   STYLE_NAME_RE,
   truncateStyle,

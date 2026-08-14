@@ -1,11 +1,12 @@
 /**
  * Style-library loading: one style per `*.md` file (frontmatter + body),
- * with optional Claude Code `outputStyles` JSON compatibility.
+ * with optional Claude Code `outputStyles` JSON compatibility (single entry
+ * or an array of entries per file).
  *
  * A style file that does not parse is skipped with a warning; the plugin
- * stays loadable. Structural ambiguity — a duplicate style name or a style
- * named `off` — fails the load because it would silently change which body
- * gets injected.
+ * stays loadable. Structural ambiguity — a duplicate style name, a style
+ * named `off`, or two styles declaring `force` — fails the load because it
+ * would silently change which body gets injected.
  * @module dsh-output-styles/style-library
  */
 
@@ -15,12 +16,27 @@ import { join } from 'node:path'
 import { parse as parseYaml } from 'yaml'
 import { OFF } from './types.ts'
 
-/** Legal style names: kebab-case, exactly what `/style <name>` accepts. */
-export const STYLE_NAME_RE = /^[a-z][a-z0-9-]*$/
+/** Character set for style names: letters, digits, spaces, and hyphens only. */
+export const STYLE_NAME_RE = /^[\p{L}\p{N} -]+$/u
+
+/**
+ * Whether a name is a legal style name and switch target: at least one
+ * letter or digit, only letters/digits/spaces/hyphens, and no leading or
+ * trailing space. Spaces are the only whitespace allowed, so a name is
+ * always a single switchable line the model can echo back. `off` passes this
+ * check but is a reserved target rejected by the library.
+ * @param name - candidate style name.
+ * @returns whether the name is legal.
+ */
+export function isValidStyleName(name: string): boolean {
+  if (name === '' || name !== name.trim()) return false
+  if (!STYLE_NAME_RE.test(name)) return false
+  return /[\p{L}\p{N}]/u.test(name)
+}
 
 /** One loaded style: library metadata plus the raw injectable body. */
 export interface OutputStyle {
-  /** Kebab-case switch target accepted by `/style`. */
+  /** Switch target accepted by `/style`; letters, digits, spaces, and hyphens. */
   readonly name: string
   /** One user-facing sentence on what the style does. */
   readonly description: string
@@ -32,23 +48,55 @@ export interface OutputStyle {
   readonly file: string
   /** Source format (`md` frontmatter or `json` compatibility entry). */
   readonly format: 'md' | 'json'
+  /**
+   * Keep the harness prompt (identity, persona, tool guidance) when this
+   * style is active (Claude Code `keep-coding-instructions`). When false,
+   * the style replaces the whole system prompt; default false, matching
+   * Claude Code.
+   */
+  readonly keepCodingInstructions: boolean
+  /** Apply this style unconditionally, overriding any session selection. */
+  readonly force: boolean
 }
 
 /** Report a style file the loader skipped or a tolerated oddity. */
 type Warn = (message: string) => void
 
 /**
- * Load every style in one directory. Deterministic order (file names sorted
- * by code unit); `.md` files are parsed as frontmatter styles, `.json` files
- * as Claude Code `outputStyles` entries when enabled.
- * @param stylesDir - absolute directory to read.
+ * Load the style library from one or more directories. Later directories
+ * override earlier ones on a same-named style (the Claude Code
+ * "closest-to-the-working-directory wins" rule); duplicates within one
+ * directory still fail the load. Deterministic order: directories in the
+ * given order, files within a directory sorted by code unit.
+ * @param stylesDirs - absolute directories, lowest priority first.
  * @param options.compatJson - whether `*.json` entries are loaded.
  * @param warn - warning sink (skipped files, unknown frontmatter keys).
- * @returns the library keyed by style name, in file order.
- * @throws when the directory is unreadable, a style is named `off`, or two
- *   files declare the same name.
+ * @returns the library keyed by style name, in directory/file order.
+ * @throws when a directory is unreadable, a style is named `off`, two files
+ *   in one directory declare the same name, or two styles declare `force`.
  */
 export function loadStyleLibrary(
+  stylesDirs: readonly string[],
+  options: { readonly compatJson: boolean },
+  warn: Warn,
+): ReadonlyMap<string, OutputStyle> {
+  const styles = new Map<string, OutputStyle>()
+  for (const dir of stylesDirs) {
+    for (const [name, style] of loadStyleDir(dir, options, warn)) {
+      styles.set(name, style) // a later directory overrides an earlier one
+    }
+  }
+  const forced = [...styles.values()].filter(style => style.force)
+  if (forced.length > 1) {
+    throw new Error(
+      `dsh-output-styles: styles ${forced.map(style => style.file).join(' and ')} both declare force; at most one style may be forced`,
+    )
+  }
+  return styles
+}
+
+/** Load every style in one directory (duplicates within it fail the load). */
+function loadStyleDir(
   stylesDir: string,
   options: { readonly compatJson: boolean },
   warn: Warn,
@@ -61,31 +109,35 @@ export function loadStyleLibrary(
   }
   entries.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
   const styles = new Map<string, OutputStyle>()
+  const addStyle = (style: OutputStyle): void => {
+    if (style.name === OFF) {
+      throw new Error(`dsh-output-styles: style ${style.file} is named "${OFF}", which is reserved for switching output styles off`)
+    }
+    if (styles.has(style.name)) {
+      throw new Error(`dsh-output-styles: duplicate style name "${style.name}" (${styles.get(style.name)?.file} and ${style.file})`)
+    }
+    styles.set(style.name, style)
+  }
   for (const entry of entries) {
     if (!entry.isFile()) continue
     const file = entry.name
-    let parsed: { style?: OutputStyle; problem?: string; oddity?: string }
     if (file.endsWith('.md')) {
-      parsed = parseMarkdownStyle(file, readStyleFile(stylesDir, file, warn))
-    } else if (options.compatJson && file.endsWith('.json')) {
-      parsed = parseJsonStyle(file, readStyleFile(stylesDir, file, warn))
-    } else {
-      continue
+      const parsed = parseMarkdownStyle(file, readStyleFile(stylesDir, file, warn))
+      if (parsed.oddity !== undefined) warn(parsed.oddity)
+      if (parsed.problem !== undefined) {
+        warn(`skipping ${file}: ${parsed.problem}`)
+        continue
+      }
+      if (parsed.style !== undefined) addStyle(parsed.style)
+    } else if (file.endsWith('.json')) {
+      if (!options.compatJson) {
+        warn(`ignoring ${file}: JSON style loading is disabled (compatJson: false)`)
+        continue
+      }
+      for (const style of parseJsonFile(file, readStyleFile(stylesDir, file, warn), warn)) {
+        addStyle(style)
+      }
     }
-    if (parsed.oddity !== undefined) warn(parsed.oddity)
-    if (parsed.problem !== undefined) {
-      warn(`skipping ${file}: ${parsed.problem}`)
-      continue
-    }
-    const style = parsed.style
-    if (style === undefined) continue
-    if (style.name === OFF) {
-      throw new Error(`dsh-output-styles: style ${file} is named "${OFF}", which is reserved for switching output styles off`)
-    }
-    if (styles.has(style.name)) {
-      throw new Error(`dsh-output-styles: duplicate style name "${style.name}" (${styles.get(style.name)?.file} and ${file})`)
-    }
-    styles.set(style.name, style)
   }
   return styles
 }
@@ -116,6 +168,9 @@ function parseMarkdownStyle(file: string, source: string | undefined): { style?:
   const body = source.slice(bodyStart).trim()
   const parsed = parseFrontmatter(file, frontmatter)
   if (parsed.problem !== undefined) return { problem: parsed.problem }
+  if (body === '') {
+    return { problem: 'style body must be non-empty' }
+  }
   const fields = parsed.fields
   if (fields === undefined) return {}
   const style = {
@@ -125,6 +180,8 @@ function parseMarkdownStyle(file: string, source: string | undefined): { style?:
     body,
     file,
     format: 'md' as const,
+    keepCodingInstructions: fields.keepCodingInstructions,
+    force: fields.force,
   }
   return parsed.oddity === undefined ? { style } : { style, oddity: parsed.oddity }
 }
@@ -134,12 +191,28 @@ interface StyleFields {
   name: string
   description: string
   whenToUse?: string
+  keepCodingInstructions: boolean
+  force: boolean
 }
 
 /** Attach a present oddity without an explicit-undefined optional key. */
 function withOddity<T extends object>(value: T, oddity: string | undefined): T | (T & { oddity: string }) {
   return oddity === undefined ? value : { ...value, oddity }
 }
+
+/** The file name a `name`-less style inherits: the file name without its extension. */
+function defaultStyleName(file: string): string {
+  return file.slice(0, file.length - '.md'.length)
+}
+
+/** Keys both frontmatter formats accept, plus the booleans they share. */
+const FRONTMATTER_KEYS = new Set([
+  'name',
+  'description',
+  'whenToUse',
+  'keep-coding-instructions',
+  'force',
+])
 
 /** Validate one frontmatter block into {@link StyleFields}. */
 function parseFrontmatter(file: string, frontmatter: string): { fields?: StyleFields; problem?: string; oddity?: string } {
@@ -153,11 +226,12 @@ function parseFrontmatter(file: string, frontmatter: string): { fields?: StyleFi
     return { problem: 'frontmatter must be a mapping of scalar fields' }
   }
   const record = raw as Record<string, unknown>
-  const oddityKeys = Object.keys(record).filter(key => key !== 'name' && key !== 'description' && key !== 'whenToUse')
+  const oddityKeys = Object.keys(record).filter(key => !FRONTMATTER_KEYS.has(key))
   const oddity = oddityKeys.length > 0 ? `${file}: ignoring unknown frontmatter field${oddityKeys.length > 1 ? 's' : ''} ${oddityKeys.join(', ')}` : undefined
   const { name, description, whenToUse } = record
-  if (typeof name !== 'string' || !STYLE_NAME_RE.test(name)) {
-    return withOddity({ problem: `frontmatter name must be a kebab-case string matching ${String(STYLE_NAME_RE)}` }, oddity)
+  const effectiveName = name === undefined ? defaultStyleName(file) : name
+  if (typeof effectiveName !== 'string' || !isValidStyleName(effectiveName)) {
+    return withOddity({ problem: 'frontmatter name must be letters, digits, spaces, or hyphens, with at least one letter or digit and no leading/trailing space' }, oddity)
   }
   if (typeof description !== 'string' || description.trim() === '') {
     return withOddity({ problem: 'frontmatter description must be a non-empty string' }, oddity)
@@ -165,31 +239,70 @@ function parseFrontmatter(file: string, frontmatter: string): { fields?: StyleFi
   if (whenToUse !== undefined && typeof whenToUse !== 'string') {
     return withOddity({ problem: 'frontmatter whenToUse must be a string when present' }, oddity)
   }
+  const booleans = booleanFields(record, 'frontmatter')
+  if (booleans.problem !== undefined) return withOddity({ problem: booleans.problem }, oddity)
   return withOddity({
     fields: {
-      name,
+      name: effectiveName,
       description: description.trim(),
       ...whenToUse === undefined ? {} : { whenToUse: whenToUse.trim() },
+      keepCodingInstructions: booleans.keepCodingInstructions,
+      force: booleans.force,
     },
   }, oddity)
 }
 
-/** Parse a Claude Code `outputStyles` JSON entry. */
-function parseJsonStyle(file: string, source: string | undefined): { style?: OutputStyle; problem?: string; oddity?: string } {
-  if (source === undefined) return {}
+/** Read the two shared boolean flags, defaulting each to false. */
+function booleanFields(record: Record<string, unknown>, source: string): { keepCodingInstructions: boolean; force: boolean; problem?: string } {
+  const keep = record['keep-coding-instructions']
+  if (keep !== undefined && typeof keep !== 'boolean') {
+    return { keepCodingInstructions: false, force: false, problem: `${source} keep-coding-instructions must be a boolean when present` }
+  }
+  const force = record['force']
+  if (force !== undefined && typeof force !== 'boolean') {
+    return { keepCodingInstructions: false, force: false, problem: `${source} force must be a boolean when present` }
+  }
+  return { keepCodingInstructions: keep ?? false, force: force ?? false }
+}
+
+/**
+ * Parse a Claude Code `outputStyles` JSON file: one entry or an array of
+ * entries (the legacy `settings.json` collection form). Bad entries are
+ * skipped with one warning each; a bad file skips the whole file.
+ */
+function parseJsonFile(file: string, source: string | undefined, warn: Warn): OutputStyle[] {
+  if (source === undefined) return []
   let raw: unknown
   try {
     raw = JSON.parse(source)
   } catch (cause) {
-    return { problem: `invalid JSON (${cause instanceof Error ? cause.message : String(cause)})` }
+    warn(`skipping ${file}: invalid JSON (${cause instanceof Error ? cause.message : String(cause)})`)
+    return []
   }
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+  const records = Array.isArray(raw) ? raw : [raw]
+  const styles: OutputStyle[] = []
+  for (const [index, record] of records.entries()) {
+    const label = Array.isArray(raw) ? `${file}#${index + 1}` : file
+    const entry = parseJsonEntry(label, record)
+    if (entry.oddity !== undefined) warn(entry.oddity)
+    if (entry.problem !== undefined) {
+      warn(`skipping ${label}: ${entry.problem}`)
+      continue
+    }
+    if (entry.style !== undefined) styles.push(entry.style)
+  }
+  return styles
+}
+
+/** Parse one Claude Code `outputStyles` JSON entry. */
+function parseJsonEntry(label: string, record: unknown): { style?: OutputStyle; problem?: string; oddity?: string } {
+  if (record === null || typeof record !== 'object' || Array.isArray(record)) {
     return { problem: 'must be a JSON object' }
   }
-  const record = raw as Record<string, unknown>
-  const { name, description, prompt } = record
-  if (typeof name !== 'string' || !STYLE_NAME_RE.test(name)) {
-    return { problem: `name must be a kebab-case string matching ${String(STYLE_NAME_RE)}` }
+  const raw = record as Record<string, unknown>
+  const { name, description, prompt, whenToUse } = raw
+  if (typeof name !== 'string' || !isValidStyleName(name)) {
+    return { problem: 'name must be letters, digits, spaces, or hyphens, with at least one letter or digit and no leading/trailing space' }
   }
   if (typeof description !== 'string' || description.trim() === '') {
     return { problem: 'description must be a non-empty string' }
@@ -197,34 +310,39 @@ function parseJsonStyle(file: string, source: string | undefined): { style?: Out
   if (typeof prompt !== 'string' || prompt.trim() === '') {
     return { problem: 'prompt must be a non-empty string' }
   }
-  const oddityKeys = Object.keys(record).filter(key => key !== 'name' && key !== 'description' && key !== 'prompt' && key !== 'whenToUse')
-  const oddity = oddityKeys.length > 0 ? `${file}: ignoring unknown JSON field${oddityKeys.length > 1 ? 's' : ''} ${oddityKeys.join(', ')}` : undefined
-  const whenToUse = record['whenToUse']
+  const oddityKeys = Object.keys(raw).filter(key => !FRONTMATTER_KEYS.has(key) && key !== 'prompt')
+  const oddity = oddityKeys.length > 0 ? `${label}: ignoring unknown JSON field${oddityKeys.length > 1 ? 's' : ''} ${oddityKeys.join(', ')}` : undefined
   if (whenToUse !== undefined && typeof whenToUse !== 'string') {
     return withOddity({ problem: 'whenToUse must be a string when present' }, oddity)
   }
+  const booleans = booleanFields(raw, 'JSON')
+  if (booleans.problem !== undefined) return withOddity({ problem: booleans.problem }, oddity)
   return withOddity({
     style: {
       name,
       description: description.trim(),
       ...whenToUse === undefined ? {} : { whenToUse: whenToUse.trim() },
       body: prompt.trim(),
-      file,
+      file: label,
       format: 'json',
+      keepCodingInstructions: booleans.keepCodingInstructions,
+      force: booleans.force,
     },
   }, oddity)
 }
 
 /**
- * Apply the style-body budget: bodies at most `maxChars` characters pass
+ * Apply the style-body budget: bodies at most `maxChars` code points pass
  * through; longer bodies are cut at the budget and closed with `marker` (the
- * marker itself is not counted against the budget).
+ * marker itself is not counted against the budget). The cut is code-point
+ * safe, so a multi-unit emoji is never split in half.
  * @param body - the raw style body.
- * @param maxChars - budget in characters; at least 1.
+ * @param maxChars - budget in code points; at least 1.
  * @param marker - text appended at the truncation point.
  * @returns the body as it will be injected.
  */
 export function truncateStyle(body: string, maxChars: number, marker: string): string {
-  if (body.length <= maxChars) return body
-  return body.slice(0, maxChars) + marker
+  const chars = Array.from(body)
+  if (chars.length <= maxChars) return body
+  return chars.slice(0, maxChars).join('') + marker
 }

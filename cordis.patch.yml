@@ -1,25 +1,40 @@
-# Sample patch rows for `dsh-output-styles`. When installed through
-# `dsh plugin --profile <name> add dsh-output-styles`, the CLI writes an
-# equivalent insert row into the profile's own cordis.patch.yml — apply this
-# file only when composing by hand (for example as a `--patch` overlay).
+# Patch layer for `dsh-output-styles`, declared by the package's
+# `dsh.bundle.patch` manifest and also usable by hand with `--patch`.
 #
-# The plugin needs a kv storage backend routed for the `output_style` domain:
-# the web profile composes `storage` + `storage-json` + `storage-domain` in
-# box. For a headless profile, add those three rows before this one.
-
+# Inserting rows by id replaces any same-id row already in the profile, so
+# the layer is safe on top of a web profile (which composes storage in box)
+# and completes a bare headless profile.
+#
+# The plugin injects `storageDomain`; a headless profile has none of the
+# storage rows, so the layer brings the routed kv backend along.
 - insert:
+    - id: storage
+      name: '@deepseek-ai/dsh-storage'
+    - id: storage-json
+      name: '@deepseek-ai/dsh-storage-json'
+    - id: storage-domain
+      name: '@deepseek-ai/dsh-storage-domain'
     - id: output-styles
       name: 'dsh-output-styles'
       # config:                     # schema defaults shown for reference
-      #   stylesDir: ''             # '' = the package's bundled styles/ directory
+      #   stylesDir: []             # [] = bundled styles/ only (lowest priority)
       #   maxStyleChars: 4000
       #   defaultStyle: ''          # '' = new sessions get no style
       #   compatJson: true
       #   sectionOrder: 90
       #   truncationMarker: "\n\n[style truncated]"
+      #   includeBuiltins: true
+      #   watchStyles: true
 
-    # Optional invariant companion (envelope-level checks; the main plugin
-    # already registers library-aware checks when an `invariants` service is
-    # composed, so this row is only for profiles that disable the main row).
-    - id: output-styles-invariant
-      name: 'dsh-output-styles/invariant'
+    # Optional invariant companion (envelope-level checks). Only for profiles
+    # that DISABLE the main row above: the main plugin already registers
+    # library-aware checks when an `invariants` service is composed, and the
+    # host registry accepts one registrant per package name.
+    # - id: output-styles-invariant
+    #   name: 'dsh-output-styles/invariant'
+
+    # Optional Web picker (browser half). Only for web profiles whose client
+    # bundle composes the client runtime services; headless profiles must not
+    # enable this row.
+    # - id: output-styles-client
+    #   name: 'dsh-output-styles/client'

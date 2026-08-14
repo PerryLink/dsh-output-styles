@@ -13,7 +13,33 @@ import StorageService from '@deepseek-ai/dsh-storage'
 import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SettingsProvider from '@deepseek-ai/dsh-settings'
+import type { SettingsNamespace, SettingsRegisterOptions, SettingsScope } from '@deepseek-ai/dsh-settings'
+import type z from '@deepseek-ai/schemastery'
 import * as outputStyles from '../src/index.ts'
+
+/**
+ * Minimal in-memory settings provider for tests. It records the last
+ * registered namespace scope so a test can drive the user-settings layer of
+ * the plugin's own `output-style` namespace.
+ */
+export class FakeSettings extends SettingsProvider {
+  readonly writable = true
+  /** The most recent namespace scope registered — the plugin's `output-style` namespace. */
+  lastScope?: SettingsScope<{ style: string }>
+  private readonly doc: Record<string, unknown> = {}
+  protected async load(): Promise<Record<string, unknown>> {
+    return this.doc
+  }
+  protected async persist(ns: SettingsNamespace, section: Record<string, unknown>): Promise<void> {
+    this.doc[ns] = section
+  }
+  override register<T>(ns: SettingsNamespace, schema: z<T>, options?: SettingsRegisterOptions<T>): SettingsScope<T> {
+    const scope = super.register(ns, schema, options)
+    this.lastScope = scope as unknown as SettingsScope<{ style: string }>
+    return scope
+  }
+}
 
 /** One composed test application: host services from the published rc.6 packages plus this plugin. */
 export interface StyleHarness {
@@ -21,12 +47,16 @@ export interface StyleHarness {
   /** The plugin's own fiber; disposing it simulates a config hot-reload. */
   pluginFiber: Fiber
   storageRoot: string
+  /** The composed settings provider, when `options.settings` was requested. */
+  settings?: FakeSettings
   makeSession(id?: string): Session
   agentFor(session: Session): Agent
   /** Execute one `/style` line against a session through the real command registry. */
   runStyle(session: Session, line: string): Promise<CommandExecution | undefined>
   /** Assemble the system prompt for a session and return this plugin's section text. */
   sectionText(session: Session): Promise<string>
+  /** Assemble the system prompt for a session and return the assembled section list. */
+  sections(session: Session): Promise<{ name: string; text: string }[]>
   /** Dispose the plugin fiber and clean the storage root. */
   dispose(): Promise<void>
 }
@@ -36,11 +66,13 @@ export interface StyleHarness {
  * a temporary json storage root.
  * @param config - plugin configuration (defaults for omitted fields).
  * @param stylesDir - style library directory; the package default when omitted.
+ * @param options.settings - also compose the in-memory settings provider.
  * @returns the live harness.
  */
 export async function createStyleHarness(
   config: outputStyles.Config = {},
   stylesDir?: string,
+  options: { settings?: boolean } = {},
 ): Promise<StyleHarness> {
   const ctx = new Context()
   const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-output-styles-'))
@@ -51,6 +83,11 @@ export async function createStyleHarness(
   await ctx.plugin(storageJson, { root: storageRoot })
   await ctx.plugin(storageDomain, { backend: 'json' })
   await ctx.plugin(SessionProjectionRegistry)
+  let settings: FakeSettings | undefined
+  if (options.settings === true) {
+    await ctx.plugin(FakeSettings)
+    settings = ctx.get('settings') as FakeSettings
+  }
   const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config })
 
   const makeSession = (id?: string): Session => ctx.sessions.create(
@@ -63,15 +100,21 @@ export async function createStyleHarness(
     const assembly = await ctx.systemPrompt.assemble({ agent: agentFor(session) })
     return assembly.sections.find(section => section.name === outputStyles.STYLE_SECTION_NAME)?.text ?? ''
   }
+  const sections = async (session: Session): Promise<{ name: string; text: string }[]> => {
+    const assembly = await ctx.systemPrompt.assemble({ agent: agentFor(session) })
+    return assembly.sections.map(({ name, text }) => ({ name, text }))
+  }
 
   return {
     ctx,
     pluginFiber,
     storageRoot,
+    ...settings === undefined ? {} : { settings },
     makeSession,
     agentFor,
     runStyle,
     sectionText,
+    sections,
     async dispose(): Promise<void> {
       try {
         await pluginFiber.dispose()

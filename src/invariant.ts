@@ -6,7 +6,7 @@
  * is reported — via the host registry's `fail` — rather than vetoed):
  *
  * 1. Every `output_style`/`selection` durable write carries this plugin's own
- *    source marker and a kebab-case style name; when the library is known,
+ *    source marker and a legal style name; when the library is known,
  *    the name must be a library member.
  * 2. A successful `/style <name>` command has a matching selection record on
  *    its session by the time its `command/done` settles, and `/style off`
@@ -24,7 +24,7 @@ import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-commands'
 import type { DomainChanged } from '@deepseek-ai/dsh-storage-domain'
 import { parseStyleInput, STYLE_COMMAND } from './style-command.ts'
-import { STYLE_NAME_RE } from './style-library.ts'
+import { isValidStyleName } from './style-library.ts'
 import { OFF, STYLE_SOURCE } from './types.ts'
 
 /** Full npm package name owning the reported failures. */
@@ -78,7 +78,7 @@ export function installInvariant(facts: InvariantFacts): InvariantInstaller {
     ctx.on('domain/changed', (change: DomainChanged) => {
       if (change.domain !== 'output_style' || change.table !== 'selection' || change.operation !== 'put') return
       const value = change.value as { style?: unknown; source?: unknown }
-      if (typeof value.style !== 'string' || !STYLE_NAME_RE.test(value.style)) {
+      if (typeof value.style !== 'string' || !isValidStyleName(value.style)) {
         fail(`selection record names invalid style ${JSON.stringify(value.style)}`)
       }
       if (JSON.stringify(value.source) !== JSON.stringify(STYLE_SOURCE)) {
