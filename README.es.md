@@ -183,7 +183,7 @@ Se contrastó con el ecosistema DSH antes del desarrollo (instantánea 2026-08):
 ```sh
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
-pnpm test            # vitest — 92 pruebas
+pnpm test            # vitest — 93 pruebas
 pnpm run verify      # typecheck + pruebas + verificación autocontenida (puerta de prepublishOnly)
 pnpm run build       # artefactos lib/ (bundles de host + cliente)
 pnpm pack            # tarball para dsh plugin add

@@ -183,7 +183,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 92 tests
+pnpm test            # vitest — 93 tests
 pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add

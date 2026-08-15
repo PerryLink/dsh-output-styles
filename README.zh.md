@@ -183,7 +183,7 @@ frontmatter 字段：
 ```sh
 pnpm install
 pnpm run typecheck   # 两个 tsc 工程
-pnpm test            # vitest —— 92 个测试
+pnpm test            # vitest —— 93 个测试
 pnpm run verify      # typecheck + 测试 + 自包含检查（prepublishOnly 闸门）
 pnpm run build       # lib/ 产物（宿主 + 客户端两个 bundle）
 pnpm pack            # 供 dsh plugin add 使用的 tarball

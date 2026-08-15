@@ -183,7 +183,7 @@ frontmatter フィールド：
 ```sh
 pnpm install
 pnpm run typecheck   # 両方の tsc プロジェクト
-pnpm test            # vitest — 92 テスト
+pnpm test            # vitest — 93 テスト
 pnpm run verify      # typecheck + テスト + 自己完結チェック（prepublishOnly ゲート）
 pnpm run build       # lib/ 成果物（ホスト + クライアント bundle）
 pnpm pack            # dsh plugin add 用の tarball
