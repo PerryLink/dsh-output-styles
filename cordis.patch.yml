@@ -6,14 +6,20 @@
 # and completes a bare headless profile.
 #
 # The plugin injects `storageDomain`; a headless profile has none of the
-# storage rows, so the layer brings the routed kv backend along.
+# storage rows, so the layer brings the routed kv backend along, including
+# the config the rc.6 schemas require (root for storage-json, backend for
+# storage-domain) — without it the rows fail their config validation.
 - insert:
     - id: storage
       name: '@deepseek-ai/dsh-storage'
     - id: storage-json
       name: '@deepseek-ai/dsh-storage-json'
+      config:
+        root: !!js dshHomePath('storages')
     - id: storage-domain
       name: '@deepseek-ai/dsh-storage-domain'
+      config:
+        backend: json
     - id: output-styles
       name: 'dsh-output-styles'
       # config:                     # schema defaults shown for reference

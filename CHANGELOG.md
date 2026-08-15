@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-08-15
+
+### Fixed
+
+- **Bundle install on DSH 0.1.0-rc.6**: the bundle patch now configures the
+  storage rows it inserts (`storage-json` root, `storage-domain` backend),
+  fixing a load-time `invalid config` failure when installing into a
+  headless profile via `dsh plugin add`. Found and verified against a real
+  rc.6 profile boot.
+
+### Added
+
+- `package.json#dsh.client` declaration for the Web picker client half.
+- `package.json#dshWorkshop` (`omdsh-workshop-package/v1`) intake manifest
+  for the omdsh-dev/dsh-hub-workshop Registry.
+
 ## [0.3.1] - 2026-08-15
 
 ### Added
@@ -68,6 +84,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   persistence, `systemPrompt.section()` injection, four bundled styles
   (`concise`, `explanatory`, `formal`, `step-by-step`).
 
+[0.3.2]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.3.2
 [0.3.1]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.3.1
 [0.3.0]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.3.0
 [0.2.0]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.2.0

@@ -1,6 +1,6 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "sideEffects": false,
@@ -79,6 +79,57 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-ui-commands",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "dshWorkshop": {
+    "schema": "omdsh-workshop-package/v1",
+    "type": "plugin",
+    "integration": {
+      "protocol": "harness-profile",
+      "artifact": "cordis.patch.yml"
+    },
+    "install": {
+      "mode": "transactional",
+      "adapter": "harness-profile",
+      "failurePolicy": "generation-rollback",
+      "touchesCurrentBeforeActivation": false
+    },
+    "lifecycle": {
+      "activation": "hot-reload",
+      "dispose": "supported"
+    },
+    "permissions": [
+      "fs:read",
+      "fs:watch",
+      "storage:read",
+      "storage:write",
+      "settings:read"
+    ],
+    "compatibility": {
+      "dshVersions": [
+        "0.1.0-rc.6"
+      ]
+    },
+    "capability": {
+      "id": "style-command",
+      "kind": "command",
+      "invocation": "/style concise",
+      "expected": "the command replies 'switched to concise' and the next assembled system prompt contains the concise style body"
+    },
+    "evidence": {
+      "install": null,
+      "failureIsolation": null,
+      "hotReload": null,
+      "remove": null
     }
   },
   "dependencies": {
