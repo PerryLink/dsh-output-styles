@@ -190,7 +190,7 @@ export class OutputStyleRuntime {
    * @returns the error text listing every switchable name.
    */
   unknownStyleLine(name: string): string {
-    return `unknown output style "${name}" (available: ${this.names.join(', ')})`
+    return `unknown output style "${name}" (available: ${this.names.join(', ') || 'none'})`
   }
 
   /**

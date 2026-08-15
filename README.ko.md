@@ -184,9 +184,12 @@ frontmatter 필드:
 pnpm install
 pnpm run typecheck   # 두 tsc 프로젝트
 pnpm test            # vitest — 92 테스트
+pnpm run verify      # typecheck + 테스트 + 자체 포함 검사(prepublishOnly 게이트)
 pnpm run build       # lib/ 산출물(호스트 + 클라이언트 번들)
 pnpm pack            # dsh plugin add용 tarball
 ```
+
+릴리스: `package.json` 버전과 일치하는 접미사를 가진 `v*` 태그를 push하면 Publish 워크플로가 실행됩니다 — 전체 검증 후 npm 게시(provenance 포함). 모든 `npm publish`도 `prepublishOnly`를 통해 `verify` 게이트를 통과합니다.
 
 구조는 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)를 따릅니다: `src/index.ts`(플러그인 메타데이터), `src/config.ts`(스키마), `src/runtime.ts`(런타임 서비스 + 활성화), `src/invariant.ts`(불변식), `src/client/`(웹 피커), `styles/`(내장 스타일).
 

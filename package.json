@@ -1,16 +1,23 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "sideEffects": false,
   "packageManager": "pnpm@11.7.0",
   "license": "Apache-2.0",
+  "author": "PerryLink",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PerryLink/dsh-output-styles.git"
   },
   "homepage": "https://github.com/PerryLink/dsh-output-styles#readme",
+  "bugs": {
+    "url": "https://github.com/PerryLink/dsh-output-styles/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
   },
@@ -18,7 +25,9 @@
     "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.json --noEmitOnError --pretty false && tsdown && tsdown -c tsdown.client.config.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmitOnError --pretty false && tsc -p tsconfig.vitest.json --pretty false",
+    "verify": "pnpm run typecheck && pnpm test && pnpm run verify:self-contained",
     "verify:self-contained": "node scripts/verify-self-contained.mjs",
+    "prepublishOnly": "pnpm run verify",
     "prepare": "node scripts/prepare.mjs"
   },
   "main": "lib/index.js",

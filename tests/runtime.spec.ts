@@ -132,6 +132,17 @@ describe('/style command dispatch', () => {
     await harness.dispose()
   })
 
+  it('says "none" in the unknown-style error when the library is empty', async () => {
+    const harness = await createStyleHarness({ includeBuiltins: false })
+    const session = harness.makeSession()
+    const unknown = await harness.runStyle(session, '/style nope')
+    expect(unknown?.result).toEqual({
+      kind: 'error',
+      text: 'unknown output style "nope" (available: none)',
+    })
+    await harness.dispose()
+  })
+
   it('switches a style whose name contains spaces (whole remainder is the name)', async () => {
     const dir = makeStyleDir({
       'diagrams.md': [

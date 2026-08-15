@@ -184,9 +184,12 @@ Se contrastó con el ecosistema DSH antes del desarrollo (instantánea 2026-08):
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
 pnpm test            # vitest — 92 pruebas
+pnpm run verify      # typecheck + pruebas + verificación autocontenida (puerta de prepublishOnly)
 pnpm run build       # artefactos lib/ (bundles de host + cliente)
 pnpm pack            # tarball para dsh plugin add
 ```
+
+Lanzamientos: hacer push de una etiqueta `v*` cuyo sufijo coincida con la versión de `package.json` dispara el flujo Publish — verificación completa y publicación en npm (con provenance). Cualquier `npm publish` también pasa la puerta `verify` vía `prepublishOnly`.
 
 La estructura sigue [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template): `src/index.ts` (metadatos del plugin), `src/config.ts` (esquema), `src/runtime.ts` (servicio de runtime + activación), `src/invariant.ts` (invariantes), `src/client/` (selector web), `styles/` (estilos integrados).
 

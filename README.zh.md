@@ -184,9 +184,12 @@ frontmatter 字段：
 pnpm install
 pnpm run typecheck   # 两个 tsc 工程
 pnpm test            # vitest —— 92 个测试
+pnpm run verify      # typecheck + 测试 + 自包含检查（prepublishOnly 闸门）
 pnpm run build       # lib/ 产物（宿主 + 客户端两个 bundle）
 pnpm pack            # 供 dsh plugin add 使用的 tarball
 ```
+
+发布：推送后缀与 `package.json` 版本一致的 `v*` tag 会触发 Publish 工作流——完整验证后发布到 npm（含 provenance）。任何 `npm publish` 也会通过 `prepublishOnly` 执行 `verify` 闸门。
 
 结构遵循 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)：`src/index.ts`（插件元数据）、`src/config.ts`（schema）、`src/runtime.ts`（运行时服务与激活）、`src/invariant.ts`（不变量）、`src/client/`（Web 选择器）、`styles/`（内置风格）。
 

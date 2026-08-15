@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-08-15
+
+### Added
+
+- **Publish workflow** (`.github/workflows/publish.yml`): pushing a `v*` tag
+  whose suffix matches the `package.json` version runs the full verification
+  suite and publishes the tarball to npm with provenance, so a GitHub release
+  can never again leave npm behind.
+- **`prepublishOnly` verification gate**: every `npm publish` runs typecheck,
+  the full test suite, and the self-contained check before packing — a local
+  safety net outside CI.
+- Package metadata: `author`, `bugs`, and `publishConfig.access: public`.
+
+### Changed
+
+- `pnpm run verify` aggregates typecheck, tests, and the self-contained check.
+- The unknown-style error says `available: none` instead of a trailing empty
+  list when the library is empty.
+- The development sections of all five READMEs document the release flow.
+
 ## [0.3.0] - 2026-08-14
 
 ### Added
@@ -48,6 +68,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   persistence, `systemPrompt.section()` injection, four bundled styles
   (`concise`, `explanatory`, `formal`, `step-by-step`).
 
+[0.3.1]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.3.1
 [0.3.0]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.3.0
 [0.2.0]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.2.0
 [0.1.0]: https://github.com/PerryLink/dsh-output-styles/releases/tag/v0.1.0
