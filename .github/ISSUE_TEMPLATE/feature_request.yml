@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an improvement for dsh-output-styles
+title: '[Feature] '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决的问题 / Problem to solve
+      description: 描述当前使用中遇到的问题或限制，以及它影响哪些场景
+      placeholder: 例如：想在 /style 列表中标记出强制（force）风格……
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为 / Proposed behavior
+      description: 你期望的新行为或新能力
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 备选方案 / Alternatives（选填）
+      description: 你考虑过的其他做法及其不足
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 附加背景 / Additional context（选填）
+      description: 截图、相关链接或其他有助于说明的信息
+    validations:
+      required: false

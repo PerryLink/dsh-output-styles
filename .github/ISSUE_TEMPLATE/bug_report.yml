@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a bug in dsh-output-styles
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。提交前请确认问题在最新版本（npm 包 `dsh-output-styles`）仍可复现，并确保所有日志与样例已脱敏。
+  - type: input
+    id: package-version
+    attributes:
+      label: 包版本 / Package version
+      description: dsh-output-styles 的版本号（`npm list dsh-output-styles` 查看）
+      placeholder: '0.3.2'
+    validations:
+      required: true
+  - type: input
+    id: harness-version
+    attributes:
+      label: 运行时版本 / Harness version
+      description: DeepSeek Harness 的版本（`dsh --version` 查看）
+      placeholder: 0.1.0-rc.6
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS 与 Node 版本 / OS & Node
+      description: 操作系统与 Node 版本（`node --version` 查看）
+      placeholder: 'Windows 11 / Node 22.22.3'
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 最小可复现步骤（安装方式、profile 类型、`/style` 输入等）
+      placeholder: |
+        1. dsh plugin --profile web add dsh-output-styles
+        2. /style concise
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为 / Expected behavior
+      description: 你认为应该发生什么
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为 / Actual behavior
+      description: 实际发生了什么（含报错信息）
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs（选填）
+      description: |
+        **⚠️ 粘贴前必须脱敏：删除所有 token、密钥、Cookie、Authorization 请求头和个人路径，无法删除的部分用 `REDACTED` 占位。**
+        只贴与问题相关的行。
+      render: shell
+    validations:
+      required: false
