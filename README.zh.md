@@ -6,6 +6,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml/badge.svg)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
 [![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
 [![DSH](https://img.shields.io/badge/deepseek--harness-0.1.0--rc.6-4d6bfe.svg)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](#)
@@ -192,6 +194,14 @@ pnpm pack            # 供 dsh plugin add 使用的 tarball
 发布：推送后缀与 `package.json` 版本一致的 `v*` tag 会触发 Publish 工作流——完整验证后发布到 npm（含 provenance）。任何 `npm publish` 也会通过 `prepublishOnly` 执行 `verify` 闸门。
 
 结构遵循 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)：`src/index.ts`（插件元数据）、`src/config.ts`（schema）、`src/runtime.ts`（运行时服务与激活）、`src/invariant.ts`（不变量）、`src/client/`（Web 选择器）、`styles/`（内置风格）。
+
+## 👥 贡献者
+
+感谢每一位为本项目做出贡献的人：
+
+- [@PerryLink](https://github.com/PerryLink) — 作者与维护者：插件架构、风格库、bundle 安装、Web 选择器、五语文档与 CI/发布工具链。
+
+发现 bug 或有想法？欢迎提交 [issue](https://github.com/PerryLink/dsh-output-styles/issues) 或 [pull request](https://github.com/PerryLink/dsh-output-styles/pulls)，任何语言的贡献都欢迎。
 
 ## 📄 License
 

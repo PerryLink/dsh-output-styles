@@ -6,6 +6,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml/badge.svg)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
 [![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
 [![DSH](https://img.shields.io/badge/deepseek--harness-0.1.0--rc.6-4d6bfe.svg)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](#)
@@ -192,6 +194,14 @@ pnpm pack            # tarball para dsh plugin add
 Lanzamientos: hacer push de una etiqueta `v*` cuyo sufijo coincida con la versión de `package.json` dispara el flujo Publish — verificación completa y publicación en npm (con provenance). Cualquier `npm publish` también pasa la puerta `verify` vía `prepublishOnly`.
 
 La estructura sigue [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template): `src/index.ts` (metadatos del plugin), `src/config.ts` (esquema), `src/runtime.ts` (servicio de runtime + activación), `src/invariant.ts` (invariantes), `src/client/` (selector web), `styles/` (estilos integrados).
+
+## 👥 Contribuyentes
+
+Gracias a todas las personas que han contribuido a este proyecto:
+
+- [@PerryLink](https://github.com/PerryLink) — autor y mantenedor: arquitectura del plugin, biblioteca de estilos, instalación del bundle, selector web, documentación en cinco idiomas y herramientas de CI/publicación.
+
+¿Encontraste un error o tienes una idea? Abre un [issue](https://github.com/PerryLink/dsh-output-styles/issues) o envía un [pull request](https://github.com/PerryLink/dsh-output-styles/pulls) — las contribuciones en cualquier idioma son bienvenidas.
 
 ## 📄 Licencia
 

@@ -6,6 +6,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml/badge.svg)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
 [![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
 [![DSH](https://img.shields.io/badge/deepseek--harness-0.1.0--rc.6-4d6bfe.svg)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](#)
@@ -192,6 +194,14 @@ pnpm pack            # dsh plugin add 用の tarball
 リリース：`package.json` のバージョンと一致する接尾辞を持つ `v*` タグを push すると Publish ワークフローが起動します——完全検証の後に npm へ公開（provenance 付き）。あらゆる `npm publish` も `prepublishOnly` 経由で `verify` ゲートを通過します。
 
 構成は [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template) に従います：`src/index.ts`（プラグインメタデータ）、`src/config.ts`（スキーマ）、`src/runtime.ts`（ランタイムサービス + アクティベーション）、`src/invariant.ts`（不変条件）、`src/client/`（Web ピッカー）、`styles/`（組み込みスタイル）。
+
+## 👥 コントリビューター
+
+本プロジェクトに貢献してくださったすべての方に感謝します：
+
+- [@PerryLink](https://github.com/PerryLink) — 作者兼メンテナー：プラグインアーキテクチャ、スタイルライブラリ、bundle インストール、Web ピッカー、5 言語ドキュメント、CI/リリースツール。
+
+バグやアイデアがあれば [issue](https://github.com/PerryLink/dsh-output-styles/issues) や [pull request](https://github.com/PerryLink/dsh-output-styles/pulls) をどうぞ。どの言語での貢献も歓迎します。
 
 ## 📄 ライセンス
 

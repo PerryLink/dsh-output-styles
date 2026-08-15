@@ -6,6 +6,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml/badge.svg)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
 [![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
 [![DSH](https://img.shields.io/badge/deepseek--harness-0.1.0--rc.6-4d6bfe.svg)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](#)
@@ -192,6 +194,14 @@ pnpm pack            # dsh plugin add용 tarball
 릴리스: `package.json` 버전과 일치하는 접미사를 가진 `v*` 태그를 push하면 Publish 워크플로가 실행됩니다 — 전체 검증 후 npm 게시(provenance 포함). 모든 `npm publish`도 `prepublishOnly`를 통해 `verify` 게이트를 통과합니다.
 
 구조는 [omdsh-dev/plugin-template](https://github.com/omdsh-dev/plugin-template)를 따릅니다: `src/index.ts`(플러그인 메타데이터), `src/config.ts`(스키마), `src/runtime.ts`(런타임 서비스 + 활성화), `src/invariant.ts`(불변식), `src/client/`(웹 피커), `styles/`(내장 스타일).
+
+## 👥 기여자
+
+이 프로젝트에 기여해 주신 모든 분께 감사드립니다:
+
+- [@PerryLink](https://github.com/PerryLink) — 작성자이자 메인테이너: 플러그인 아키텍처, 스타일 라이브러리, 번들 설치, 웹 피커, 5개 언어 문서, CI/릴리스 도구.
+
+버그나 아이디어가 있으신가요? [issue](https://github.com/PerryLink/dsh-output-styles/issues) 또는 [pull request](https://github.com/PerryLink/dsh-output-styles/pulls)를 보내 주세요. 어떤 언어의 기여든 환영합니다.
 
 ## 📄 라이선스
 
