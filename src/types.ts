@@ -11,6 +11,7 @@
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { z as zod } from 'zod'
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain'
+import type { OutputRenderer, RenderContext, RenderedText } from './renderers.ts'
 
 /** The reserved switch target that removes a session's selection. */
 export const OFF = 'off'
@@ -82,5 +83,32 @@ export const styleSelectionViewSchema = zod.object({
 declare module '@deepseek-ai/dsh-session-projection/types' {
   interface SessionProjectionMap {
     style: StyleSelectionView
+  }
+}
+
+/** The `ctx.outputRenderers` service: the output.render.* renderer registry. */
+export interface OutputRenderersService {
+  /** Register a renderer (returns the disposer; caller owns it via ctx.effect). */
+  register(renderer: OutputRenderer): () => void
+  /** Every registered renderer, deterministic order (priority desc, registration asc). */
+  list(): OutputRenderer[]
+  /** Renderers matching a request, highest priority first. */
+  resolve(context: RenderContext): OutputRenderer[]
+  /** Render text through the `output.render/before` waterfall, then rules + matched renderers. */
+  renderText(text: string, context: RenderContext): Promise<RenderedText>
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    /** The output.render.* renderer registry provided by dsh-output-styles. */
+    outputRenderers: OutputRenderersService
+  }
+  interface Events {
+    /**
+     * Pre-render waterfall: listeners receive `{ text, context }` and MUST
+     * call `next()` with their transformed request (or the unchanged one);
+     * returning without `next()` short-circuits the render pipeline.
+     */
+    'output.render/before'(request: { text: string; context: RenderContext }, next: (request: { text: string; context: RenderContext }) => Promise<RenderedText>): Promise<RenderedText>
   }
 }

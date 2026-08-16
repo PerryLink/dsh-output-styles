@@ -24,6 +24,8 @@ import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegi
 import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-library.ts'
 import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, type StyleFoldState } from './style-command.ts'
 import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
+import { BUILTIN_RENDERERS, RendererRegistry, type OutputRenderer, type RenderContext, type RenderedText, type StyleRule } from './renderers.ts'
+import { conversationLines, renderExport } from './export.ts'
 
 /** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
 export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.meta.url))
@@ -436,4 +438,112 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     }
     registry.register(PACKAGE_NAME, installInvariant(facts))
   })
+
+  // ── output.render.* protocol: the renderer registry service ───────────────
+  // Third-party plugins register presenters (id / match rules / pure
+  // presenter / priority) through `ctx.outputRenderers`; registration is a
+  // caller-owned effect (register() returns the disposer). The built-in
+  // concise/step-by-step renderers mirror the two headline styles. Rendering
+  // runs the `output.render/before` waterfall first — listeners transform the
+  // request and MUST call next() — then applies the rule table and matching
+  // renderers; every result keeps the original text beside the rendered one.
+  const renderers = new RendererRegistry()
+  for (const renderer of BUILTIN_RENDERERS) {
+    ctx.effect(() => renderers.register(renderer), `dsh-output-styles: renderer ${renderer.id}`)
+  }
+  let effectiveRules: readonly StyleRule[] = resolved.rules
+  const renderText = (text: string, context: RenderContext): Promise<RenderedText> =>
+    ctx.waterfall('output.render/before', { text, context }, async (request: { text: string; context: RenderContext }) =>
+      renderers.render(request.text, request.context, effectiveRules))
+  const renderService = {
+    register: (renderer: OutputRenderer) => renderers.register(renderer),
+    list: () => renderers.list(),
+    resolve: (context: RenderContext) => renderers.resolve(context),
+    renderText,
+  }
+  ctx.provide('outputRenderers', renderService)
+
+  // Per-session/per-tool rules over the settings seam: the `output-style-rules`
+  // namespace carries the rule table (composition `base` + user overrides);
+  // rules referencing an unknown renderer fail at write time, and rendering
+  // fails loudly at call time if a renderer left the registry.
+  installSettingsSection(
+    ctx,
+    settingsNamespace('output-style-rules'),
+    z.object({
+      rules: z.array(z.object({
+        match: z.object({
+          tool: z.string().required(false),
+          contentType: z.union([z.const('text'), z.const('markdown'), z.const('html')]).required(false),
+          session: z.string().required(false),
+        }).required(false),
+        style: z.string().min(1),
+        priority: z.number().required(false),
+      })).default([]),
+    }),
+    { rules: resolved.rules },
+    {
+      setSource: current => {
+        effectiveRules = current().rules.map(rule => ({ match: rule.match ?? {}, style: rule.style, priority: rule.priority ?? 0 }))
+      },
+      onChange: () => {},
+      validate: value => {
+        for (const rule of value.rules) {
+          if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
+            throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
+          }
+        }
+      },
+    },
+  )
+
+  // The /export command: renders the current session's message surface to
+  // Markdown or sanitized HTML through the renderer pipeline. The document
+  // itself is the visible artifact; the original lines are the session log
+  // the export was projected from — rendered and original stay reconstructable.
+  if (resolved.enableExport) {
+    ctx.inject(['commands'], (commandCtx) => {
+      commandCtx.commands.register({
+        name: 'export',
+        description: 'Export this session as Markdown or HTML (renderer-aware)',
+        input: { hint: '[markdown|html] [--renderer=<id>]' },
+        handler: async ({ agent, rawInput }) => {
+          const input = parseExportInput(rawInput)
+          if (input.kind === 'error') {
+            return { kind: 'error', text: 'usage: /export [markdown|html] [--renderer=<id>]' }
+          }
+          const lines = conversationLines(agent.session.events)
+          const rules: StyleRule[] = input.renderer === undefined
+            ? [...effectiveRules]
+            : [{ match: {}, style: input.renderer, priority: 0 }]
+          const document = renderExport(renderers, lines, input.format, rules)
+          return { kind: 'success', text: document.text }
+        },
+      })
+    })
+  }
+}
+
+/** Parsed `/export` invocation. */
+type ExportInput = { kind: 'ok'; format: 'markdown' | 'html'; renderer?: string } | { kind: 'error' }
+
+/** Parse `/export [markdown|html] [--renderer=<id>]` from the raw command input. */
+export function parseExportInput(rawInput: unknown): ExportInput {
+  const raw = String(rawInput ?? '').trim()
+  const parts = raw === '' ? [] : raw.split(/\s+/)
+  let format: 'markdown' | 'html' = 'markdown'
+  let renderer: string | undefined
+  for (const part of parts) {
+    if (part === 'markdown' || part === 'html') {
+      format = part
+      continue
+    }
+    const match = /^--renderer=([a-z0-9][a-z0-9-]*)$/.exec(part)
+    if (match !== null) {
+      renderer = match[1]
+      continue
+    }
+    return { kind: 'error' }
+  }
+  return { kind: 'ok', format, ...renderer === undefined ? {} : { renderer } }
 }

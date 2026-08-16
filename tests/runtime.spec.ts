@@ -306,7 +306,7 @@ describe('project default over the settings seam', () => {
     const harness = await createStyleHarness({}, undefined, { settings: true })
     const session = harness.makeSession()
     expect(await harness.sectionText(session)).toBe('')
-    const scope = harness.settings?.lastScope
+    const scope = harness.settings?.scope('output-style')
     expect(scope).toBeDefined()
     await scope?.update({ style: 'step-by-step' })
     expect(await harness.sectionText(session)).toContain('# Output style: step-by-step')
@@ -321,7 +321,7 @@ describe('project default over the settings seam', () => {
 
   it('rejects a settings outputStyle that names no library style', async () => {
     const harness = await createStyleHarness({}, undefined, { settings: true })
-    const scope = harness.settings?.lastScope
+    const scope = harness.settings?.scope('output-style')
     expect(scope).toBeDefined()
     await expect(scope?.update({ style: 'nope' })).rejects.toThrow(/names no style/)
     await harness.dispose()

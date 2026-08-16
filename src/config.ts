@@ -11,6 +11,23 @@
 import z from '@deepseek-ai/schemastery'
 import { resolve } from 'node:path'
 
+/** One per-session/per-tool style rule: match facts + the renderer to apply. */
+export interface StyleRuleConfig {
+  /** Match facts; an empty object matches every render request. */
+  match: {
+    /** Tool name or '*' (omitted = any tool). */
+    tool?: string
+    /** Content type (omitted = any). */
+    contentType?: 'text' | 'markdown' | 'html'
+    /** Exact session id (omitted = any session) — the per-session axis. */
+    session?: string
+  }
+  /** Renderer id to apply; built-in ids mirror the style names (concise, step-by-step). */
+  style: string
+  /** Higher priority wins; ties break by rule order (earlier first). */
+  priority?: number
+}
+
 /** Plugin configuration supplied by the profile composition. */
 export interface Config {
   /**
@@ -42,6 +59,10 @@ export interface Config {
   includeBuiltins?: boolean
   /** Reload the library when a style file changes on disk (default true). */
   watchStyles?: boolean
+  /** Per-session/per-tool render rules (renderer registry); applied by `/export` and the render service. */
+  rules?: StyleRuleConfig[]
+  /** Register the `/export` command (Markdown/HTML session-export, renderer-aware). */
+  enableExport?: boolean
 }
 
 /** Configuration after defaults have been resolved. */
@@ -62,6 +83,10 @@ export interface ResolvedConfig {
   includeBuiltins: boolean
   /** Whether the library reloads on style-file changes. */
   watchStyles: boolean
+  /** Per-session/per-tool render rules with resolved priorities. */
+  rules: Array<{ match: { tool?: string; contentType?: 'text' | 'markdown' | 'html'; session?: string }; style: string; priority: number }>
+  /** Whether the `/export` command registers. */
+  enableExport: boolean
 }
 
 /** Loader-visible configuration schema and defaults. */
@@ -74,6 +99,16 @@ export const Config: z<Config> = z.object({
   truncationMarker: z.string().default('\n\n[style truncated]'),
   includeBuiltins: z.boolean().default(true),
   watchStyles: z.boolean().default(true),
+  rules: z.array(z.object({
+    match: z.object({
+      tool: z.string().required(false),
+      contentType: z.union([z.const('text'), z.const('markdown'), z.const('html')]).required(false),
+      session: z.string().required(false),
+    }).required(false),
+    style: z.string().min(1),
+    priority: z.number().required(false),
+  })).default([]),
+  enableExport: z.boolean().default(true),
 })
 
 /**
@@ -97,6 +132,18 @@ export function resolveConfig(config: Config, defaultStylesDir: string): Resolve
   const rawDirs = Array.isArray(config.stylesDir) ? config.stylesDir : config.stylesDir === undefined || config.stylesDir === '' ? [] : [config.stylesDir]
   const customDirs = rawDirs.map(dir => resolve(dir))
   const stylesDirs = includeBuiltins ? [defaultStylesDir, ...customDirs] : customDirs
+  for (const rule of config.rules ?? []) {
+    const match = rule.match ?? {}
+    if (match.tool !== undefined && match.tool !== '*' && /[^a-zA-Z0-9_-]/.test(match.tool)) {
+      throw new Error(`dsh-output-styles: rule tool ${JSON.stringify(match.tool)} must be a tool name or '*'`)
+    }
+    if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
+      throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
+    }
+    if (rule.priority !== undefined && !Number.isFinite(rule.priority)) {
+      throw new Error(`dsh-output-styles: rule priority must be a finite number, got ${String(rule.priority)}`)
+    }
+  }
   return {
     stylesDirs,
     maxStyleChars,
@@ -106,5 +153,7 @@ export function resolveConfig(config: Config, defaultStylesDir: string): Resolve
     truncationMarker: config.truncationMarker ?? '\n\n[style truncated]',
     includeBuiltins,
     watchStyles: config.watchStyles ?? true,
+    rules: (config.rules ?? []).map(rule => ({ ...rule, priority: rule.priority ?? 0 })),
+    enableExport: config.enableExport ?? true,
   }
 }

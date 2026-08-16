@@ -12,6 +12,8 @@ describe('Config schema', () => {
       truncationMarker: '\n\n[style truncated]',
       includeBuiltins: true,
       watchStyles: true,
+      rules: [],
+      enableExport: true,
     })
   })
 
@@ -48,6 +50,8 @@ describe('resolveConfig', () => {
       truncationMarker: '\n\n[style truncated]',
       includeBuiltins: true,
       watchStyles: true,
+      rules: [],
+      enableExport: true,
     })
   })
 

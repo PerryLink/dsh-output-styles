@@ -25,8 +25,10 @@ import * as outputStyles from '../src/index.ts'
  */
 export class FakeSettings extends SettingsProvider {
   readonly writable = true
-  /** The most recent namespace scope registered — the plugin's `output-style` namespace. */
+  /** The most recent namespace scope registered. */
   lastScope?: SettingsScope<{ style: string }>
+  /** Every namespace scope registered, keyed by the settings namespace. */
+  readonly scopes = new Map<string, SettingsScope<unknown>>()
   private readonly doc: Record<string, unknown> = {}
   protected async load(): Promise<Record<string, unknown>> {
     return this.doc
@@ -37,7 +39,12 @@ export class FakeSettings extends SettingsProvider {
   override register<T>(ns: SettingsNamespace, schema: z<T>, options?: SettingsRegisterOptions<T>): SettingsScope<T> {
     const scope = super.register(ns, schema, options)
     this.lastScope = scope as unknown as SettingsScope<{ style: string }>
+    this.scopes.set(String(ns), scope as unknown as SettingsScope<unknown>)
     return scope
+  }
+  /** The scope registered for one namespace (e.g. `output-style`). */
+  scope(ns: string): SettingsScope<{ style: string }> | undefined {
+    return this.scopes.get(ns) as SettingsScope<{ style: string }> | undefined
   }
 }
 
