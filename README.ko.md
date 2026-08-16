@@ -109,7 +109,12 @@ flowchart LR
 | `truncationMarker` | `"\n\n[style truncated]"` | 잘린 지점에 추가되는 마커. |
 | `includeBuiltins` | `true` | 패키지 내장 `styles/`를 최저 우선순위 계층으로 포함합니다. |
 | `watchStyles` | `true` | 디스크에서 스타일 파일이 변경되면 라이브러리를 다시 로드합니다. |
+| `rules` | `[]` | 세션/도구별 렌더 규칙：`[{ match: { tool?, contentType?, session? }, style, priority? }]`——`style` 은 렌더러 id（내장은 스타일과 동명）。 |
+| `enableExport` | `true` | `/export` 명령 등록（Markdown/HTML 세션 내보내기、렌더러 인식）。 |
 
+## 🎨 렌더러 프로토콜
+
+`output.render.*` 프로토콜은 프레젠테이션 계층을 확장점으로 만듭니다。렌더러는 **순수 presenter**——`presenter(text, context)` 가 인자를 표시 데이터로 매핑하고 DOM 에는 손대지 않습니다——도구 이름과 콘텐츠 타입으로 매칭되고 우선순위로 정렬됩니다。서드파티는 `ctx.outputRenderers.register({ id, match, priority, presenter })` 로 등록합니다（register 는 disposer 를 반환、호출자의 ctx.effect 소유）。모든 렌더는 먼저 `output.render/before` waterfall（리스너는 반드시 `next()`）을 거친 뒤 규칙표（세션/도구별：`rules: [{ match: { tool: 'bash' }, style: 'concise' }]`、설정 페이지 `output-style-rules` 에서 편집）를 적용합니다。내장 렌더러는 `concise`（공백 압축 + 예산 절단）와 `step-by-step`（단계 일련번호）입니다。감사 가능：모든 결과는 `{ original, rendered, rendererId, changed }` 를 가지며 원문은 세션 로그 그 자체로 결정적으로 재구성됩니다。`/export [markdown|html] [--renderer=<id>]` 는 같은 파이프라인으로 현재 세션을 내보냅니다。전체 규격：docs/renderer-protocol.md（영어）/ docs/renderer-protocol.zh.md。
 ## 📚 스타일 라이브러리
 
 <details>

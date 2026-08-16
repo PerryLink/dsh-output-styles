@@ -109,7 +109,12 @@ flowchart LR
 | `truncationMarker` | `"\n\n[style truncated]"` | 切り詰め位置に付加されるマーカー。 |
 | `includeBuiltins` | `true` | パッケージ同梱の `styles/` を最優先度の低いレイヤーとして含めます。 |
 | `watchStyles` | `true` | スタイルファイルがディスク上で変更されたときにライブラリを再読み込みします。 |
+| `rules` | `[]` | セッション/ツール別の描画ルール：`[{ match: { tool?, contentType?, session? }, style, priority? }]`——`style` はレンダラー id（ビルトインはスタイル名と同名）。 |
+| `enableExport` | `true` | `/export` コマンドを登録（Markdown/HTML セッション書き出し、レンダラー対応）。 |
 
+## 🎨 レンダラープロトコル
+
+`output.render.*` プロトコルはプレゼンテーション層を拡張点にします。レンダラーは**純粋な presenter**——`presenter(text, context)` が引数を表示データに写し、DOM には触れません——ツール名とコンテンツタイプでマッチし、優先度で並びます。サードパーティは `ctx.outputRenderers.register({ id, match, priority, presenter })` で登録（register は disposer を返し、呼び出し側の ctx.effect が所有）。各レンダーはまず `output.render/before` waterfall（リスナーは必ず `next()`）を通り、次にルール表（セッション/ツール別：`rules: [{ match: { tool: 'bash' }, style: 'concise' }]`、設定画面 `output-style-rules` で編集可）。ビルトインは `concise`（空白圧縮 + 予算切り詰め）と `step-by-step`（手順の連番化）。監査可能：各結果は `{ original, rendered, rendererId, changed }` を持ち、原文はセッションログそのもので決定論的に再構築できます。`/export [markdown|html] [--renderer=<id>]` は同じパイプラインで現在のセッションを書き出します。完全な仕様：docs/renderer-protocol.md（英語）/ docs/renderer-protocol.zh.md。
 ## 📚 スタイルライブラリ
 
 <details>

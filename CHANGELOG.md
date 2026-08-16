@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-16
+
+### Added
+
+- **Renderer registry (`output.render.*` protocol)**: `ctx.outputRenderers` service with reversible `register()` / `list()` / `resolve()` / `renderText()`. A renderer is `{ id, match (tool/content-type), priority, presenter }` — the presenter is a pure function (args → display data, no DOM). Every render request passes the `output.render/before` waterfall first (listeners transform `{ text, context }` and must call `next()`), then the rule table, then matching renderers in priority order. Built-in renderers: `concise` and `step-by-step`.
+- **Per-session/per-tool style rules**: `rules: [{ match: { tool, contentType, session }, style, priority }]` in Config and the new `output-style-rules` settings section (validated at write time; unknown renderer ids fail loudly at render time).
+- **`/export` command**: renders the current session's message surface (official `deriveEventMessage` projection) to Markdown or sanitized HTML through the renderer pipeline — `/export [markdown|html] [--renderer=<id>]`. Every render keeps `{ original, rendered, rendererId, changed }`, so rendered output and its session-log source reconstruct together.
+- `sanitizeText` / `toMarkdown` / `toHtml` / `renderExport` pure functions with extreme-case coverage (tags, control characters, huge inputs).
+- Renderer protocol reference: `docs/renderer-protocol.md` (+ 中文).
+
+### Changed
+
+- `/style` command and per-session persistence are fully unchanged (0.3.x compatible).
+- Five-language READMEs: renderer protocol section, two new Config rows, `/export` reference; test count updated to 107.
+
 ## [0.3.2] - 2026-08-15
 
 ### Fixed

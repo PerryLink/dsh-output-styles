@@ -109,7 +109,12 @@ Todo ajuste es un campo `Config` de Schemastery validado (los valores inválidos
 | `truncationMarker` | `"\n\n[style truncated]"` | Marcador añadido en el punto de truncado. |
 | `includeBuiltins` | `true` | Incluye el `styles/` incluido en el paquete como la capa de menor prioridad. |
 | `watchStyles` | `true` | Recarga la biblioteca cuando un archivo de estilo cambia en disco. |
+| `rules` | `[]` | Reglas de renderizado por sesión/herramienta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` — `style` nombra un id de renderer (los integrados coinciden con los nombres de estilo). |
+| `enableExport` | `true` | Registrar el comando `/export` (exportación de sesión a Markdown/HTML, con renderers). |
 
+## 🎨 Protocolo de renderers
+
+El protocolo `output.render.*` convierte la capa de presentación en un punto de extensión. Un renderer es un **presenter puro** — `presenter(text, context)` mapea argumentos a datos de presentación y nunca toca el DOM — emparejado por nombre de herramienta y tipo de contenido, ordenado por prioridad. Los plugins de terceros se registran con `ctx.outputRenderers.register({ id, match, priority, presenter })` (register devuelve el disposer, propiedad del ctx.effect del llamador). Cada renderizado pasa primero por el waterfall `output.render/before` (los listeners deben llamar `next()`), luego por la tabla de reglas (por sesión/herramienta: `rules: [{ match: { tool: 'bash' }, style: 'concise' }]`, editable en la sección de ajustes `output-style-rules`). Renderers integrados: `concise` (compresión de espacios + truncado con presupuesto) y `step-by-step` (numeración uniforme de pasos). Auditabilidad: cada resultado lleva `{ original, rendered, rendererId, changed }`; el original es el propio registro de sesión y la aplicación de renderers es determinista. `/export [markdown|html] [--renderer=<id>]` exporta la sesión actual por el mismo pipeline. Especificación completa: docs/renderer-protocol.md (inglés) / docs/renderer-protocol.zh.md.
 ## 📚 Biblioteca de estilos
 
 <details>

@@ -36,6 +36,9 @@
 | ⚙️ **Project default over settings** | Sessions that never selected one fall back to `output-style.style` from the DSH settings seam, then to `defaultStyle`. |
 | 🖱️ **Web picker** | A `dsh.client` entry (`dsh-output-styles/client`) decorates the host `/style` command with a projection-backed popup picker. |
 | 📊 **Session projection** | A `style` projection (`{ options, currentValue }`) for the Web UI, folded from settled commands in the session log. |
+| 🎨 **Renderer registry (`output.render.*`)** | `ctx.outputRenderers` lets any plugin register a presenter — `{ id, match (tool/content-type), presenter, priority }` — applied through the `output.render/before` waterfall (listeners must `next()`). Built-in renderers: `concise`, `step-by-step`. Registration is reversible and owned by the caller's `ctx.effect`. |
+| 🧾 **Per-session/per-tool rules** | `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` — first matching rule (by priority) names the renderer; `match.session` scopes a rule to one session. Editable through the `output-style-rules` settings section. |
+| 📤 **`/export`** | Renders the current session's message surface to Markdown or sanitized HTML through the render pipeline (`/export [markdown|html] [--renderer=<id>]`); every render keeps its original text beside the rendered one, and the original always stays reconstructable from the session log. |
 | 🧯 **Fail loud, skip cleanly** | Misconfiguration throws at load; a bad style file is skipped with a warning and never breaks the profile. |
 | 🌐 **Five-language docs** | EN · 中文 · 日本語 · 한국어 · Español. |
 
@@ -109,6 +112,8 @@ Every tunable is a validated Schemastery `Config` field (invalid values fail the
 | `truncationMarker` | `"\n\n[style truncated]"` | Marker appended at the truncation point. |
 | `includeBuiltins` | `true` | Include the package's bundled `styles/` as the lowest-priority layer. |
 | `watchStyles` | `true` | Reload the library when a style file changes on disk. |
+| `rules` | `[]` | Per-session/per-tool render rules: `[{ match: { tool?, contentType?, session? }, style, priority? }]` — `style` names a renderer id (built-ins mirror the style names). |
+| `enableExport` | `true` | Register the `/export` command (Markdown/HTML session export, renderer-aware). |
 
 ## 📚 Style library
 
@@ -160,6 +165,31 @@ Entries accept `keep-coding-instructions` and `force-for-plugin` exactly as Clau
 | `/style Diagrams first` | Multi-word names are the whole remainder |
 | `/style off` | Restore the project default (settings default, then `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
+| `/export` | Render the current session to Markdown through the renderer pipeline |
+| `/export html` | Render to sanitized HTML |
+| `/export --renderer=concise` | Render with one renderer forced (rules bypassed) |
+
+## 🎨 Renderer protocol
+
+The `output.render.*` protocol turns the presentation layer into an extension point. A renderer is a **pure presenter** — `presenter(text, context)` maps args to display data, never touches the DOM — matched by tool name and content type, ordered by priority:
+
+```ts
+// Third-party plugin registering a custom renderer (register() returns the disposer)
+ctx.effect(() => ctx.outputRenderers.register({
+  id: 'sql-table',
+  name: 'SQL table compactor',
+  description: 'Truncates oversized SQL result sets to the head plus a row count.',
+  match: [{ tool: 'sql', contentType: 'text' }],
+  priority: 20,
+  presenter: (text, context) => compactRows(text, 50),
+}))
+```
+
+- **Waterfall first**: every render request passes through `output.render/before` (`{ text, context }`) — listeners transform the request and **must call `next()`**; returning without it short-circuits the pipeline.
+- **Rules**: `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` names the renderer for matching requests (tool, content type, or exact session); ties break by `priority`, then rule order. Rules live in cordis.yml and the `output-style-rules` settings section.
+- **Built-ins**: `concise` (whitespace compaction + budget truncation) and `step-by-step` (consistent step numbering) — ids mirror the two headline style names.
+- **Auditability**: every render result carries `{ original, rendered, rendererId, changed }`. The rendered text is what surfaces; the original text is the session log itself, and the render application is deterministic — so rendered output and its source always reconstruct together.
+- Full protocol reference (including a worked third-party example): [docs/renderer-protocol.md](docs/renderer-protocol.md) (中文: [docs/renderer-protocol.zh.md](docs/renderer-protocol.zh.md)).
 
 ## 🖱️ Web picker
 
@@ -185,7 +215,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 93 tests
+pnpm test            # vitest — 107 tests
 pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add

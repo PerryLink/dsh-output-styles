@@ -109,7 +109,12 @@ flowchart LR
 | `truncationMarker` | `"\n\n[style truncated]"` | 截断点追加的标记。 |
 | `includeBuiltins` | `true` | 将包内置 `styles/` 作为最低优先级层纳入。 |
 | `watchStyles` | `true` | 风格文件在磁盘上变化时重载风格库。 |
+| `rules` | `[]` | 按会话/按工具的渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]`——`style` 指定渲染器 id（内置与风格同名）。 |
+| `enableExport` | `true` | 注册 `/export` 命令（Markdown/HTML 会话导出，渲染器感知）。 |
 
+## 🎨 渲染器协议
+
+`output.render.*` 协议把呈现层变成扩展点。渲染器是**纯 presenter**——`presenter(text, context)` 把参数映射为展示数据、绝不碰 DOM——按工具名与内容类型匹配、按优先级排序：第三方插件经 `ctx.outputRenderers.register({ id, match, priority, presenter })` 注册（register 返回 disposer，归调用方 ctx.effect）。每次渲染先过 `output.render/before` waterfall（监听器必须 `next()`），再走规则表（按会话/按工具：`rules: [{ match: { tool: 'bash' }, style: 'concise' }]`，设置页 `output-style-rules` 可编辑）。内置渲染器 `concise`（空白折叠 + 预算截断）与 `step-by-step`（步骤统一编号）。可审计：每个结果携带 `{ original, rendered, rendererId, changed }`，原始文本即会话日志、渲染确定可重建。`/export [markdown|html] [--renderer=<id>]` 经同一流水线导出当前会话。完整协议：docs/renderer-protocol.md（英文）/ docs/renderer-protocol.zh.md。
 ## 📚 风格库
 
 <details>
