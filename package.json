@@ -63,9 +63,9 @@
     "LICENSE",
     "README.md",
     "README.zh.md",
-    "README.ja.md",
-    "README.ko.md",
     "README.es.md",
+    "README.pt.md",
+    "README.hi.md",
     "docs"
   ],
   "keywords": [
