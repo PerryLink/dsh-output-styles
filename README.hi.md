@@ -55,6 +55,40 @@ dsh plugin --profile web add dsh-output-styles
 dsh --profile web --dump-config | grep -A3 'id: output-styles'
 ```
 
+## Demo
+
+```
+You > /style
+      output style off
+      concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
+      explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
+      formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
+      step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
+
+You > /style concise
+      switched to concise
+
+You > 请只用一句话介绍你自己。
+AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
+```
+
+## How it works
+
+```mermaid
+flowchart LR
+    U[You type /style concise] --> C[command registry]
+    C -->|command/run logged| L[(session log)]
+    C -->|put {style, source}| D[(output_style domain)]
+    D --> R[OutputStyleRuntime]
+    R -->|body at every assembly| S[systemPrompt section order 90]
+    S --> M[Model request]
+    M -->|full system prompt| H[request/header logged]
+```
+
+मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं। शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `request/header` से, और स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है। शैलियाँ केवल मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
+
 ## Install & uninstall
 
 - **git चैनल** (नवीनतम `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — `prepare` स्क्रिप्ट केवल उत्पादन निर्भरताओं से बनाती है।
@@ -141,6 +175,10 @@ dsh --profile web --dump-config | grep -A3 'id: output-styles'
 | प्रभावी होने का समय | `/clear` के बाद या नया सत्र | तुरंत — सिस्टम प्रॉम्प्ट प्रति-अनुरोध पुनः संयोजित होता है |
 | उप-एजेंट | शैलियाँ लागू नहीं होतीं | समान — उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं |
 | बदलना | `/config` मेनू या `outputStyle` सेटिंग (`/output-style` कमांड v2.1.91 में हटाया गया) | `/style` कमांड + Web picker + settings `output-style.style` |
+
+## Conflict check
+
+विकास से पहले DSH पारिस्थितिकी के विरुद्ध जाँचा गया (2026-08 स्नैपशॉट): [topic:dsh-plugin](https://github.com/topics/dsh-plugin) के अंतर्गत कोई `style`/`output-style` रिपॉज़िटरी नहीं, चार प्रमुख [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) में कोई output-style श्रेणी नहीं, और [dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop) में कोई प्रविष्टि नहीं। निकटतम पड़ोसी — [dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md) (persona) और [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace) (आउटपुट शैलियाँ स्पष्ट रूप से v0.2+ तक टाली गईं) — सन्निकट हैं, संघर्षपूर्ण नहीं।
 
 ## Permissions & data
 

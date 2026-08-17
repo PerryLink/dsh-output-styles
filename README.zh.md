@@ -55,6 +55,40 @@ dsh plugin --profile web add dsh-output-styles
 dsh --profile web --dump-config | grep -A3 'id: output-styles'
 ```
 
+## Demo
+
+```
+You > /style
+      output style off
+      concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
+      explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
+      formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
+      step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
+
+You > /style concise
+      switched to concise
+
+You > 请只用一句话介绍你自己。
+AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
+```
+
+## How it works
+
+```mermaid
+flowchart LR
+    U[You type /style concise] --> C[command registry]
+    C -->|command/run logged| L[(session log)]
+    C -->|put {style, source}| D[(output_style domain)]
+    D --> R[OutputStyleRuntime]
+    R -->|body at every assembly| S[systemPrompt section order 90]
+    S --> M[Model request]
+    M -->|full system prompt| H[request/header logged]
+```
+
+模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `request/header`，来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
+
 ## Install & uninstall
 
 - **git channel**（最新 `main`）：`dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` —— `prepare` 脚本仅用生产依赖构建。
@@ -141,6 +175,10 @@ dsh --profile web --dump-config | grep -A3 'id: output-styles'
 | 生效时机 | `/clear` 之后或新会话 | 立即——系统提示按请求重新组装 |
 | 子代理 | 风格不适用 | 相同——子代理会话保留各自提示 |
 | 切换 | `/config` 菜单或 `outputStyle` 设置（`/output-style` 命令已在 v2.1.91 移除） | `/style` 命令 + Web picker + settings `output-style.style` |
+
+## Conflict check
+
+开发前已对照 DSH 生态排查（2026-08 快照）：[topic:dsh-plugin](https://github.com/topics/dsh-plugin) 下无 `style`/`output-style` 仓库，四个主要 [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 中无 output-style 分类，[dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop) 中无条目。最接近的邻居——[dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md)（persona）与 [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace)（输出风格明确推迟到 v0.2+）——是相邻而非冲突。
 
 ## Permissions & data
 

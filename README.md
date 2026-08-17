@@ -55,6 +55,40 @@ dsh plugin --profile web add dsh-output-styles
 dsh --profile web --dump-config | grep -A3 'id: output-styles'
 ```
 
+## Demo
+
+```
+You > /style
+      output style off
+      concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
+      explanatory — Educational answers with short "Insights" that teach as you work. (Learning a codebase, onboarding, …)
+      formal — Formal, precise prose with complete sentences and defined terms. (Reports, documentation, release notes, …)
+      learning — Collaborative learn-by-doing mode with short "Insights" and small hands-on steps for the user. (Pairing, onboarding, …)
+      proactive — Execute immediately, assume reasonable defaults, and prefer action over planning. (Routine multi-step work, …)
+      step-by-step — Numbered reasoning steps with explicit intermediate results. (Debugging, design decisions, …)
+
+You > /style concise
+      switched to concise
+
+You > 请只用一句话介绍你自己。
+AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
+```
+
+## How it works
+
+```mermaid
+flowchart LR
+    U[You type /style concise] --> C[command registry]
+    C -->|command/run logged| L[(session log)]
+    C -->|put {style, source}| D[(output_style domain)]
+    D --> R[OutputStyleRuntime]
+    R -->|body at every assembly| S[systemPrompt section order 90]
+    S --> M[Model request]
+    M -->|full system prompt| H[request/header logged]
+```
+
+Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `request/header`, and the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
+
 ## Install & uninstall
 
 - **git channel** (latest `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — the `prepare` script builds with production dependencies only.
@@ -141,6 +175,10 @@ The `dsh.client` entry decorates the host `/style` command's bare invocation wit
 | Taking effect | After `/clear` or a new session | Immediately — the system prompt re-assembles per request |
 | Subagents | Styles do not apply | Same — subagent sessions keep their own prompts |
 | Switching | `/config` menu or `outputStyle` setting (the `/output-style` command was removed in v2.1.91) | `/style` command + Web picker + settings `output-style.style` |
+
+## Conflict check
+
+Screened against the DSH ecosystem before development (2026-08 snapshot): no `style`/`output-style` repository under [topic:dsh-plugin](https://github.com/topics/dsh-plugin), no output-style category in the four major [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin), and no entry in the [dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop). The closest neighbors — [dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md) (persona) and [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace) (output styles explicitly deferred to v0.2+) — are adjacent, not conflicting.
 
 ## Permissions & data
 
