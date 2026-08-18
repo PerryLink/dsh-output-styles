@@ -32,11 +32,23 @@ jobs:
       - name: Unit and integration tests
         run: pnpm test
 
+      - name: Coverage
+        run: pnpm run test:coverage
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: README sync (five languages)
+        run: pnpm run check:readmes
+
       - name: Self-containment check
         run: pnpm run verify:self-contained
 
       - name: Build
         run: pnpm run build
+
+      - name: Verify built artifacts
+        run: pnpm run verify:artifacts
 
       - name: Pack tarball
         run: pnpm pack --pack-destination artifacts
