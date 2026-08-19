@@ -56,6 +56,44 @@ describe('fiber disposal', () => {
 })
 
 // ---------------------------------------------------------------------------
+// HMR regression: the inline invariant companion must unregister on dispose —
+// the host registry throws on a duplicate package name, so its returned
+// disposer is the only clean re-registration path
+// ---------------------------------------------------------------------------
+
+describe('invariant companion disposal', () => {
+  /** Wait out the secondary inject scope's asynchronous activation. */
+  async function untilSettled(expectation: () => boolean): Promise<void> {
+    for (let i = 0; i < 50 && !expectation(); i++) {
+      await new Promise(resolve => setTimeout(resolve, 0))
+    }
+  }
+
+  it('unregisters the invariant companion on dispose and re-registers cleanly on remount', async () => {
+    const harness = await createStyleHarness({}, undefined, { invariants: true })
+    const registry = harness.invariants
+    if (registry === undefined) throw new Error('harness.invariants missing')
+    try {
+      await untilSettled(() => registry.registrations.has('dsh-output-styles'))
+      expect(registry.registrations.has('dsh-output-styles')).toBe(true)
+
+      await harness.pluginFiber.dispose()
+      expect(registry.registrations.has('dsh-output-styles')).toBe(false)
+
+      // A remount (config hot-reload) must not trip the duplicate guard.
+      const plugin = await import('../src/index.ts')
+      const remounted = await harness.ctx.plugin(plugin, { stylesDir: '' })
+      await untilSettled(() => registry.registrations.has('dsh-output-styles'))
+      expect(registry.registrations.has('dsh-output-styles')).toBe(true)
+      await remounted.dispose()
+      expect(registry.registrations.has('dsh-output-styles')).toBe(false)
+    } finally {
+      await harness.dispose()
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // U4: the explicit resolveConfig layer rejects out-of-bounds values
 // ---------------------------------------------------------------------------
 

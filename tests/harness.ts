@@ -48,6 +48,21 @@ export class FakeSettings extends SettingsProvider {
   }
 }
 
+/**
+ * Duplicate-strict stand-in for the host invariant registry: like the real
+ * service, it throws on a duplicate package name and its returned disposer is
+ * the only unregistration path.
+ */
+export class FakeInvariants {
+  /** Currently registered package names. */
+  readonly registrations = new Set<string>()
+  register(packageName: string, _installer: unknown): () => void {
+    if (this.registrations.has(packageName)) throw new Error(`package "${packageName}" is already registered`)
+    this.registrations.add(packageName)
+    return () => { this.registrations.delete(packageName) }
+  }
+}
+
 /** One composed test application: host services from the published rc.6 packages plus this plugin. */
 export interface StyleHarness {
   ctx: Context
@@ -56,6 +71,8 @@ export interface StyleHarness {
   storageRoot: string
   /** The composed settings provider, when `options.settings` was requested. */
   settings?: FakeSettings
+  /** The composed invariant registry, when `options.invariants` was requested. */
+  invariants?: FakeInvariants
   makeSession(id?: string): Session
   agentFor(session: Session): Agent
   /** Execute one `/style` line against a session through the real command registry. */
@@ -74,12 +91,13 @@ export interface StyleHarness {
  * @param config - plugin configuration (defaults for omitted fields).
  * @param stylesDir - style library directory; the package default when omitted.
  * @param options.settings - also compose the in-memory settings provider.
+ * @param options.invariants - also compose the duplicate-strict invariant registry.
  * @returns the live harness.
  */
 export async function createStyleHarness(
   config: outputStyles.Config = {},
   stylesDir?: string,
-  options: { settings?: boolean } = {},
+  options: { settings?: boolean; invariants?: boolean } = {},
 ): Promise<StyleHarness> {
   const ctx = new Context()
   const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-output-styles-'))
@@ -94,6 +112,11 @@ export async function createStyleHarness(
   if (options.settings === true) {
     await ctx.plugin(FakeSettings)
     settings = ctx.get('settings') as FakeSettings
+  }
+  let invariants: FakeInvariants | undefined
+  if (options.invariants === true) {
+    invariants = new FakeInvariants()
+    ctx.provide('invariants', invariants as never)
   }
   const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config })
 
@@ -117,6 +140,7 @@ export async function createStyleHarness(
     pluginFiber,
     storageRoot,
     ...settings === undefined ? {} : { settings },
+    ...invariants === undefined ? {} : { invariants },
     makeSession,
     agentFor,
     runStyle,

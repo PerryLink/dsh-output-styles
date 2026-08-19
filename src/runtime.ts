@@ -428,7 +428,10 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
 
   // The invariant companion, registered from the main plugin so its checks
   // see the live library and domain. Activates only when an invariant
-  // registry is composed.
+  // registry is composed. The registry binds its internal effect to the
+  // service context and throws on a duplicate package name, so the returned
+  // disposer is the only unregistration path: hold it on this inject scope's
+  // fiber.
   ctx.inject(['invariants'], (invariantCtx) => {
     const registry = invariantCtx.get('invariants') as InvariantRegistry | undefined
     if (registry === undefined) return
@@ -436,7 +439,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       knownStyles: () => new Set(runtime.names),
       selectionFor: sessionId => runtime.selectionFor(sessionId),
     }
-    registry.register(PACKAGE_NAME, installInvariant(facts))
+    invariantCtx.effect(() => registry.register(PACKAGE_NAME, installInvariant(facts)), 'dsh-output-styles: invariant companion')
   })
 
   // ── output.render.* protocol: the renderer registry service ───────────────
