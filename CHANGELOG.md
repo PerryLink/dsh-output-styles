@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-08-19
+
+### Fixed
+
+- **Invariant companion survives hot-reload**: the inline invariant registration now holds the host registry's disposer through the inject scope's `ctx.effect` (the registry binds its own effect to the service context, so the returned disposer is the only unregistration path). Disposing the plugin fiber unregisters the companion and its `domain/changed` / `session/event` listeners; remounting re-registers cleanly instead of throwing `package "dsh-output-styles" is already registered`. Regression covered by a dispose-and-remount lifecycle test against a duplicate-strict registry.
+
 ## [0.4.0] - 2026-08-16
 
 ### Added
