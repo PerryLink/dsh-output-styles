@@ -88,7 +88,7 @@ export function apply(ctx: ClientContext): void {
         },
         onSelect: async (option, session) => {
           const line = option.id === OFF_ID ? '/style off' : `/style ${option.id}`
-          const result = await remote.commands.execute(session.sessionId, line)
+          const result = await remote.commands.execute(session.sessionId, line, [])
           if (!result.ok) {
             throw new Error(`command.execute failed: ${result.error.code}: ${result.error.message}`)
           }
