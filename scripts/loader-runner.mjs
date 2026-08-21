@@ -59,7 +59,7 @@ try {
   }
 
   // Real behavior: /style concise switches the bundled style.
-  const execution = await ctx.commands.execute(agent, '/style concise', new AbortController().signal)
+  const execution = await ctx.commands.execute(agent, '/style concise', [], new AbortController().signal)
   if (execution?.result?.text !== 'switched to concise') {
     throw new Error(`Loader composition: /style concise returned ${JSON.stringify(execution?.result)}`)
   }

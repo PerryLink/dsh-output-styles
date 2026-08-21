@@ -125,7 +125,7 @@ export async function createStyleHarness(
   )
   const agentFor = (session: Session): Agent => ({ session } as unknown as Agent)
   const runStyle = (session: Session, line: string): Promise<CommandExecution | undefined> =>
-    ctx.commands.execute(agentFor(session), line, new AbortController().signal)
+    ctx.commands.execute(agentFor(session), line, [], new AbortController().signal)
   const sectionText = async (session: Session): Promise<string> => {
     const assembly = await ctx.systemPrompt.assemble({ agent: agentFor(session) })
     return assembly.sections.find(section => section.name === outputStyles.STYLE_SECTION_NAME)?.text ?? ''
