@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-08-21
+
+### Changed
+
+- **rc8 compatibility**: every `@deepseek-ai/dsh-*` dependency moves to
+  `0.1.0-rc.8` (devDependencies and the runtime storage dependencies pinned,
+  peer ranges `>=0.1.0-rc.8 <0.2.0`); the five README compatibility rows,
+  the `dshWorkshop` compatibility claim, and the compat workflow's rc8 pins
+  follow. Verified on a real rc8 profile: bundle install, row mount, and a
+  keyless headless run through the deterministic mock LLM (`SMOKE-OK`).
+
+### Fixed
+
+- **Web picker submits through the rc8 command Remote**: the generated
+  `commands.execute` client signature gained the image-attachment batch —
+  the `/style` picker passes an empty batch, keeping every switch on the
+  host's durable command lifecycle.
+- **rc8 `commands.execute` arity in tests and the loader runner**: the
+  integration harness and `scripts/loader-runner.mjs` pass the image batch
+  and the abort signal explicitly, matching the rc8 registry signature.
+
 ## [0.4.1] - 2026-08-19
 
 ### Fixed
