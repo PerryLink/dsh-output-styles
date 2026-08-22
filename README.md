@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎨 dsh-output-styles
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-output-styles)
 
 **Claude Code `outputStyles` for DeepSeek Harness** — switch the model's output style at runtime, per session, durably.
 
