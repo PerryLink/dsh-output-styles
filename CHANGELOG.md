@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-08-22
+
+### Changed
+
+- **rc2 compatibility**: every `@deepseek-ai/dsh-*` dependency moves to
+  `0.1.1-rc.2` (devDependencies and the runtime storage dependencies pinned);
+  the `@deepseek-ai/dsh-session-projection` peer range raises to
+  `>=0.1.1-rc.2 <0.2.0` because the projection unit now uses the rc2-only
+  `stateSchema` + `wire` definition. The five README compatibility rows, the
+  `dshWorkshop` compatibility claim, the compat workflow's rc pins, and the
+  workspace `minimumReleaseAgeExclude` follow.
+
+### Fixed
+
+- **rc2 session-projection definition**: the `style` projection registers a
+  `stateSchema` (persisted fold-state validator) and a client `wire`
+  (`viewSchema` + `view`) instead of the rc8 top-level `schema`/`view`, and
+  declares its `SessionProjectionStateMap` merge so the `register` overload
+  resolves the client-visible unit.
+
 ## [0.4.2] - 2026-08-21
 
 ### Changed

@@ -40,6 +40,7 @@ export {
   OFF,
   OUTPUT_STYLE_DOMAIN,
   STYLE_SOURCE,
+  styleFoldStateSchema,
   styleSelectionSchema,
   styleSelectionViewSchema,
 } from './types.ts'

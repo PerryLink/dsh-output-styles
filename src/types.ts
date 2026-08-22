@@ -12,6 +12,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { z as zod } from 'zod'
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain'
 import type { OutputRenderer, RenderContext, RenderedText } from './renderers.ts'
+import type { StyleFoldState } from './style-command.ts'
 
 /** The reserved switch target that removes a session's selection. */
 export const OFF = 'off'
@@ -80,9 +81,29 @@ export const styleSelectionViewSchema = zod.object({
   currentValue: zod.string().min(1).nullable(),
 })
 
+/**
+ * Validates the `style` projection's persisted fold state before it seeds a
+ * fold (the `stateSchema` of the registered unit). The state is plain JSON:
+ * the settled selection (`current`, null when off) plus the in-flight switch
+ * parked by `command/run` and resolved by its paired `command/done`.
+ */
+export const styleFoldStateSchema = zod.object({
+  current: zod.string().min(1).nullable(),
+  pending: zod.object({
+    commandId: zod.string().min(1),
+    target: zod.union([
+      zod.object({ name: zod.string().min(1) }),
+      zod.object({ off: zod.literal(true) }),
+    ]),
+  }).nullable(),
+})
+
 declare module '@deepseek-ai/dsh-session-projection/types' {
   interface SessionProjectionMap {
     style: StyleSelectionView
+  }
+  interface SessionProjectionStateMap {
+    style: StyleFoldState
   }
 }
 

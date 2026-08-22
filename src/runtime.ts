@@ -23,7 +23,7 @@ import { resolveConfig, type Config } from './config.ts'
 import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegistry } from './invariant.ts'
 import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-library.ts'
 import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, type StyleFoldState } from './style-command.ts'
-import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
+import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleFoldStateSchema, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
 import { BUILTIN_RENDERERS, RendererRegistry, type OutputRenderer, type RenderContext, type RenderedText, type StyleRule } from './renderers.ts'
 import { conversationLines, renderExport } from './export.ts'
 
@@ -418,10 +418,13 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   ctx.inject(['sessionProjections'], (projectionCtx) => {
     projectionCtx.sessionProjections.register<'style', StyleFoldState>({
       key: 'style',
-      schema: styleSelectionViewSchema,
+      stateSchema: styleFoldStateSchema,
       init: () => EMPTY_STYLE_STATE,
       apply: applyStyleEvent,
-      view: state => viewStyleSelection(runtime, state),
+      wire: {
+        viewSchema: styleSelectionViewSchema,
+        view: state => viewStyleSelection(runtime, state),
+      },
       stateVersion: 2,
     })
   })
