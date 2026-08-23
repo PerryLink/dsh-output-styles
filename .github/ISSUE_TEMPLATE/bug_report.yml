@@ -12,7 +12,7 @@ body:
     attributes:
       label: 包版本 / Package version
       description: dsh-output-styles 的版本号（`npm list dsh-output-styles` 查看）
-      placeholder: '0.4.2'
+      placeholder: '0.5.0'
     validations:
       required: true
   - type: input
@@ -20,7 +20,7 @@ body:
     attributes:
       label: 运行时版本 / Harness version
       description: DeepSeek Harness 的版本（`dsh --version` 查看）
-      placeholder: 0.1.0-rc.8
+      placeholder: 0.1.1-rc.2
     validations:
       required: true
   - type: input
