@@ -40,7 +40,7 @@
 - **Paridad Claude Code** — `keep-coding-instructions`, `force-for-plugin` (alias `force`), compatibilidad JSON `outputStyles`, directorios `stylesDir` por capas, recarga en caliente y fallback del proyecto sobre la costura de settings de DSH.
 - **Registro de renderers (`output.render.*`)** — `ctx.outputRenderers` permite a cualquier plugin registrar un presenter puro, aplicado a través de la cascada `output.render/before`; renderers integrados `concise` y `step-by-step`.
 - **Reglas por sesión/por herramienta** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` nombran el renderer para solicitudes coincidentes; editables mediante la sección de settings `output-style-rules`.
-- **`/export`** — renderiza la sesión actual a Markdown o HTML saneado a través de la tubería de render; cada render conserva el texto original junto al renderizado.
+- **`/export`** — renderiza la sesión actual a Markdown o HTML saneado a través de la tubería de render; `--save <path>` escribe el documento saneado en esa ruta de workspace tras la aprobación del usuario. Cada render conserva el texto original junto al renderizado.
 
 ## Quick start
 
@@ -111,14 +111,14 @@ Todos los parámetros son campos Schemastery `Config` (modificables desde cordis
 | `includeBuiltins` | `true` | Incluir los `styles/` del paquete como capa de menor prioridad |
 | `watchStyles` | `true` | Recargar la librería cuando un archivo de estilo cambia en disco |
 | `rules` | `[]` | Reglas de render por sesión/herramienta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | Registrar el comando `/export` (exportación de sesión Markdown/HTML, consciente del renderer) |
+| `enableExport` | `true` | Registrar el comando `/export` (exportación de sesión Markdown/HTML, consciente del renderer; `--save` escribe con aprobación) |
 
 ## Tools & surfaces
 
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | Lista estilos, cambia o restaura el valor por defecto del proyecto |
-| `/export` | command | Renderiza la sesión actual a Markdown o HTML saneado |
+| `/export` | command | Renderiza la sesión actual a Markdown o HTML saneado; `--save` escribe con aprobación |
 | `output_style` | storage domain | Elección de estilo por sesión, indexada por sessionId |
 | `systemPrompt.section()` | contribution | Inyecta el cuerpo del estilo actual en cada ensamblado |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + la cascada `output.render/before` |
@@ -135,8 +135,10 @@ Todos los parámetros son campos Schemastery `Config` (modificables desde cordis
 | `/style off` | Restaura el valor por defecto del proyecto (default de settings, luego `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
 | `/export` | Renderiza la sesión actual a Markdown a través de la pipeline de render |
+| `/export md` | Renderiza a Markdown (`md` es la forma abreviada de `markdown`) |
 | `/export html` | Renderiza a HTML saneado |
 | `/export --renderer=concise` | Renderiza forzando un renderer (reglas omitidas) |
+| `/export md --save report.md` | Renderiza y luego escribe el documento saneado en `report.md` tras la aprobación |
 
 ## Style library
 
@@ -182,7 +184,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 
 ## Permissions & data
 
-- **Permissions**: el manifiesto de workshop declara `fs:read`, `fs:watch`, `storage:read`, `storage:write` y `settings:read`.
+- **Permissions**: el manifiesto de workshop declara `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` y `settings:read`.
 - **Data**: la elección de estilo vive en el dominio de almacenamiento `output_style` (indexada por sessionId); no se persiste otro estado, sin solicitudes de red.
 - **Session log**: el nombre del estilo viene de `command/run`, el texto exacto inyectado de `request/header`; el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio.
 
@@ -191,6 +193,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 - **Solo servicios públicos.** Contribuye `systemPrompt`, comandos, almacenamiento y settings; sin cambios en engine / agent-loop / apiproxy / UI oficial.
 - **Visible para el modelo ⟺ registrado.** Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin un nuevo tipo de evento de sesión, sin cambios en el agent-loop.
 - **Original siempre conservado.** Cada render (y `/export`) conserva el texto original junto al renderizado; para la exportación HTML se usa HTML saneado.
+- **Escrituras en disco controladas.** `/export --save` escribe solo después de que el servicio de aprobación lo conceda, y el contenido escrito pasa primero por la función pura `sanitizeText`; sin un servicio de aprobación o fs no escribe nada (fail-closed).
 
 ## Known limitations
 
@@ -203,7 +206,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 ```sh
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
-pnpm test            # vitest — 107 tests
+pnpm test            # vitest — 127 tests
 pnpm run verify      # typecheck + tests + self-contained (la puerta de prepublishOnly)
 pnpm run build       # artefactos lib/ (bundles host + client)
 pnpm pack            # tarball para dsh plugin add

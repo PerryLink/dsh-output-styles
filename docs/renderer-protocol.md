@@ -132,3 +132,13 @@ export function apply(ctx: Context): void {
 const result = await ctx.outputRenderers.renderText(rawText, { tool: 'sql', contentType: 'text' })
 // { original, rendered, rendererId, changed } — log both halves wherever you surface it.
 ```
+
+## Export to disk
+
+`/export` returns the rendered document as command output text. `/export
+[md|markdown|html] [--renderer=<id>] --save <path>` additionally writes the
+document to a workspace path: the document passes through the `sanitizeText`
+pure function first, then the write is gated by the approval service
+(`ctx.get('approval')`, fail-closed when absent) and performed by the fs
+service (`ctx.get('fs')`, fail-loud when absent). The render pipeline itself is
+unchanged — the same presenters and rule table apply before either output.

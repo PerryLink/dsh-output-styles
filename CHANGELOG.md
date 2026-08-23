@@ -6,12 +6,27 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`/export --save <path>`**: the export command now writes the rendered
+  document to a workspace path, gated by the user-approval service and the fs
+  service. `/export [md|markdown|html] [--renderer=<id>] [--save <path>]` — the
+  no-argument behavior is unchanged (the document is returned as output text);
+  `--save` writes only after `ctx.get('approval')` grants `allowed-once`
+  (fail-closed when the service is absent, rejects, cancels, or throws), uses
+  `ctx.get('fs')` for the actual write (fail-loud with a structured error when
+  absent), and passes the document through `sanitizeText` before writing.
+  `md` is accepted as a Markdown alias. `@deepseek-ai/dsh-fs` and
+  `@deepseek-ai/dsh-user-approval` are declared as optional peer dependencies.
+
 ### Changed
 
 - **Standards alignment**: `package.json` declares `packageManager` (`pnpm@11.7.0`,
   matching CI and the lockfile), and the `cordis.patch.yml` reference comment
   now lists the two renderer-protocol config keys (`rules`, `enableExport`)
   added in 0.4.0. No runtime behavior changes.
+- Five READMEs: `/export --save` reference, the `fs:write` workshop permission,
+  and the test count refreshed to 127.
 
 ## [0.4.3] - 2026-08-22
 

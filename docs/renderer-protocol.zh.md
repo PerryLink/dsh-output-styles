@@ -123,3 +123,11 @@ export function apply(ctx: Context): void {
 const result = await ctx.outputRenderers.renderText(rawText, { tool: 'sql', contentType: 'text' })
 // { original, rendered, rendererId, changed } —— 在任何展示它的地方把两半都记下来。
 ```
+
+## 导出到磁盘
+
+`/export` 把渲染后的文档作为命令输出文本返回。`/export [md|markdown|html]
+[--renderer=<id>] --save <path>` 另外把文档写入工作区路径：文档先经 `sanitizeText`
+纯函数净化，随后写入由审批服务（`ctx.get('approval')`，缺失则 fail-closed）把关、由
+fs 服务（`ctx.get('fs')`，缺失则大声失败）执行。渲染流水线本身不变——两种输出之前都应用
+同样的 presenter 与规则表。

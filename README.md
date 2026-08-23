@@ -41,7 +41,7 @@
 - **Claude Code parity** — `keep-coding-instructions`, `force-for-plugin` (`force` alias), `outputStyles` JSON compatibility, layered `stylesDir` directories, hot reload, and project-default fallback over the DSH settings seam.
 - **Renderer registry (`output.render.*`)** — `ctx.outputRenderers` lets any plugin register a pure presenter, applied through the `output.render/before` waterfall; built-in renderers `concise` and `step-by-step`.
 - **Per-session/per-tool rules** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` name the renderer for matching requests; editable through the `output-style-rules` settings section.
-- **`/export`** — render the current session to Markdown or sanitized HTML through the render pipeline; every render keeps the original text beside the rendered one.
+- **`/export`** — render the current session to Markdown or sanitized HTML through the render pipeline; `--save <path>` writes the sanitized document to that workspace path after user approval. Every render keeps the original text beside the rendered one.
 
 ## Quick start
 
@@ -112,14 +112,14 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | `includeBuiltins` | `true` | Include the package's bundled `styles/` as the lowest-priority layer |
 | `watchStyles` | `true` | Reload the library when a style file changes on disk |
 | `rules` | `[]` | Per-session/per-tool render rules: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | Register the `/export` command (Markdown/HTML session export, renderer-aware) |
+| `enableExport` | `true` | Register the `/export` command (Markdown/HTML session export, renderer-aware; `--save` writes with approval) |
 
 ## Tools & surfaces
 
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | List styles, switch, or restore the project default |
-| `/export` | command | Render the current session to Markdown or sanitized HTML |
+| `/export` | command | Render the current session to Markdown or sanitized HTML; `--save` writes with approval |
 | `output_style` | storage domain | Session-scoped style choice, keyed by sessionId |
 | `systemPrompt.section()` | contribution | Injects the current style body at every assembly |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + the `output.render/before` waterfall |
@@ -136,8 +136,10 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | `/style off` | Restore the project default (settings default, then `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
 | `/export` | Render the current session to Markdown through the renderer pipeline |
+| `/export md` | Render to Markdown (`md` is the shorthand for `markdown`) |
 | `/export html` | Render to sanitized HTML |
 | `/export --renderer=concise` | Render with one renderer forced (rules bypassed) |
+| `/export md --save report.md` | Render, then write the sanitized document to `report.md` after approval |
 
 ## Style library
 
@@ -183,7 +185,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 
 ## Permissions & data
 
-- **Permissions**: declares `fs:read`, `fs:watch`, `storage:read`, `storage:write`, and `settings:read` in its workshop manifest.
+- **Permissions**: declares `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write`, and `settings:read` in its workshop manifest.
 - **Data**: the style choice lives in the `output_style` storage domain (keyed by sessionId); no other state is persisted, no network requests.
 - **Session log**: the style name comes from `command/run`, the exact injected text from `request/header`; the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record.
 
@@ -192,6 +194,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 - **Public services only.** Contributes `systemPrompt`, commands, storage, and settings; no engine / agent-loop / apiproxy / official-UI changes.
 - **Model-visible ⟺ logged.** Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes.
 - **Original always kept.** Every render (and `/export`) keeps the original text beside the rendered one; sanitized HTML is used for HTML export.
+- **Disk writes gated.** `/export --save` writes only after the approval service grants it, and the written content passes through the `sanitizeText` pure function first; without an approval or fs service it writes nothing (fail-closed).
 
 ## Known limitations
 
@@ -204,7 +207,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 107 tests
+pnpm test            # vitest — 127 tests
 pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add

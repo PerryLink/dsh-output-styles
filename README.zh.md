@@ -40,7 +40,7 @@
 - **Claude Code 对齐** —— `keep-coding-instructions`、`force-for-plugin`（别名 `force`）、`outputStyles` JSON 兼容、分层 `stylesDir` 目录、热重载，以及通过 DSH settings 接缝的项目默认回退。
 - **渲染器注册表（`output.render.*`）** —— `ctx.outputRenderers` 允许任意插件注册纯 presenter，经 `output.render/before` waterfall 应用；内置渲染器 `concise` 与 `step-by-step`。
 - **按会话/按工具规则** —— `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` 为匹配请求指定渲染器；可通过 `output-style-rules` 设置区编辑。
-- **`/export`** —— 经渲染管线把当前会话导出为 Markdown 或净化 HTML；每次渲染都保留原文与渲染结果并列。
+- **`/export`** —— 经渲染管线把当前会话导出为 Markdown 或净化 HTML；`--save <path>` 经用户审批后把净化文档写入该工作区路径。每次渲染都保留原文与渲染结果并列。
 
 ## Quick start
 
@@ -111,14 +111,14 @@ flowchart LR
 | `includeBuiltins` | `true` | 将包内置 `styles/` 作为最低优先级层 |
 | `watchStyles` | `true` | 风格文件在磁盘上变化时重载库 |
 | `rules` | `[]` | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | 注册 `/export` 命令（Markdown/HTML 会话导出，感知渲染器） |
+| `enableExport` | `true` | 注册 `/export` 命令（Markdown/HTML 会话导出，感知渲染器；`--save` 经审批写入） |
 
 ## Tools & surfaces
 
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | 列出风格、切换或恢复项目默认 |
-| `/export` | command | 把当前会话渲染为 Markdown 或净化 HTML |
+| `/export` | command | 把当前会话渲染为 Markdown 或净化 HTML；`--save` 经审批写入 |
 | `output_style` | storage domain | 按 sessionId 隔离的会话级风格选择 |
 | `systemPrompt.section()` | contribution | 在每次组装时注入当前风格正文 |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + `output.render/before` waterfall |
@@ -135,8 +135,10 @@ flowchart LR
 | `/style off` | 恢复项目默认（settings 默认，其次 `defaultStyle`） |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
 | `/export` | 经渲染管线把当前会话渲染为 Markdown |
+| `/export md` | 渲染为 Markdown（`md` 是 `markdown` 的简写） |
 | `/export html` | 渲染为净化 HTML |
 | `/export --renderer=concise` | 强制指定一个渲染器渲染（跳过规则） |
+| `/export md --save report.md` | 渲染后经审批把净化文档写入 `report.md` |
 
 ## Style library
 
@@ -182,7 +184,7 @@ flowchart LR
 
 ## Permissions & data
 
-- **Permissions**：workshop 清单声明 `fs:read`、`fs:watch`、`storage:read`、`storage:write` 与 `settings:read`。
+- **Permissions**：workshop 清单声明 `fs:read`、`fs:write`、`fs:watch`、`storage:read`、`storage:write` 与 `settings:read`。
 - **Data**：风格选择存于 `output_style` 存储域（按 sessionId 隔离）；不持久化其他状态，无网络请求。
 - **Session log**：风格名来自 `command/run`，精确注入文本来自 `request/header`；来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。
 
@@ -191,6 +193,7 @@ flowchart LR
 - **仅公开服务。** 贡献 `systemPrompt`、命令、存储与 settings；不改 engine / agent-loop / apiproxy / 官方 UI。
 - **模型可见 ⟺ 已记录。** 模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。
 - **始终保留原文。** 每次渲染（含 `/export`）都保留原文与渲染结果并列；HTML 导出使用净化 HTML。
+- **写盘有门禁。** `/export --save` 仅在审批服务放行后写入，且写入内容先经 `sanitizeText` 纯函数净化；缺少审批或 fs 服务时一律不写入（fail-closed）。
 
 ## Known limitations
 
@@ -203,7 +206,7 @@ flowchart LR
 ```sh
 pnpm install
 pnpm run typecheck   # 两个 tsc 项目
-pnpm test            # vitest —— 107 个测试
+pnpm test            # vitest —— 127 个测试
 pnpm run verify      # typecheck + tests + self-contained（prepublishOnly 门禁）
 pnpm run build       # lib/ 产物（host + client 包）
 pnpm pack            # 供 dsh plugin add 的 tarball

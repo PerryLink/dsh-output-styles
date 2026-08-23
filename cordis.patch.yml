@@ -34,6 +34,8 @@
       #   rules: []                  # per-session/per-tool render rules
       #                              # [{ match: { tool?, contentType?, session? }, style, priority? }]
       #   enableExport: true         # register the /export command
+      #                              # (md|html; --save <path> writes the
+      #                              # sanitized document after approval)
 
     # Optional invariant companion (envelope-level checks). Only for profiles
     # that DISABLE the main row above: the main plugin already registers
