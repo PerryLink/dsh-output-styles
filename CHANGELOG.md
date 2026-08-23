@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Standards alignment**: `package.json` declares `packageManager` (`pnpm@11.7.0`,
+  matching CI and the lockfile), and the `cordis.patch.yml` reference comment
+  now lists the two renderer-protocol config keys (`rules`, `enableExport`)
+  added in 0.4.0. No runtime behavior changes.
+
 ## [0.4.3] - 2026-08-22
 
 ### Changed
