@@ -25,7 +25,7 @@ import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-libra
 import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, type StyleFoldState } from './style-command.ts'
 import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleFoldStateSchema, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
 import { BUILTIN_RENDERERS, RendererRegistry, type OutputRenderer, type RenderContext, type RenderedText, type StyleRule } from './renderers.ts'
-import { conversationLines, renderExport } from './export.ts'
+import { conversationLines, renderExport, sanitizeText } from './export.ts'
 
 /** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
 export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.meta.url))
@@ -507,23 +507,41 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // Markdown or sanitized HTML through the renderer pipeline. The document
   // itself is the visible artifact; the original lines are the session log
   // the export was projected from — rendered and original stay reconstructable.
+  // `--save <path>` additionally writes the sanitized document to that
+  // workspace path, gated by the approval service and the fs service (both
+  // optional; a missing approval service denies the write, a missing fs
+  // service fails loudly).
   if (resolved.enableExport) {
     ctx.inject(['commands'], (commandCtx) => {
       commandCtx.commands.register({
         name: 'export',
         description: 'Export this session as Markdown or HTML (renderer-aware)',
-        input: { hint: '[markdown|html] [--renderer=<id>]' },
-        handler: async ({ agent, rawInput }) => {
+        input: { hint: '[markdown|html] [--renderer=<id>] [--save <path>]' },
+        handler: async ({ agent, rawInput, signal }) => {
           const input = parseExportInput(rawInput)
           if (input.kind === 'error') {
-            return { kind: 'error', text: 'usage: /export [markdown|html] [--renderer=<id>]' }
+            return { kind: 'error', text: 'usage: /export [markdown|html] [--renderer=<id>] [--save <path>]' }
           }
           const lines = conversationLines(agent.session.events)
           const rules: StyleRule[] = input.renderer === undefined
             ? [...effectiveRules]
             : [{ match: {}, style: input.renderer, priority: 0 }]
           const document = renderExport(renderers, lines, input.format, rules)
-          return { kind: 'success', text: document.text }
+          if (input.save === undefined) {
+            return { kind: 'success', text: document.text }
+          }
+          // The disk path sanitizes the rendered document before writing and
+          // writes only after the approval service grants it.
+          const saved = await saveExportFile(
+            ctx.get('fs') as ExportFileSystem | undefined,
+            ctx.get('approval') as ExportApproval | undefined,
+            agent,
+            input.save,
+            sanitizeText(document.text),
+            signal,
+          )
+          if (saved.kind === 'error') return { kind: 'error', text: saved.text }
+          return { kind: 'success', text: `saved ${input.format} export to ${saved.path}` }
         },
       })
     })
@@ -531,25 +549,151 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
 }
 
 /** Parsed `/export` invocation. */
-type ExportInput = { kind: 'ok'; format: 'markdown' | 'html'; renderer?: string } | { kind: 'error' }
+type ExportInput = {
+  kind: 'ok'
+  format: 'markdown' | 'html'
+  renderer?: string
+  save?: string
+} | { kind: 'error' }
 
-/** Parse `/export [markdown|html] [--renderer=<id>]` from the raw command input. */
+/** Parse `/export [markdown|html] [--renderer=<id>] [--save <path>]` from the raw command input. */
 export function parseExportInput(rawInput: unknown): ExportInput {
   const raw = String(rawInput ?? '').trim()
   const parts = raw === '' ? [] : raw.split(/\s+/)
   let format: 'markdown' | 'html' = 'markdown'
   let renderer: string | undefined
-  for (const part of parts) {
-    if (part === 'markdown' || part === 'html') {
-      format = part
+  let save: string | undefined
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index]
+    if (part === undefined) continue
+    if (part === 'markdown' || part === 'md') {
+      format = 'markdown'
       continue
     }
-    const match = /^--renderer=([a-z0-9][a-z0-9-]*)$/.exec(part)
-    if (match !== null) {
-      renderer = match[1]
+    if (part === 'html') {
+      format = 'html'
+      continue
+    }
+    const rendererMatch = /^--renderer=([a-z0-9][a-z0-9-]*)$/.exec(part)
+    if (rendererMatch !== null) {
+      renderer = rendererMatch[1]
+      continue
+    }
+    const saveInline = /^--save=(.+)$/.exec(part)
+    if (saveInline !== null) {
+      save = saveInline[1]
+      continue
+    }
+    if (part === '--save') {
+      const next = parts[index + 1]
+      if (next === undefined || next === '') return { kind: 'error' }
+      save = next
+      index += 1
       continue
     }
     return { kind: 'error' }
   }
-  return { kind: 'ok', format, ...renderer === undefined ? {} : { renderer } }
+  return {
+    kind: 'ok',
+    format,
+    ...renderer === undefined ? {} : { renderer },
+    ...save === undefined ? {} : { save },
+  }
+}
+
+/** Approval outcome vocabulary, structural (mirrors the approval seam without importing it). */
+type ApprovalOutcome = 'allowed-once' | 'rejected' | 'cancelled' | 'unavailable'
+
+/** Structural slice of the DSH filesystem service the save path uses. */
+export interface ExportFileSystem {
+  resolve(path: string, opts?: { cwd?: string; signal?: AbortSignal }): Promise<unknown>
+  writeText(target: unknown, content: string): Promise<unknown>
+}
+
+/** Structural slice of the DSH approval service the save path uses. */
+export interface ExportApproval {
+  request(request: { agent: unknown; toolName: string; reason: string; signal?: AbortSignal }): Promise<ApprovalOutcome>
+}
+
+/** Error codes of the `/export --save` path; each is a stable machine-readable label. */
+export type ExportSaveErrorCode = 'fs-unavailable' | 'approval-unavailable' | 'approval-denied' | 'approval-cancelled'
+
+/** Result of a `/export --save` attempt: the written path or a structured failure. */
+export type ExportSaveResult =
+  | { readonly kind: 'written'; readonly path: string }
+  | { readonly kind: 'error'; readonly code: ExportSaveErrorCode; readonly text: string }
+
+/**
+ * Write one rendered export document to a workspace path after user approval.
+ * Fail-closed: a missing approval service, a rejected/cancelled/unavailable
+ * decision, or a throwing approval channel all deny the write; a missing fs
+ * service fails loudly with a structured error. The caller already sanitized
+ * `content` before this write.
+ * @param fs - the fs service (`ctx.get('fs')`), or undefined when none is composed.
+ * @param approval - the approval service (`ctx.get('approval')`), or undefined when none is composed.
+ * @param agent - the agent whose session the export belongs to (routes the approval).
+ * @param path - the workspace path to write.
+ * @param content - the sanitized document text.
+ * @param signal - the command's abort signal, forwarded to approval and resolve.
+ * @returns the written path, or a structured failure.
+ */
+export async function saveExportFile(
+  fs: ExportFileSystem | undefined,
+  approval: ExportApproval | undefined,
+  agent: unknown,
+  path: string,
+  content: string,
+  signal?: AbortSignal,
+): Promise<ExportSaveResult> {
+  if (approval === undefined) {
+    return {
+      kind: 'error',
+      code: 'approval-unavailable',
+      text: 'dsh-output-styles: /export --save requires an approval service (compose @deepseek-ai/dsh-user-approval); nothing was written',
+    }
+  }
+  let outcome: ApprovalOutcome
+  try {
+    outcome = await approval.request({
+      agent,
+      toolName: 'export',
+      reason: `write the exported document to ${path}`,
+      ...signal === undefined ? {} : { signal },
+    })
+  } catch {
+    // An approval channel that cannot answer is an unanswerable ask: fail closed.
+    outcome = 'unavailable'
+  }
+  switch (outcome) {
+    case 'allowed-once': break
+    case 'rejected':
+      return {
+        kind: 'error',
+        code: 'approval-denied',
+        text: 'dsh-output-styles: /export --save was rejected; nothing was written',
+      }
+    case 'cancelled':
+      return {
+        kind: 'error',
+        code: 'approval-cancelled',
+        text: 'dsh-output-styles: /export --save was cancelled; nothing was written',
+      }
+    default:
+      // 'unavailable' plus any out-of-vocabulary answer fail closed (never write).
+      return {
+        kind: 'error',
+        code: 'approval-unavailable',
+        text: 'dsh-output-styles: /export --save approval is unavailable; nothing was written',
+      }
+  }
+  if (fs === undefined) {
+    return {
+      kind: 'error',
+      code: 'fs-unavailable',
+      text: 'dsh-output-styles: /export --save requires an fs service (compose @deepseek-ai/dsh-fs); nothing was written',
+    }
+  }
+  const target = await fs.resolve(path, signal === undefined ? undefined : { signal })
+  await fs.writeText(target, content)
+  return { kind: 'written', path }
 }
