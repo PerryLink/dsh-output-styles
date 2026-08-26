@@ -112,6 +112,7 @@ Todos los parámetros son campos Schemastery `Config` (modificables desde cordis
 | `watchStyles` | `true` | Recargar la librería cuando un archivo de estilo cambia en disco |
 | `rules` | `[]` | Reglas de render por sesión/herramienta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
 | `enableExport` | `true` | Registrar el comando `/export` (exportación de sesión Markdown/HTML, consciente del renderer; `--save` escribe con aprobación) |
+| `respectCoreOutputStyles` | `true` | Al detectar un servicio core `outputStyles`, omitir la inyección de prompt de este plugin (mantener hot-switch / rules / export) |
 
 ## Tools & surfaces
 

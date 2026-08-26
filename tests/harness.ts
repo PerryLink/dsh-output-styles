@@ -151,12 +151,13 @@ export interface StyleHarness {
  * @param options.invariants - also compose the duplicate-strict invariant registry.
  * @param options.fs - also provide the fs fake.
  * @param options.approval - also provide the approval fake.
+ * @param options.coreOutputStyles - also provide a fake core `outputStyles` service (coexistence tests).
  * @returns the live harness.
  */
 export async function createStyleHarness(
   config: outputStyles.Config = {},
   stylesDir?: string,
-  options: { settings?: boolean; invariants?: boolean; fs?: FakeFileSystem; approval?: FakeApproval } = {},
+  options: { settings?: boolean; invariants?: boolean; fs?: FakeFileSystem; approval?: FakeApproval; coreOutputStyles?: boolean } = {},
 ): Promise<StyleHarness> {
   const ctx = new Context()
   const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-output-styles-'))
@@ -181,6 +182,7 @@ export async function createStyleHarness(
   if (fs !== undefined) ctx.provide('fs', fs as never)
   const approval = options.approval
   if (approval !== undefined) ctx.provide('approval', approval as never)
+  if (options.coreOutputStyles === true) ctx.provide('outputStyles', {} as never)
   const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config })
 
   const makeSession = (id?: string): Session => ctx.sessions.create(

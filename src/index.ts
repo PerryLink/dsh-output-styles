@@ -21,6 +21,8 @@ export const inject = ['systemPrompt', 'storageDomain']
 
 export { Config, resolveConfig } from './config.ts'
 export type { ResolvedConfig } from './config.ts'
+export { CORE_OUTPUT_STYLES_SERVICE, coexistenceReport, detectCoreOutputStyles } from './coexist.ts'
+export type { CoexistenceMode, CoexistenceReport } from './coexist.ts'
 export { apply, DEFAULT_STYLES_DIR, OutputStyleRuntime, STYLE_SECTION_NAME } from './runtime.ts'
 export {
   applyStyleEvent,

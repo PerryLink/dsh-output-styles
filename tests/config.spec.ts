@@ -14,6 +14,7 @@ describe('Config schema', () => {
       watchStyles: true,
       rules: [],
       enableExport: true,
+      respectCoreOutputStyles: true,
     })
   })
 
@@ -52,6 +53,7 @@ describe('resolveConfig', () => {
       watchStyles: true,
       rules: [],
       enableExport: true,
+      respectCoreOutputStyles: true,
     })
   })
 

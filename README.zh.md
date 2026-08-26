@@ -112,6 +112,7 @@ flowchart LR
 | `watchStyles` | `true` | 风格文件在磁盘上变化时重载库 |
 | `rules` | `[]` | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
 | `enableExport` | `true` | 注册 `/export` 命令（Markdown/HTML 会话导出，感知渲染器；`--save` 经审批写入） |
+| `respectCoreOutputStyles` | `true` | 检测到核心 `outputStyles` 服务时跳过本插件的提示词注入（保留热切换 / rules / export） |
 
 ## Tools & surfaces
 

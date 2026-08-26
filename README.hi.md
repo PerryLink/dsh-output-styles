@@ -112,6 +112,7 @@ flowchart LR
 | `watchStyles` | `true` | डिस्क पर शैली फ़ाइल बदलने पर पुस्तकालय फिर से लोड करें |
 | `rules` | `[]` | प्रति-सत्र/प्रति-टूल रेंडर नियम: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
 | `enableExport` | `true` | `/export` कमांड पंजीकृत करें (Markdown/HTML सत्र निर्यात, रेंडरर-जागरूक; `--save` स्वीकृति से लिखता है) |
+| `respectCoreOutputStyles` | `true` | कोर `outputStyles` सेवा का पता चलने पर इस प्लगइन का prompt इंजेक्शन छोड़ें (hot-switch / rules / export बनाए रखें) |
 
 ## Tools & surfaces
 

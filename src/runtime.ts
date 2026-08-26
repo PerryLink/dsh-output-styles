@@ -20,6 +20,7 @@ import type { Domain, DomainFacility, KvTable } from '@deepseek-ai/dsh-storage-d
 import z from '@deepseek-ai/schemastery'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { resolveConfig, type Config } from './config.ts'
+import { detectCoreOutputStyles } from './coexist.ts'
 import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegistry } from './invariant.ts'
 import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-library.ts'
 import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, type StyleFoldState } from './style-command.ts'
@@ -265,6 +266,14 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     )
   }
   const resolved = resolveConfig(config, DEFAULT_STYLES_DIR)
+  // Coexistence with a core outputStyles capability: when it is composed (and
+  // respectCoreOutputStyles is true), prompt injection belongs to the core —
+  // this plugin keeps hot-switch / rules / export and skips the two injections
+  // below to avoid double-injecting a style directive.
+  const coreActive = resolved.respectCoreOutputStyles && detectCoreOutputStyles(ctx)
+  if (coreActive) {
+    ctx.logger.info('dsh-output-styles: core outputStyles detected — degrading to hot-switch + rules + export (no prompt injection)')
+  }
   const styles = loadStyleLibrary(
     resolved.stylesDirs,
     { compatJson: resolved.compatJson },
@@ -348,36 +357,38 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     },
   )
 
-  ctx.systemPrompt.section({
-    name: STYLE_SECTION_NAME,
-    order: resolved.sectionOrder,
-    text: (context: AssembleContext) => {
-      const agent = context.agent
-      if (agent === undefined) return ''
-      const style = runtime.effectiveStyle(agent.session.id)
-      // A keep-coding-instructions: false style owns the whole prompt: the
-      // assembly waterfall below rebuilds the section list, so this section
-      // stays silent instead of double-injecting.
-      if (style === undefined || !style.keepCodingInstructions) return ''
-      return runtime.promptText(agent.session.id)
-    },
-  })
+  if (!coreActive) {
+    ctx.systemPrompt.section({
+      name: STYLE_SECTION_NAME,
+      order: resolved.sectionOrder,
+      text: (context: AssembleContext) => {
+        const agent = context.agent
+        if (agent === undefined) return ''
+        const style = runtime.effectiveStyle(agent.session.id)
+        // A keep-coding-instructions: false style owns the whole prompt: the
+        // assembly waterfall below rebuilds the section list, so this section
+        // stays silent instead of double-injecting.
+        if (style === undefined || !style.keepCodingInstructions) return ''
+        return runtime.promptText(agent.session.id)
+      },
+    })
 
-  // Claude Code keep-coding-instructions: false — the active style replaces
-  // the whole system prompt. The waterfall runs after downstream
-  // contributions resolve (tools, contexts, and variables still assemble),
-  // then swaps in a single style section.
-  ctx.on('system-prompt/assemble', async (_assembly: PromptAssembly, context: AssembleContext, next) => {
-    const out = await next()
-    const agent = context.agent
-    if (agent === undefined) return out
-    const style = runtime.effectiveStyle(agent.session.id)
-    if (style === undefined || style.keepCodingInstructions) return out
-    return {
-      ...out,
-      sections: [{ name: STYLE_SECTION_NAME, text: runtime.promptText(agent.session.id) }],
-    }
-  })
+    // Claude Code keep-coding-instructions: false — the active style replaces
+    // the whole system prompt. The waterfall runs after downstream
+    // contributions resolve (tools, contexts, and variables still assemble),
+    // then swaps in a single style section.
+    ctx.on('system-prompt/assemble', async (_assembly: PromptAssembly, context: AssembleContext, next) => {
+      const out = await next()
+      const agent = context.agent
+      if (agent === undefined) return out
+      const style = runtime.effectiveStyle(agent.session.id)
+      if (style === undefined || style.keepCodingInstructions) return out
+      return {
+        ...out,
+        sections: [{ name: STYLE_SECTION_NAME, text: runtime.promptText(agent.session.id) }],
+      }
+    })
+  }
 
   // The /style command: the one write path a web client uses. The child
   // activates only when a command registry is composed (headless assemblies

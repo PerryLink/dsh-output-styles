@@ -113,6 +113,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | `watchStyles` | `true` | Reload the library when a style file changes on disk |
 | `rules` | `[]` | Per-session/per-tool render rules: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
 | `enableExport` | `true` | Register the `/export` command (Markdown/HTML session export, renderer-aware; `--save` writes with approval) |
+| `respectCoreOutputStyles` | `true` | When a core `outputStyles` service is detected, skip this plugin's prompt injection (keep hot-switch / rules / export) |
 
 ## Tools & surfaces
 
@@ -198,6 +199,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 
 ## Known limitations
 
+- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/export`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions.
 - **Main conversation only.** Styles apply to the main conversation; subagent sessions keep their own prompts (matching Claude Code).
 - **Truncation.** Style bodies longer than `maxStyleChars` are truncated with a marker.
 - **Skipped style files.** A bad style file is skipped with a warning and never breaks the profile.

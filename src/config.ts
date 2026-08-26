@@ -63,6 +63,13 @@ export interface Config {
   rules?: StyleRuleConfig[]
   /** Register the `/export` command (Markdown/HTML session-export, renderer-aware). */
   enableExport?: boolean
+  /**
+   * Honor a detected core `outputStyles` capability: when true (default) and
+   * the core service is composed, this plugin skips its own system-prompt
+   * injection (hot-switch / rules / export stay active). Set false to always
+   * inject regardless.
+   */
+  respectCoreOutputStyles?: boolean
 }
 
 /** Configuration after defaults have been resolved. */
@@ -87,6 +94,8 @@ export interface ResolvedConfig {
   rules: Array<{ match: { tool?: string; contentType?: 'text' | 'markdown' | 'html'; session?: string }; style: string; priority: number }>
   /** Whether the `/export` command registers. */
   enableExport: boolean
+  /** Whether a detected core `outputStyles` capability disables prompt injection. */
+  respectCoreOutputStyles: boolean
 }
 
 /** Loader-visible configuration schema and defaults. */
@@ -109,6 +118,7 @@ export const Config: z<Config> = z.object({
     priority: z.number().required(false),
   })).default([]),
   enableExport: z.boolean().default(true),
+  respectCoreOutputStyles: z.boolean().default(true),
 })
 
 /**
@@ -155,5 +165,6 @@ export function resolveConfig(config: Config, defaultStylesDir: string): Resolve
     watchStyles: config.watchStyles ?? true,
     rules: (config.rules ?? []).map(rule => ({ ...rule, priority: rule.priority ?? 0 })),
     enableExport: config.enableExport ?? true,
+    respectCoreOutputStyles: config.respectCoreOutputStyles ?? true,
   }
 }
