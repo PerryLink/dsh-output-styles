@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-26
+
+### Added
+
+- 与核心 outputStyles 共存/降级策略：探测 + 免重复注入 + 可运行检测。
+
 ## [0.5.0] - 2026-08-23
 
 ### Added
