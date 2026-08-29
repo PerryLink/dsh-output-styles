@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎨 dsh-output-styles
+- **Canal 1024 store**: `npm i -g dsh1024` una vez, luego `dsh1024 plugin --profile web add dsh-output-styles` (cuenta para el ranking de instalaciones de [deepseek1024.com](https://deepseek1024.com)).
 
 **`outputStyles` de Claude Code para DeepSeek Harness**: cambia el estilo de salida del modelo en tiempo de ejecución, por sesión, de forma duradera.
 

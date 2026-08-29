@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎨 dsh-output-styles
+- **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-output-styles`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）。
 
 **DeepSeek Harness 的 Claude Code `outputStyles` 等价实现** —— 在运行时、按会话、持久地切换模型输出风格。
 

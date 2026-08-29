@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎨 dsh-output-styles
+- **1024 स्टोर चैनल**: एक बार `npm i -g dsh1024`, फिर `dsh1024 plugin --profile web add dsh-output-styles` ([deepseek1024.com](https://deepseek1024.com) इंस्टॉल रैंकिंग में गिना जाता है)।
 
 **DeepSeek Harness के लिए Claude Code का `outputStyles`**: मॉडल की आउटपुट शैली को रनटाइम पर, प्रति-सत्र, स्थायी रूप से बदलें।
 

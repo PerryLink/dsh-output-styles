@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎨 dsh-output-styles
+- **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-output-styles` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
 [![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-output-styles)
 
 **Claude Code `outputStyles` for DeepSeek Harness** — switch the model's output style at runtime, per session, durably.
