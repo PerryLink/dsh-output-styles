@@ -224,5 +224,9 @@
     "verify": "pnpm run typecheck && pnpm test && pnpm run verify:self-contained",
     "verify:self-contained": "node scripts/verify-self-contained.mjs",
     "verify:artifacts": "node scripts/verify-artifacts.mjs"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/PerryLink"
   }
 }
