@@ -9,7 +9,7 @@
  * @module dsh-output-styles/client
  */
 
-import type { ClientContext, ISessions } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { CommandUiContract, SelectOption } from '@deepseek-ai/dsh-client-ui-commands/client'
@@ -32,6 +32,37 @@ export const inject = ['commandUi', 'locale', 'remote', 'sessions']
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'style'
+
+/**
+ * Minimal structural contract of an observable face: the `style` projection
+ * is read through `getSnapshot` only.
+ */
+interface ObservableSnapshot<T> {
+  getSnapshot(): T
+}
+
+/**
+ * The projection-carrying session face reached through the sessions binding;
+ * only the projection lookup the picker uses is named.
+ */
+interface StyleSessionBinding {
+  session: {
+    projections: {
+      faceOf(name: string): ObservableSnapshot<unknown>
+    }
+  }
+}
+
+/**
+ * Minimal structural contract of the client sessions face the picker needs.
+ * Declared locally because the owner package of `ISessions` moved across
+ * harness lines (rc.2's client runtime, then the session controller, which
+ * sits outside the published plugin peer line); the runtime contract is
+ * structural, so only the `binding` lookup is named here.
+ */
+interface ISessions {
+  binding(sessionId: string): StyleSessionBinding | undefined
+}
 
 /** The picker row that restores the project default; stable, never a style name. */
 const OFF_ID = 'off'
@@ -68,10 +99,9 @@ export function apply(ctx: ClientContext): void {
 
   ctx.inject(['commandUi', 'remote', 'sessions'], (scope: ClientContext) => {
     const commandUi = scope.get('commandUi') as CommandUiContract
-    // The host graph (`dsh-session`) and the client graph (`dsh-client-runtime`)
-    // both declare a `sessions` service on Context; this package compiles
-    // against both faces, so the runtime value is the client service named
-    // 'sessions' and the host type is what the merged declaration resolves.
+    // The client sessions service is read through the local structural
+    // contract above: its owner package changed across harness lines while
+    // the runtime shape (binding → projections → observable face) is stable.
     const sessions = scope.get('sessions') as unknown as ISessions
     const remote = scope.remote
 
@@ -101,4 +131,4 @@ export function apply(ctx: ClientContext): void {
   })
 }
 
-export type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+export type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'

@@ -74,7 +74,6 @@
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-api-remotes",
         "@deepseek-ai/dsh-client-ui-commands",
         "@deepseek-ai/dsh-client-locale"
@@ -144,7 +143,6 @@
     "@deepseek-ai/schemastery": "^3.18.1",
     "@deepseek-ai/dsh-api-remotes": ">=0.1.1-rc.2 <0.2.0",
     "@deepseek-ai/dsh-client-locale": ">=0.1.1-rc.2 <0.2.0",
-    "@deepseek-ai/dsh-client-runtime": ">=0.1.1-rc.2 <0.2.0",
     "@deepseek-ai/dsh-client-ui-commands": ">=0.1.1-rc.2 <0.2.0"
   },
   "peerDependenciesMeta": {
@@ -166,9 +164,6 @@
     "@deepseek-ai/dsh-api-remotes": {
       "optional": true
     },
-    "@deepseek-ai/dsh-client-runtime": {
-      "optional": true
-    },
     "@deepseek-ai/dsh-client-ui-commands": {
       "optional": true
     },
@@ -188,7 +183,6 @@
     "@deepseek-ai/dsh-attachment": "0.1.1-rc.2",
     "@deepseek-ai/dsh-brand": "0.1.1-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.1.1-rc.2",
-    "@deepseek-ai/dsh-client-runtime": "0.1.1-rc.2",
     "@deepseek-ai/dsh-client-ui-commands": "0.1.1-rc.2",
     "@deepseek-ai/dsh-client-ui-input-trigger": "0.1.1-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.1.1-rc.2",

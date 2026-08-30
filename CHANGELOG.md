@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Client half: `ClientContext` now aliases `@deepseek-ai/cordis` `Context`
+  and the sessions face is a local structural contract (`binding` → `style`
+  projection observable), replacing the removed
+  `@deepseek-ai/dsh-client-runtime` import; `SessionId` re-exports from
+  `@deepseek-ai/dsh-api-remotes/client`. The browser picker mounts again on
+  harness lines without the client runtime package.
+
 ## [0.6.1] - 2026-08-27
 
 ### Fixed
