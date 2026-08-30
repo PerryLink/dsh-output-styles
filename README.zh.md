@@ -7,6 +7,8 @@
 
 *`/style concise` —— 从此每条回复都简洁。`/style off` —— 回到项目默认。*
 
+> **官方仓库。** 本仓库是 dsh-output-styles 的唯一官方仓库，由 PerryLink 维护。其他账号下的同名仓库与本项目无关。
+
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![DSH plugin](https://img.shields.io/badge/dsh-plugin-✅-green)](https://github.com/topics/dsh-plugin)
 [![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
