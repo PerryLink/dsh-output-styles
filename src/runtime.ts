@@ -501,7 +501,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         })).default([]),
       }),
       {
-        base: { rules: resolved.rules },
+        base: { rules: resolved.rules } as never,
         validate: (value: { rules: ReadonlyArray<{ style: string }> }): void => {
           for (const rule of value.rules) {
             if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
