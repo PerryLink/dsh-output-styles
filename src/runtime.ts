@@ -511,11 +511,11 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         },
       },
     )
-    const adoptRules = (next: { rules: ReadonlyArray<{ match?: unknown; style: string; priority?: number }> }): void => {
-      effectiveRules = next.rules.map(rule => ({ match: rule.match ?? {}, style: rule.style, priority: rule.priority ?? 0 }))
+    const adoptRules = (next: { rules: readonly StyleRule[] }): void => {
+      effectiveRules = next.rules
     }
-    adoptRules(rulesScope.get())
-    rulesScope.watch(next => { adoptRules(next) })
+    adoptRules(rulesScope.get() as unknown as { rules: readonly StyleRule[] })
+    rulesScope.watch(next => { adoptRules(next as unknown as { rules: readonly StyleRule[] }) })
   })
 
   // The /export command: renders the current session's message surface to
