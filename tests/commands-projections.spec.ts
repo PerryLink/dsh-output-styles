@@ -112,7 +112,7 @@ describe('style session projection', () => {
     await harness.runStyle(session, '/style concise')
     const checkpoint = harness.ctx.sessionProjections.checkpoint(session)
     expect(checkpoint['style']).toMatchObject({ ver: 2, val: { current: 'concise', pending: null } })
-    const restored = harness.ctx.sessionProjections.restore(checkpoint, session.events, 0)
+    const restored = harness.ctx.sessionProjections.restore(checkpoint, session.events, 0, session.header)
     expect(restored.snapshot.values.style?.currentValue).toBe('concise')
     await harness.dispose()
   })

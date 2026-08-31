@@ -36,7 +36,8 @@ export class FakeSettings extends SettingsProvider {
   protected async persist(ns: SettingsNamespace, section: Record<string, unknown>): Promise<void> {
     this.doc[ns] = section
   }
-  override register<T>(ns: SettingsNamespace, schema: z<T>, options?: SettingsRegisterOptions<T>): SettingsScope<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the alpha.2 register signature is generically constrained on a non-exported namespace input; the fake widens the parameter.
+  override register<T>(ns: any, schema: z<T>, options?: SettingsRegisterOptions<T>): SettingsScope<T> {
     const scope = super.register(ns, schema, options)
     this.lastScope = scope as unknown as SettingsScope<{ style: string }>
     this.scopes.set(String(ns), scope as unknown as SettingsScope<unknown>)
