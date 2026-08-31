@@ -18,7 +18,7 @@ import type {} from '@deepseek-ai/dsh-session-projection'
 import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type { Domain, DomainFacility, KvTable } from '@deepseek-ai/dsh-storage-domain'
 import z from '@deepseek-ai/schemastery'
-import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import { resolveConfig, type Config } from './config.ts'
 import { detectCoreOutputStyles } from './coexist.ts'
 import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegistry } from './invariant.ts'
@@ -35,7 +35,7 @@ export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.met
 export const STYLE_SECTION_NAME = 'output-style:selection'
 
 /** Settings namespace owning the project-level default (`outputStyle`). */
-const SETTINGS_NS = settingsNamespace('output-style')
+const SETTINGS_NS = 'output-style' as SettingsNamespace
 
 /** Coalescing delay for style-file change events; an internal implementation constant, not a deployment knob. */
 const WATCH_DEBOUNCE_MS = 250
@@ -337,25 +337,27 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // selected a style fall back to `output-style.style` (user settings layer,
   // then the composition defaultStyle). Stays inactive until a settings
   // provider is composed; the settings namespace validates names against the
-  // live library at write time.
-  installSettingsSection(
-    ctx,
-    SETTINGS_NS,
-    z.object({ style: z.string().default('') }),
-    { style: resolved.defaultStyle },
-    {
-      setSource: (current: () => { style: string }): void => { runtime.setProjectDefault(() => current().style) },
-      onChange: () => {},
-      validate: (value: { style: string }): void => {
-        if (value.style !== '' && !runtime.styles.has(value.style)) {
-          throw new Error(
-            `dsh-output-styles: settings outputStyle "${value.style}" names no style `
-            + `(available: ${[...runtime.styles.keys()].join(', ') || 'none'})`,
-          )
-        }
+  // live library at write time. The 0.1.2-alpha.2 settings seam registers a
+  // namespace schema and returns an owner scope (`get`/`watch`); the removed
+  // `installSettingsSection` helper no longer exists.
+  ctx.inject(['settings'], (settingsCtx) => {
+    const scope = settingsCtx.settings.register(
+      SETTINGS_NS,
+      z.object({ style: z.string().default('') }),
+      {
+        base: { style: resolved.defaultStyle },
+        validate: (value: { style: string }): void => {
+          if (value.style !== '' && !runtime.styles.has(value.style)) {
+            throw new Error(
+              `dsh-output-styles: settings outputStyle "${value.style}" names no style `
+              + `(available: ${[...runtime.styles.keys()].join(', ') || 'none'})`,
+            )
+          }
+        },
       },
-    },
-  )
+    )
+    runtime.setProjectDefault(() => scope.get().style)
+  })
 
   if (!coreActive) {
     ctx.systemPrompt.section({
@@ -484,35 +486,37 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // namespace carries the rule table (composition `base` + user overrides);
   // rules referencing an unknown renderer fail at write time, and rendering
   // fails loudly at call time if a renderer left the registry.
-  installSettingsSection(
-    ctx,
-    settingsNamespace('output-style-rules'),
-    z.object({
-      rules: z.array(z.object({
-        match: z.object({
-          tool: z.string().required(false),
-          contentType: z.union([z.const('text'), z.const('markdown'), z.const('html')]).required(false),
-          session: z.string().required(false),
-        }).required(false),
-        style: z.string().min(1),
-        priority: z.number().required(false),
-      })).default([]),
-    }),
-    { rules: resolved.rules },
-    {
-      setSource: (current: () => { rules: ReadonlyArray<{ match?: unknown; style: string; priority?: number }> }): void => {
-        effectiveRules = current().rules.map(rule => ({ match: rule.match ?? {}, style: rule.style, priority: rule.priority ?? 0 }))
-      },
-      onChange: () => {},
-      validate: (value: { rules: ReadonlyArray<{ style: string }> }): void => {
-        for (const rule of value.rules) {
-          if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
-            throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
+  ctx.inject(['settings'], (settingsCtx) => {
+    const rulesScope = settingsCtx.settings.register(
+      'output-style-rules' as SettingsNamespace,
+      z.object({
+        rules: z.array(z.object({
+          match: z.object({
+            tool: z.string().required(false),
+            contentType: z.union([z.const('text'), z.const('markdown'), z.const('html')]).required(false),
+            session: z.string().required(false),
+          }).required(false),
+          style: z.string().min(1),
+          priority: z.number().required(false),
+        })).default([]),
+      }),
+      {
+        base: { rules: resolved.rules },
+        validate: (value: { rules: ReadonlyArray<{ style: string }> }): void => {
+          for (const rule of value.rules) {
+            if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
+              throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
+            }
           }
-        }
+        },
       },
-    },
-  )
+    )
+    const adoptRules = (next: { rules: ReadonlyArray<{ match?: unknown; style: string; priority?: number }> }): void => {
+      effectiveRules = next.rules.map(rule => ({ match: rule.match ?? {}, style: rule.style, priority: rule.priority ?? 0 }))
+    }
+    adoptRules(rulesScope.get())
+    rulesScope.watch(next => { adoptRules(next) })
+  })
 
   // The /export command: renders the current session's message surface to
   // Markdown or sanitized HTML through the renderer pipeline. The document
