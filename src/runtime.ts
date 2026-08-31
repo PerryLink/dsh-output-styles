@@ -344,9 +344,9 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     z.object({ style: z.string().default('') }),
     { style: resolved.defaultStyle },
     {
-      setSource: current => { runtime.setProjectDefault(() => current().style) },
+      setSource: (current: () => { style: string }): void => { runtime.setProjectDefault(() => current().style) },
       onChange: () => {},
-      validate: value => {
+      validate: (value: { style: string }): void => {
         if (value.style !== '' && !runtime.styles.has(value.style)) {
           throw new Error(
             `dsh-output-styles: settings outputStyle "${value.style}" names no style `
