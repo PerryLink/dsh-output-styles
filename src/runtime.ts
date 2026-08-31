@@ -500,11 +500,11 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     }),
     { rules: resolved.rules },
     {
-      setSource: current => {
+      setSource: (current: () => { rules: ReadonlyArray<{ match?: unknown; style: string; priority?: number }> }): void => {
         effectiveRules = current().rules.map(rule => ({ match: rule.match ?? {}, style: rule.style, priority: rule.priority ?? 0 }))
       },
       onChange: () => {},
-      validate: value => {
+      validate: (value: { rules: ReadonlyArray<{ style: string }> }): void => {
         for (const rule of value.rules) {
           if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
             throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
