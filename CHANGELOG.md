@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Align the devDependency pins to the published dsh `0.1.2-alpha.3` line (21 `@deepseek-ai/dsh-*` packages), widen the `dsh-commands`/`dsh-system-prompt` peers to `>=0.1.0-rc.8 <0.2.0`, and raise `dshWorkshop.compatibility.dshVersions` to `0.1.2-alpha.3`. No behavior change; the five-language READMEs record the alpha.3 fact.
+
 ## [0.6.2] - 2026-08-30
 
 ### Fixed
