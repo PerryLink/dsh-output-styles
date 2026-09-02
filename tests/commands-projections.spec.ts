@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { SessionLogOffset } from '@deepseek-ai/dsh-session'
 import * as outputStyles from '../src/index.ts'
 import { createStyleHarness } from './harness.ts'
 
@@ -20,13 +21,13 @@ describe('command discovery and session-log reconstruction', () => {
     const harness = await createStyleHarness()
     const session = harness.makeSession()
     await harness.runStyle(session, '/style concise')
-    const run = session.events.find(event => event.type === 'command/run')
+    const run = session.snapshotEvents().find(event => event.type === 'command/run')
     expect(run?.type === 'command/run' && run.data).toMatchObject({
       name: 'style',
       args: ' concise',
       source: { kind: 'user' },
     })
-    const done = session.events.find(event => event.type === 'command/done')
+    const done = session.snapshotEvents().find(event => event.type === 'command/done')
     expect(done?.type === 'command/done' && done.data).toMatchObject({
       kind: 'success',
       text: 'switched to concise',
@@ -112,7 +113,7 @@ describe('style session projection', () => {
     await harness.runStyle(session, '/style concise')
     const checkpoint = harness.ctx.sessionProjections.checkpoint(session)
     expect(checkpoint['style']).toMatchObject({ ver: 2, val: { current: 'concise', pending: null } })
-    const restored = harness.ctx.sessionProjections.restore(checkpoint, session.events, 0, session.header)
+    const restored = harness.ctx.sessionProjections.restore(checkpoint, session.snapshotEvents(), SessionLogOffset(0), session.header, session.inheritedEventCount)
     expect(restored.snapshot.values.style?.currentValue).toBe('concise')
     await harness.dispose()
   })

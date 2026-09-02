@@ -11,7 +11,7 @@
 import { fileURLToPath } from 'node:url'
 import { watch, type FSWatcher } from 'node:fs'
 import type { Context } from '@deepseek-ai/cordis'
-import type { Session, SessionId } from '@deepseek-ai/dsh-session'
+import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-commands'
 import type {} from '@deepseek-ai/dsh-session-projection'
@@ -27,6 +27,16 @@ import { applyStyleEvent, EMPTY_STYLE_STATE, parseStyleInput, STYLE_COMMAND, typ
 import { OUTPUT_STYLE_DOMAIN, STYLE_SOURCE, styleFoldStateSchema, styleSelectionViewSchema, type StyleSelection, type StyleSelectionView } from './types.ts'
 import { BUILTIN_RENDERERS, RendererRegistry, type OutputRenderer, type RenderContext, type RenderedText, type StyleRule } from './renderers.ts'
 import { conversationLines, renderExport, sanitizeText } from './export.ts'
+
+/**
+ * Session events with an old-host fallback: 0.1.2-alpha.5 renamed the
+ * `Session.events` getter to `snapshotEvents()` while the peer floor
+ * (>=0.1.0-rc.8) still exposes `.events`.
+ */
+function readSessionEvents(session: Session): readonly SessionEvent[] {
+  if (typeof session.snapshotEvents === 'function') return session.snapshotEvents()
+  return (session as unknown as { events: readonly SessionEvent[] }).events
+}
 
 /** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
 export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.meta.url))
@@ -537,7 +547,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           if (input.kind === 'error') {
             return { kind: 'error', text: 'usage: /export [markdown|html] [--renderer=<id>] [--save <path>]' }
           }
-          const lines = conversationLines(agent.session.events)
+          const lines = conversationLines(readSessionEvents(agent.session))
           const rules: StyleRule[] = input.renderer === undefined
             ? [...effectiveRules]
             : [{ match: {}, style: input.renderer, priority: 0 }]

@@ -32,7 +32,7 @@ describe('core outputStyles coexistence', () => {
     expect(await harness.sectionText(session)).toBe('')
     // Hot-switch command still registers and works.
     await harness.runStyle(session, '/style step-by-step')
-    const done = session.events.find(event => event.type === 'command/done')
+    const done = session.snapshotEvents().find(event => event.type === 'command/done')
     expect(done?.type === 'command/done' && done.data.text).toContain('switched to step-by-step')
     // The renderer/export incremental surface stays provided.
     expect(harness.ctx.get('outputRenderers')).toBeDefined()

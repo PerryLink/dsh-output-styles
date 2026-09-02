@@ -16,12 +16,14 @@ const ctx = new Context()
 await ctx.plugin(SessionStore)
 await ctx.plugin(persistenceJsonl.default ?? persistenceJsonl, { root: sessionsRoot })
 
-const headers = await ctx.sessionPersistence.list()
-headers.sort((a, b) => b.createdAt - a.createdAt)
+const snapshots = await ctx.sessionPersistence.list()
+snapshots.sort((a, b) => b.header.createdAt - a.header.createdAt)
 
-for (const header of headers.slice(0, 2)) {
-  const inspection = await ctx.sessionPersistence.inspect(header.id)
-  const events = inspection.events
+for (const snapshot of snapshots.slice(0, 2)) {
+  const handle = await ctx.sessionPersistence.open(snapshot.header.id, 'read')
+  const events = await handle.read()
+  await handle.close()
+  const header = snapshot.header
   const requestHeaders = events.filter(event => event.type === 'request/header')
   const last = requestHeaders.at(-1)
   const system = last?.type === 'request/header' ? last.data.header.system ?? '' : ''

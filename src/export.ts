@@ -1,7 +1,8 @@
 /**
  * Session export: a pure projection of the current session's message surface
  * into Markdown or sanitized HTML, with renderer application on top. The
- * extraction reads only the public `session.events` log through the official
+ * extraction reads only the public session event log (`Session.events` up to
+ * 0.1.2-alpha.3, `Session.snapshotEvents()` from 0.1.2-alpha.5) through the official
  * `deriveEventMessage` projection — the same rule the harness uses to build
  * model requests — so the exported document is reconstructable from the log.
  * Every render application preserves the original text beside the rendered
