@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.6] - 2026-09-03
+
+### Changed
+
+- Runtime `dependencies` (`dsh-storage` / `dsh-storage-domain` / `dsh-storage-json`) moved from `0.1.1-rc.2` to the published `0.1.2-alpha.5` line, matching the dev pins.
+- Dev pins `@deepseek-ai/cordis-plugin-loader ^1.0.3` / `@deepseek-ai/cordis-plugin-include ^1.0.7` aligned with the `cordis 4.0.2` peer ranges.
+
 ## [0.6.5] - 2026-09-02
 
 ### Docs
