@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.7] - 2026-09-04
+
+### Changed
+
+- Align the `dependencies` (3 packages) and devDependency pins to the published dsh `0.1.2-rc.1` line, move the compat CI probes from `0.1.1-rc.2` to `0.1.2-rc.1`, and refresh `dshWorkshop.dshVersions`; no behavior change.
+
+### Docs
+
+- Sync the five-language README compatibility rows to the `0.1.2-rc.1` facts.
+
 ## [0.6.6] - 2026-09-03
 
 ### Changed
