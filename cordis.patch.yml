@@ -1,25 +1,17 @@
 # Patch layer for `dsh-output-styles`, declared by the package's
 # `dsh.bundle.patch` manifest and also usable by hand with `--patch`.
 #
-# Inserting rows by id replaces any same-id row already in the profile, so
-# the layer is safe on top of a web profile (which composes storage in box)
-# and completes a bare headless profile.
+# The shipped profiles (web/headless/sdk/acp) compose the storage stack via
+# dsh-base, so this patch mounts only the plugin row. On the published
+# rc.1 loader, inserting a row whose id already exists is a fatal boot
+# error (`duplicate loader entry id`), not a same-id replace. A bare
+# profile without dsh-base must compose the storage stack itself.
 #
-# The plugin injects `storageDomain`; a headless profile has none of the
-# storage rows, so the layer brings the routed kv backend along, including
+# The plugin injects `storageDomain`; a bare profile has none of the
+# storage rows, so it must bring the routed kv backend along, including
 # the config the rc.6 schemas require (root for storage-json, backend for
 # storage-domain) — without it the rows fail their config validation.
 - insert:
-    - id: storage
-      name: '@deepseek-ai/dsh-storage'
-    - id: storage-json
-      name: '@deepseek-ai/dsh-storage-json'
-      config:
-        root: !!js dshHomePath('storages')
-    - id: storage-domain
-      name: '@deepseek-ai/dsh-storage-domain'
-      config:
-        backend: json
     - id: output-styles
       name: 'dsh-output-styles'
       # config:                     # schema defaults shown for reference

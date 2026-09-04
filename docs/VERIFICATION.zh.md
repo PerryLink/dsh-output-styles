@@ -47,7 +47,7 @@ $ dsh --profile scratch --dump-config
   name: dsh-output-styles
 ```
 
-包清单 `dsh.bundle.patch = ./cordis.patch.yml` 生效：一条 `plugin add` 即把 storage 三行 + 插件行作为补丁层组合进 profile（按 id 插入替换同 id 行，对 web profile 幂等）。0.1.0 时代的「纯依赖安装、需手写行」摩擦消除。
+包清单 `dsh.bundle.patch = ./cordis.patch.yml` 生效：一条 `plugin add` 即把插件行作为补丁层组合进 profile。已发布的 profile（web/headless/sdk/acp）经 `dsh-base` 已组合 storage 栈（storage / storage-json / storage-domain），补丁层只挂 output-styles 行——同 id 行再插入在已发布加载器上是致命启动错误（`duplicate loader entry id`），不是替换。未含 `dsh-base` 的裸 profile 需自行组合 storage 栈。0.1.0 时代的「纯依赖安装、需手写行」摩擦消除。
 
 ## 3. `--dump-config` 行生效
 
