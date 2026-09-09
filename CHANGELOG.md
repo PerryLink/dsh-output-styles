@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.12] - 2026-09-09
+
+### Fixed
+
+- `/export` no longer includes the system prompt. Session format V3 (DeepSeek Harness `dsh-v0.1.5-alpha.1`) moved the rendered prompt onto the message surface as node 0 (a `system/message` event), and the transcript projection mapped that node to the first `## User` block, so a V3 session exported the whole prompt with the output-style body inside it. The surface node is excluded now and the pre-V3 export output is restored; `tests/export-surface.spec.ts` fails without the fix and passes with it.
+- `scripts/verify-session-log.mjs` follows the V3 session-log contracts: `SessionHandle.read()` returns `{ eventState, events }` (an event array up to `0.1.3-alpha.1`), the model-visible prompt is read from the `system/message` event (`request/header.system` stays a V2 read fallback), and the storage probe reads the `single`-layout unit file `<root>/output_style.json` instead of scanning a directory that never exists. The pure shape handling moved to `scripts/session-log-evidence.mjs` and is unit tested (`tests/session-log-evidence.spec.ts`) without reading any real session log.
+
+### Changed
+
+- The `devDependencies` pins for `@deepseek-ai/dsh-storage`, `@deepseek-ai/dsh-storage-domain`, and `@deepseek-ai/dsh-storage-json` are stated at `0.1.2-rc.1`, matching what pnpm resolves: the same packages are runtime `dependencies` on that line and pnpm resolves them from `dependencies` alone, so the `0.1.5-alpha.1` dev pins added in 0.6.11 were inert. The runtime dependency line is unchanged (0.1.2-rc.1 is the widest published install line and the peer range still covers 0.1.5-alpha.1).
+- The compat workflow probes now install `@deepseek-ai/dsh@0.1.5-alpha.1`, `@deepseek-ai/dsh-base@0.1.5-alpha.1`, and `@deepseek-ai/dsh-headless@0.1.5-alpha.1`, and the bare-import job pins the current `dsh-settings` peer range.
+
+### Docs
+
+- Five-language README: the injected system prompt is recorded as the `system/message` surface node (not `request/header`), and the test-count line states 148 tests.
+
 ## [0.6.11] - 2026-09-09
 
 ### Changed
