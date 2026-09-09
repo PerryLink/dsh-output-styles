@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.14] - 2026-09-09
+
+### Fixed
+
+- Realign the runtime `@deepseek-ai/dsh-storage`, `@deepseek-ai/dsh-storage-domain`, and `@deepseek-ai/dsh-storage-json` pins from `0.1.2-rc.1` to `0.1.5-alpha.1`. The rc.1 runtime pin was misaligned with the `0.1.5-alpha.1` host this batch targets: installing the tarball into a `0.1.5-alpha.1` profile let the bundled rc.1 copies shadow the host's own `0.1.5-alpha.1` tree, so the plugin resolved a foreign `@deepseek-ai/dsh-*` generation. All three stay regular `dependencies` — `dsh-storage-domain` is a value import in `src/types.ts`, and a bare profile resolves its storage rows from the plugin's own `node_modules` — and the duplicate `devDependencies` entries now state the same version. No peer range changes.
+
+### Changed
+
+- Supersede the 0.6.12 note that kept the runtime storage line at `0.1.2-rc.1`: that line is now `0.1.5-alpha.1`, so `dependencies` and `devDependencies` agree and pnpm resolves the aligned tree.
+
 ## [0.6.13] - 2026-09-09
 
 ### Fixed
