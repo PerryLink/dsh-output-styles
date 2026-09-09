@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.13] - 2026-09-09
+
+### Fixed
+
+- Use `$RUNNER_TEMP` instead of an absolute `/tmp` path in the plugin-doctor workflow: the repository self-contained gate rejects absolute paths, so the 0.6.12 publish workflow failed at `verify-self-contained`; no product code changes.
+
 ## [0.6.12] - 2026-09-09
 
 ### Fixed
