@@ -43,6 +43,13 @@ export interface ExportDocument {
  * Extract the message surface of a session log as plain lines. Tool calls and
  * tool results render as labeled lines so the transcript stays readable; the
  * content is never summarized — this is a projection, not an interpretation.
+ *
+ * Session format V3 moved the rendered system prompt onto the surface as node 0
+ * (a `system/message` event, replacing the old `request/header.system`). A
+ * transcript export is the human conversation, not the model request, so the
+ * system node is excluded: otherwise the whole system prompt would surface as
+ * the first `## User` block, which is neither a user turn nor content the
+ * transcript ever showed.
  * @param events - the session log, in seq order.
  * @returns the conversation lines in surface order.
  */
@@ -52,8 +59,9 @@ export function conversationLines(events: readonly SessionEvent[]): ExportLine[]
   for (const seq of nodes) {
     const event = events.find(item => item.seq === seq)
     if (event === undefined) continue
+    if (event.type === 'system/message') continue
     const message = deriveEventMessage(event)
-    if (message === null) continue
+    if (message === null || message.role === 'system') continue
     const described = describeMessage(message)
     if (described.text === '') continue
     lines.push(described)
