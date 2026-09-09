@@ -85,10 +85,10 @@ flowchart LR
     D --> R[OutputStyleRuntime]
     R -->|body at every assembly| S[systemPrompt section order 90]
     S --> M[Model request]
-    M -->|full system prompt| H[request/header logged]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं। शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `request/header` से, और स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है। शैलियाँ केवल मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
+मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं। शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से, और स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है। शैलियाँ केवल मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
 
 ## Install & uninstall
 
@@ -188,7 +188,7 @@ flowchart LR
 
 - **Permissions**: workshop मैनिफ़ेस्ट `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` और `settings:read` घोषित करता है।
 - **Data**: शैली चयन `output_style` स्टोरेज डोमेन में रहता है (sessionId से अनुक्रमित); कोई अन्य स्थिति स्थायी नहीं, कोई नेटवर्क अनुरोध नहीं।
-- **Session log**: शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `request/header` से; स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है।
+- **Session log**: शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से; स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है।
 
 ## Security boundaries
 
@@ -208,7 +208,7 @@ flowchart LR
 ```sh
 pnpm install
 pnpm run typecheck   # दोनों tsc परियोजनाएँ
-pnpm test            # vitest — 127 tests
+pnpm test            # vitest — 148 tests
 pnpm run verify      # typecheck + tests + self-contained (prepublishOnly द्वार)
 pnpm run build       # lib/ कलाकृतियाँ (host + client बंडल)
 pnpm pack            # dsh plugin add के लिए tarball

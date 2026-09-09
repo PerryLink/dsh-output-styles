@@ -169,7 +169,8 @@ export class OutputStyleRuntime {
   /**
    * The model-visible style directive for a session: a header naming the
    * style plus its body under the configured budget. The exact text is what
-   * the harness logs in `request/header` before dispatch.
+   * the harness logs as the `system/message` surface node before dispatch
+   * (session format V3; `request/header.system` in older logs).
    * @param sessionId - the session the directive is built for.
    * @returns the directive, or `''` when no style applies.
    */

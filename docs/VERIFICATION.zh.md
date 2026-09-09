@@ -169,3 +169,65 @@ Error: dsh: plugin tree failed to load: ... entry output-styles (dsh-output-styl
 ```
 
 即：0.3.0 tarball 经真实 rc.6 CLI 安装、补丁层组合、启动加载器逐行应用全部通过；插件的 Schemastery schema 在真实组合中生效（非法配置按插件自身的校验信息拒绝启动）。模型可见注入路径（systemPrompt 组装）由第 7.1 节组装级集成测试覆盖，真实 API 复测边界与第 6 节一致。
+
+## 8. 0.6.12 增量验证（会话格式 V3）
+
+宿主基线 `dsh-v0.1.5-alpha.1`：系统提示词不再是 `request/header.system`，而是消息面上的节点 0（`system/message` 事件）；`SessionHandle.read()` 返回 `{ eventState, events }`（此前为事件数组）。本节记录本版本针对这两项契约的实测，全部使用合成事件，未读取任何真实会话。
+
+### 8.1 `/export` 回归（先红后绿）
+
+```text
+$ git stash push -- src/export.ts                     # 暂时撤掉修复
+$ pnpm exec vitest run tests/export-surface.spec.ts
+ ❯ tests/export-surface.spec.ts (4 tests | 3 failed)
+AssertionError: expected '# Session export\n\n## User\n\n# Outp…' not to contain 'Output style'
+      Tests  3 failed | 1 passed (4)
+
+$ git stash pop                                       # 恢复修复
+$ pnpm exec vitest run tests/export-surface.spec.ts tests/session-log-evidence.spec.ts
+ ✓ tests/session-log-evidence.spec.ts (13 tests)
+ ✓ tests/export-surface.spec.ts (4 tests)
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+```
+
+修复前，V3 会话的导出文档首段正是 `## User` + 整段系统提示词（含 `# Output style: concise` 正文），与评估卡用合成 surface 的实测结论一致；修复后系统节点被排除，`## User` 只出现一次且不含风格正文。V2 存储日志（`request/header` 携带 `system`）本就不在消息面上，输出与 0.1.3 及更早一致（同文件第三条用例覆盖）。
+
+### 8.2 取证脚本的 V3 形状（合成数据）
+
+`scripts/verify-session-log.mjs` 的纯形状处理抽到 `scripts/session-log-evidence.mjs`，由 `tests/session-log-evidence.spec.ts` 用合成事件覆盖：`read()` 的 V3 对象与旧数组两种形状、`system/message` 的 `data.message.content` 提取（含「末节点为空即视为无系统提示、不回落旧文本」）、V2 `request/header.system` 回落、风格标记计数，以及 `single` 布局 `<root>/output_style.json` 的定位（旧脚本扫描的是永不存在的同名目录）。
+
+真实会话日志复跑（`node scripts/verify-session-log.mjs`）**未执行**：红线禁止使用真实会话数据（`$DSH_HOME/sessions`）。脚本已按 V3 形状修好，复跑命令与第 4 节一致，留待人工在有真实 V3 会话的机器上执行。
+
+### 8.3 门禁（2026-09-09 实测）
+
+```text
+$ pnpm install --frozen-lockfile --ignore-scripts
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+$ pnpm run check:readmes
+readme-sync: all 5 READMEs share 22 sections, the install command, and 11 config keys
+
+$ pnpm run lint
+Found 4 warnings and 0 errors.
+
+$ pnpm run typecheck                                  # exit 0（两个 tsc 工程）
+$ pnpm test
+ Test Files  14 passed (14)
+      Tests  148 passed (148)
+
+$ pnpm run build
+fix-dts: 5 file(s), 22 specifier(s) rewritten to .js
+
+$ pnpm run verify:self-contained
+self-contained repository verified (75 text files)
+
+$ pnpm run verify:artifacts
+artifacts OK: syntax + ESM imports + bundle patch present
+
+$ pnpm pack --pack-destination <pack 目录>
+dsh-output-styles-0.6.12.tgz
+```
+
+`compat.yml` 的月度/手动作业本版本已把两条安装钉号升到 `0.1.5-alpha.1`、并把裸装作业的 `dsh-settings` 范围改为当前 peer 复合范围；该 workflow 只在 GitHub runner 上运行，本机**未执行**。

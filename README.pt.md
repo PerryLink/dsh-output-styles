@@ -85,10 +85,10 @@ flowchart LR
     D --> R[OutputStyleRuntime]
     R -->|body at every assembly| S[systemPrompt section order 90]
     S --> M[Model request]
-    M -->|full system prompt| H[request/header logged]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem novo tipo de evento de sessão, sem alterações no agent-loop. O nome do estilo vem de `command/run`, o texto exato injetado de `request/header`, e o marcador de procedência `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja no registro do domínio. Os estilos se aplicam apenas à conversa principal; sessões de subagente mantêm seus próprios prompts (como no Claude Code).
+Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem novo tipo de evento de sessão, sem alterações no agent-loop. O nome do estilo vem de `command/run`, o texto exato injetado de `system/message`, e o marcador de procedência `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja no registro do domínio. Os estilos se aplicam apenas à conversa principal; sessões de subagente mantêm seus próprios prompts (como no Claude Code).
 
 ## Install & uninstall
 
@@ -188,7 +188,7 @@ Filtrado contra o ecossistema DSH antes do desenvolvimento (instantânea 2026-08
 
 - **Permissions**: o manifesto de workshop declara `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` e `settings:read`.
 - **Data**: a escolha de estilo vive no domínio de armazenamento `output_style` (indexada por sessionId); nenhum outro estado é persistido, sem solicitações de rede.
-- **Session log**: o nome do estilo vem de `command/run`, o texto exato injetado de `request/header`; o marcador de procedência `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja no registro do domínio.
+- **Session log**: o nome do estilo vem de `command/run`, o texto exato injetado de `system/message`; o marcador de procedência `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja no registro do domínio.
 
 ## Security boundaries
 
@@ -208,7 +208,7 @@ Filtrado contra o ecossistema DSH antes do desenvolvimento (instantânea 2026-08
 ```sh
 pnpm install
 pnpm run typecheck   # ambos os projetos tsc
-pnpm test            # vitest — 127 tests
+pnpm test            # vitest — 148 tests
 pnpm run verify      # typecheck + tests + self-contained (a porta de prepublishOnly)
 pnpm run build       # artefatos lib/ (bundles host + client)
 pnpm pack            # tarball para dsh plugin add

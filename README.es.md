@@ -85,10 +85,10 @@ flowchart LR
     D --> R[OutputStyleRuntime]
     R -->|body at every assembly| S[systemPrompt section order 90]
     S --> M[Model request]
-    M -->|full system prompt| H[request/header logged]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin un nuevo tipo de evento de sesión, sin cambios en el agent-loop. El nombre del estilo viene de `command/run`, el texto exacto inyectado de `request/header`, y el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio. Los estilos se aplican solo a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
+Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin un nuevo tipo de evento de sesión, sin cambios en el agent-loop. El nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`, y el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio. Los estilos se aplican solo a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
 
 ## Install & uninstall
 
@@ -188,7 +188,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 
 - **Permissions**: el manifiesto de workshop declara `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` y `settings:read`.
 - **Data**: la elección de estilo vive en el dominio de almacenamiento `output_style` (indexada por sessionId); no se persiste otro estado, sin solicitudes de red.
-- **Session log**: el nombre del estilo viene de `command/run`, el texto exacto inyectado de `request/header`; el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio.
+- **Session log**: el nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`; el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio.
 
 ## Security boundaries
 
@@ -208,7 +208,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 ```sh
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
-pnpm test            # vitest — 127 tests
+pnpm test            # vitest — 148 tests
 pnpm run verify      # typecheck + tests + self-contained (la puerta de prepublishOnly)
 pnpm run build       # artefactos lib/ (bundles host + client)
 pnpm pack            # tarball para dsh plugin add

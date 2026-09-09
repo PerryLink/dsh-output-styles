@@ -88,10 +88,10 @@ flowchart LR
     D --> R[OutputStyleRuntime]
     R -->|body at every assembly| S[systemPrompt section order 90]
     S --> M[Model request]
-    M -->|full system prompt| H[request/header logged]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `request/header`, and the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
+Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `system/message`, and the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
 
 ## Install & uninstall
 
@@ -191,7 +191,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 
 - **Permissions**: declares `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write`, and `settings:read` in its workshop manifest.
 - **Data**: the style choice lives in the `output_style` storage domain (keyed by sessionId); no other state is persisted, no network requests.
-- **Session log**: the style name comes from `command/run`, the exact injected text from `request/header`; the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record.
+- **Session log**: the style name comes from `command/run`, the exact injected text from `system/message`; the provenance marker `{ kind: 'plugin', plugin: 'dsh-output-styles' }` rides in the domain record.
 
 ## Security boundaries
 
@@ -212,7 +212,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 127 tests
+pnpm test            # vitest — 148 tests
 pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add

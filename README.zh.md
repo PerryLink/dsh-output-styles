@@ -87,10 +87,10 @@ flowchart LR
     D --> R[OutputStyleRuntime]
     R -->|body at every assembly| S[systemPrompt section order 90]
     S --> M[Model request]
-    M -->|full system prompt| H[request/header logged]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `request/header`，来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
+模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
 
 ## Install & uninstall
 
@@ -190,7 +190,7 @@ flowchart LR
 
 - **Permissions**：workshop 清单声明 `fs:read`、`fs:write`、`fs:watch`、`storage:read`、`storage:write` 与 `settings:read`。
 - **Data**：风格选择存于 `output_style` 存储域（按 sessionId 隔离）；不持久化其他状态，无网络请求。
-- **Session log**：风格名来自 `command/run`，精确注入文本来自 `request/header`；来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。
+- **Session log**：风格名来自 `command/run`，精确注入文本来自 `system/message`；来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。
 
 ## Security boundaries
 
@@ -210,7 +210,7 @@ flowchart LR
 ```sh
 pnpm install
 pnpm run typecheck   # 两个 tsc 项目
-pnpm test            # vitest —— 127 个测试
+pnpm test            # vitest —— 148 个测试
 pnpm run verify      # typecheck + tests + self-contained（prepublishOnly 门禁）
 pnpm run build       # lib/ 产物（host + client 包）
 pnpm pack            # 供 dsh plugin add 的 tarball
