@@ -48,20 +48,37 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         # A tag push without the secret, or for a version already on the
-        # registry (e.g. published manually before the tag), skips the publish
-        # instead of failing the release tag. (The guard lives in bash because
+        # registry (e.g. published manually before the tag), no longer skips
+        # silently: a release that published nothing used to go green, and it
+        # now fails loudly instead. A version already on the registry still
+        # skips (idempotent re-runs). (The guard lives in bash because
         # GitHub rejects the secrets context in step-level `if` expressions.)
         run: |
           version="$(node -p "require('./package.json').version")"
           if [ -z "$NPM_TOKEN" ]; then
-            echo "NPM_TOKEN secret is not set; skipping npm publish"
-            exit 0
+            echo "::error::NPM_TOKEN secret is not set; refusing to report a release that published nothing"
+            exit 1
           fi
           if npm view "dsh-output-styles@${version}" version >/dev/null 2>&1; then
             echo "dsh-output-styles@${version} is already published; skipping npm publish"
           else
             npm publish --provenance
           fi
+
+      - name: Verify the version is live on the registry
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "dsh-output-styles@${version}" version >/dev/null 2>&1; then
+              echo "dsh-output-styles@${version} is live on the registry"
+              exit 0
+            fi
+            echo "attempt ${attempt}: not visible on the registry yet; retrying"
+            sleep 5
+          done
+          echo "::error::dsh-output-styles@${version} is not on the registry after the publish step"
+          exit 1
 
   # npm publish alone left every release without a GitHub Release page (v0.6.15
   # had to be created by hand after the fact). This job closes that gap and is
