@@ -29,7 +29,7 @@ $ pnpm test
 $ pnpm pack
 Tarball Contents（节选）: package.json, LICENSE, lib/index.js, lib/invariant.js, lib/invariant-*.js,
 lib/client.js, lib/types/**/*.d.ts, src/**, styles/{concise,explanatory,formal,step-by-step}.md,
-cordis.patch.yml, README.md, README.zh.md, README.ja.md, README.ko.md, README.es.md, docs/
+cordis.patch.yml, README.md, README-zh.md, README.ja.md, README.ko.md, README-es.md, docs/
 
 $ env:DSH_HOME = <临时目录>
 $ dsh plugin --profile scratch add ./dsh-output-styles-0.2.0.tgz

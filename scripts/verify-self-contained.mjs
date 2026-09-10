@@ -86,7 +86,7 @@ for (const requiredPath of [
   'styles/step-by-step.md',
   'tests/harness.ts',
   'README.md',
-  'README.zh.md',
+  'README-zh.md',
 ]) {
   if (!existsSync(join(root, requiredPath))) failures.push(`missing repository-layout contract ${requiredPath}`)
 }
