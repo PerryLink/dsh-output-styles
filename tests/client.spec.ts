@@ -6,6 +6,20 @@ import type { CommandDecoration } from '@deepseek-ai/dsh-client-ui-commands/clie
 import type { StyleSelectionView } from '../src/types.ts'
 import * as client from '../src/client/index.ts'
 
+/**
+ * Narrow a decoration's command surface to the `popupSelect` member this
+ * plugin registers. DeepSeek Harness 0.1.5-rc.1 turned `CommandUiSpec` into
+ * the union `PopupSelectSpec | ActionSpec`, so the surface has to be
+ * discriminated before `options` / `onSelect` are reachable.
+ */
+function popupSelect(decoration: CommandDecoration | undefined) {
+  const ui = decoration?.ui
+  if (ui?.kind !== 'popupSelect') {
+    throw new Error('expected the style command to register a popupSelect surface')
+  }
+  return ui
+}
+
 function makeView(current: string | null): StyleSelectionView {
   return {
     options: [
@@ -82,7 +96,7 @@ describe('dsh-output-styles client picker', () => {
     expect(decoration?.name).toBe('style')
     expect(decoration?.available(session)).toBe(true)
 
-    const options = await decoration?.ui.options(session, new AbortController().signal)
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
     expect(options?.map(option => option.id)).toEqual(['off', 'concise', 'Diagrams first'])
     expect(options?.[0]).toMatchObject({ label: 'option.off', active: false })
     expect(options?.[1]).toMatchObject({ label: 'concise', detail: 'Terse. · Daily work', active: true })
@@ -93,16 +107,16 @@ describe('dsh-output-styles client picker', () => {
   it('marks the off row active when the session has no selection', async () => {
     const { decorations } = await makeClient()
     const decoration = decorations[0]
-    const options = await decoration?.ui.options(session, new AbortController().signal)
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
     expect(options?.[0]).toMatchObject({ active: true })
   })
 
   it('submits the completed command line on select, including multi-word names and off', async () => {
     const { decorations, executes } = await makeClient()
     const decoration = decorations[0]
-    const options = await decoration?.ui.options(session, new AbortController().signal)
-    await decoration?.ui.onSelect(options?.[2]!, session)
-    await decoration?.ui.onSelect(options?.[0]!, session)
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
+    await popupSelect(decoration).onSelect(options?.[2]!, session)
+    await popupSelect(decoration).onSelect(options?.[0]!, session)
     expect(executes).toEqual([
       { sessionId: 's-1', line: '/style Diagrams first' },
       { sessionId: 's-1', line: '/style off' },
@@ -114,8 +128,8 @@ describe('dsh-output-styles client picker', () => {
       execute: () => Promise.resolve({ ok: false, error: { code: 'REMOTE', message: 'boom' } }),
     })
     const decoration = decorations[0]
-    const options = await decoration?.ui.options(session, new AbortController().signal)
-    await expect(decoration?.ui.onSelect(options?.[1]!, session)).rejects.toThrow('REMOTE')
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
+    await expect(popupSelect(decoration).onSelect(options?.[1]!, session)).rejects.toThrow('REMOTE')
   })
 
   it('surfaces an unmatched command as a settlement failure', async () => {
@@ -123,8 +137,8 @@ describe('dsh-output-styles client picker', () => {
       execute: () => Promise.resolve({ ok: true, value: undefined as never }),
     })
     const decoration = decorations[0]
-    const options = await decoration?.ui.options(session, new AbortController().signal)
-    await expect(decoration?.ui.onSelect(options?.[1]!, session)).rejects.toThrow(/unknown or malformed command/)
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
+    await expect(popupSelect(decoration).onSelect(options?.[1]!, session)).rejects.toThrow(/unknown or malformed command/)
   })
 
   it('returns no options when the style projection has not arrived', async () => {
@@ -139,7 +153,7 @@ describe('dsh-output-styles client picker', () => {
     ctx.provide('remote', { commands: { execute: async () => ({ ok: true, value: { result: {} } }) } })
     await ctx.plugin(client)
     const decoration = decorations[decorations.length - 1]
-    const options = await decoration?.ui.options(session, new AbortController().signal)
+    const options = await popupSelect(decoration).options(session, new AbortController().signal)
     expect(options).toEqual([])
   })
 })
