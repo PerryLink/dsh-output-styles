@@ -28,7 +28,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.1`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-10 对照 dsh-v0.1.5-rc.1 master checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
+| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-11 对照 dsh-v0.1.5-rc.2 master checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | 全部（host + Web 客户端） |
 | Model | 任意（系统提示注入） |

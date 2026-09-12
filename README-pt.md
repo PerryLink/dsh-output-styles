@@ -26,7 +26,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.1` (adaptado em 2026-09-09): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados - o Session.append ainda não consegue estampá-lo, então o comportamento da porta não muda. Verificado em 2026-09-10 contra o checkout master dsh-v0.1.5-rc.1 (cadeia de portas completa + smoke de instalação do perfil). |
+| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2` (adaptado em 2026-09-09): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados - o Session.append ainda não consegue estampá-lo, então o comportamento da porta não muda. Verificado em 2026-09-11 contra o checkout master dsh-v0.1.5-rc.2 (cadeia de portas completa + smoke de instalação do perfil). |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | Todas (host + cliente web) |
 | Model | Qualquer (injeção no prompt do sistema) |
