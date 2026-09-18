@@ -91,7 +91,7 @@ describe('conversationLines over a V3 surface', () => {
   })
 })
 
-describe('/export over a V3 surface', () => {
+describe('/transcript over a V3 surface', () => {
   it('renders only the conversation, not the system prompt', async () => {
     const harness = await createStyleHarness()
     try {
@@ -102,14 +102,14 @@ describe('/export over a V3 surface', () => {
         source: { kind: 'user' },
       }), { surfaceOp: 'append' })
 
-      const execution = await harness.runExport(session, '/export md')
+      const execution = await harness.runExport(session, '/transcript md')
       expect(execution?.result).toMatchObject({ kind: 'success' })
       const text = execution?.result.text ?? ''
       expect(text).toContain('## User\n\nship it')
       expect(text).not.toContain('Output style')
       expect(text).not.toContain('保持简洁')
 
-      const html = await harness.runExport(session, '/export html')
+      const html = await harness.runExport(session, '/transcript html')
       expect(html?.result.text ?? '').not.toContain('Output style')
     } finally {
       await harness.dispose()

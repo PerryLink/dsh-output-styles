@@ -43,7 +43,7 @@
 - **Claude Code समानता** — `keep-coding-instructions`, `force-for-plugin` (उपनाम `force`), `outputStyles` JSON संगतता, स्तरित `stylesDir` निर्देशिकाएँ, हॉट रीलोड और DSH settings सीम पर परियोजना-डिफ़ॉल्ट फ़ॉलबैक।
 - **रेंडरर रजिस्ट्री (`output.render.*`)** — `ctx.outputRenderers` किसी भी प्लगइन को एक शुद्ध presenter पंजीकृत करने देता है, जो `output.render/before` वॉटरफ़ॉल से लागू होता है; अंतर्निहित रेंडरर `concise` और `step-by-step`।
 - **प्रति-सत्र/प्रति-टूल नियम** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` मिलान वाले अनुरोधों के लिए रेंडरर नामित करते हैं; `output-style-rules` settings अनुभाग से संपादन-योग्य।
-- **`/export`** — रेंडर पाइपलाइन से वर्तमान सत्र को Markdown या सैनिटाइज़्ड HTML में प्रस्तुत करता है; `--save <path>` उपयोगकर्ता की स्वीकृति के बाद सैनिटाइज़्ड दस्तावेज़ को उस workspace पथ पर लिखता है। हर रेंडर मूल पाठ को रेंडर किए गए के साथ रखता है।
+- **`/transcript`** — रेंडर पाइपलाइन से वर्तमान सत्र को Markdown या सैनिटाइज़्ड HTML में प्रस्तुत करता है; `--save <path>` उपयोगकर्ता की स्वीकृति के बाद सैनिटाइज़्ड दस्तावेज़ को उस workspace पथ पर लिखता है। हर रेंडर मूल पाठ को रेंडर किए गए के साथ रखता है।
 
 ## Quick start
 
@@ -114,7 +114,7 @@ flowchart LR
 | `includeBuiltins` | `true` | पैकेज के अंतर्निहित `styles/` को निम्नतम-प्राथमिकता परत के रूप में शामिल करें |
 | `watchStyles` | `true` | डिस्क पर शैली फ़ाइल बदलने पर पुस्तकालय फिर से लोड करें |
 | `rules` | `[]` | प्रति-सत्र/प्रति-टूल रेंडर नियम: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | `/export` कमांड पंजीकृत करें (Markdown/HTML सत्र निर्यात, रेंडरर-जागरूक; `--save` स्वीकृति से लिखता है) |
+| `enableExport` | `true` | `/transcript` कमांड पंजीकृत करें (Markdown/HTML सत्र निर्यात, रेंडरर-जागरूक; `--save` स्वीकृति से लिखता है) |
 | `respectCoreOutputStyles` | `true` | कोर `outputStyles` सेवा का पता चलने पर इस प्लगइन का prompt इंजेक्शन छोड़ें (hot-switch / rules / export बनाए रखें) |
 
 ## Tools & surfaces
@@ -122,7 +122,7 @@ flowchart LR
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | शैलियाँ सूचीबद्ध करें, बदलें या परियोजना डिफ़ॉल्ट बहाल करें |
-| `/export` | command | वर्तमान सत्र को Markdown या सैनिटाइज़्ड HTML में प्रस्तुत करें; `--save` स्वीकृति से लिखता है |
+| `/transcript` | command | वर्तमान सत्र को Markdown या सैनिटाइज़्ड HTML में प्रस्तुत करें; `--save` स्वीकृति से लिखता है |
 | `output_style` | storage domain | sessionId से अनुक्रमित सत्र-स्कोप्ड शैली चयन |
 | `systemPrompt.section()` | contribution | हर संयोजन पर वर्तमान शैली का मुख्य भाग इंजेक्ट करता है |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + `output.render/before` वॉटरफ़ॉल |
@@ -138,11 +138,11 @@ flowchart LR
 | `/style Diagrams first` | बहु-शब्द नाम पूरा शेष भाग होते हैं |
 | `/style off` | परियोजना डिफ़ॉल्ट बहाल करें (settings डिफ़ॉल्ट, फिर `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
-| `/export` | रेंडर पाइपलाइन से वर्तमान सत्र को Markdown में प्रस्तुत करें |
-| `/export md` | Markdown में प्रस्तुत करें (`md`, `markdown` का संक्षिप्त रूप है) |
-| `/export html` | सैनिटाइज़्ड HTML में प्रस्तुत करें |
-| `/export --renderer=concise` | एक रेंडरर बाध्य करके प्रस्तुत करें (नियम छोड़े गए) |
-| `/export md --save report.md` | प्रस्तुत करें, फिर स्वीकृति के बाद सैनिटाइज़्ड दस्तावेज़ को `report.md` में लिखें |
+| `/transcript` | रेंडर पाइपलाइन से वर्तमान सत्र को Markdown में प्रस्तुत करें |
+| `/transcript md` | Markdown में प्रस्तुत करें (`md`, `markdown` का संक्षिप्त रूप है) |
+| `/transcript html` | सैनिटाइज़्ड HTML में प्रस्तुत करें |
+| `/transcript --renderer=concise` | एक रेंडरर बाध्य करके प्रस्तुत करें (नियम छोड़े गए) |
+| `/transcript md --save report.md` | प्रस्तुत करें, फिर स्वीकृति के बाद सैनिटाइज़्ड दस्तावेज़ को `report.md` में लिखें |
 
 ## Style library
 
@@ -196,8 +196,8 @@ flowchart LR
 
 - **केवल सार्वजनिक सेवाएँ।** `systemPrompt`, कमांड, स्टोरेज और settings योगदान करता है; engine / agent-loop / apiproxy / आधिकारिक UI में कोई बदलाव नहीं।
 - **मॉडल-दृश्य ⟺ लॉग किया गया।** मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं।
-- **मूल हमेशा रखा गया।** हर रेंडर (और `/export`) मूल पाठ को रेंडर किए गए के साथ रखता है; HTML निर्यात के लिए सैनिटाइज़्ड HTML उपयोग होता है।
-- **डिस्क लेखन गेटेड।** `/export --save` केवल स्वीकृति सेवा की अनुमति के बाद लिखता है, और लिखा गया कंटेंट पहले `sanitizeText` शुद्ध फ़ंक्शन से गुज़रता है; स्वीकृति या fs सेवा के बिना कुछ भी नहीं लिखा जाता (fail-closed)।
+- **मूल हमेशा रखा गया।** हर रेंडर (और `/transcript`) मूल पाठ को रेंडर किए गए के साथ रखता है; HTML निर्यात के लिए सैनिटाइज़्ड HTML उपयोग होता है।
+- **डिस्क लेखन गेटेड।** `/transcript --save` केवल स्वीकृति सेवा की अनुमति के बाद लिखता है, और लिखा गया कंटेंट पहले `sanitizeText` शुद्ध फ़ंक्शन से गुज़रता है; स्वीकृति या fs सेवा के बिना कुछ भी नहीं लिखा जाता (fail-closed)।
 
 ## Known limitations
 

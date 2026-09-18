@@ -45,7 +45,7 @@
 - **Claude Code parity** — `keep-coding-instructions`, `force-for-plugin` (`force` alias), `outputStyles` JSON compatibility, layered `stylesDir` directories, hot reload, and project-default fallback over the DSH settings seam.
 - **Renderer registry (`output.render.*`)** — `ctx.outputRenderers` lets any plugin register a pure presenter, applied through the `output.render/before` waterfall; built-in renderers `concise` and `step-by-step`.
 - **Per-session/per-tool rules** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` name the renderer for matching requests; editable through the `output-style-rules` settings section.
-- **`/export`** — render the current session to Markdown or sanitized HTML through the render pipeline; `--save <path>` writes the sanitized document to that workspace path after user approval. Every render keeps the original text beside the rendered one.
+- **`/transcript`** — render the current session to Markdown or sanitized HTML through the render pipeline; `--save <path>` writes the sanitized document to that workspace path after user approval. Every render keeps the original text beside the rendered one.
 
 ## Quick start
 
@@ -116,7 +116,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | `includeBuiltins` | `true` | Include the package's bundled `styles/` as the lowest-priority layer |
 | `watchStyles` | `true` | Reload the library when a style file changes on disk |
 | `rules` | `[]` | Per-session/per-tool render rules: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | Register the `/export` command (Markdown/HTML session export, renderer-aware; `--save` writes with approval) |
+| `enableExport` | `true` | Register the `/transcript` command (Markdown/HTML session export, renderer-aware; `--save` writes with approval) |
 | `respectCoreOutputStyles` | `true` | When a core `outputStyles` service is detected, skip this plugin's prompt injection (keep hot-switch / rules / export) |
 
 ## Tools & surfaces
@@ -124,7 +124,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | List styles, switch, or restore the project default |
-| `/export` | command | Render the current session to Markdown or sanitized HTML; `--save` writes with approval |
+| `/transcript` | command | Render the current session to Markdown or sanitized HTML; `--save` writes with approval |
 | `output_style` | storage domain | Session-scoped style choice, keyed by sessionId |
 | `systemPrompt.section()` | contribution | Injects the current style body at every assembly |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + the `output.render/before` waterfall |
@@ -140,11 +140,11 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). Inval
 | `/style Diagrams first` | Multi-word names are the whole remainder |
 | `/style off` | Restore the project default (settings default, then `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
-| `/export` | Render the current session to Markdown through the renderer pipeline |
-| `/export md` | Render to Markdown (`md` is the shorthand for `markdown`) |
-| `/export html` | Render to sanitized HTML |
-| `/export --renderer=concise` | Render with one renderer forced (rules bypassed) |
-| `/export md --save report.md` | Render, then write the sanitized document to `report.md` after approval |
+| `/transcript` | Render the current session to Markdown through the renderer pipeline |
+| `/transcript md` | Render to Markdown (`md` is the shorthand for `markdown`) |
+| `/transcript html` | Render to sanitized HTML |
+| `/transcript --renderer=concise` | Render with one renderer forced (rules bypassed) |
+| `/transcript md --save report.md` | Render, then write the sanitized document to `report.md` after approval |
 
 ## Style library
 
@@ -198,12 +198,12 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 
 - **Public services only.** Contributes `systemPrompt`, commands, storage, and settings; no engine / agent-loop / apiproxy / official-UI changes.
 - **Model-visible ⟺ logged.** Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes.
-- **Original always kept.** Every render (and `/export`) keeps the original text beside the rendered one; sanitized HTML is used for HTML export.
-- **Disk writes gated.** `/export --save` writes only after the approval service grants it, and the written content passes through the `sanitizeText` pure function first; without an approval or fs service it writes nothing (fail-closed).
+- **Original always kept.** Every render (and `/transcript`) keeps the original text beside the rendered one; sanitized HTML is used for HTML export.
+- **Disk writes gated.** `/transcript --save` writes only after the approval service grants it, and the written content passes through the `sanitizeText` pure function first; without an approval or fs service it writes nothing (fail-closed).
 
 ## Known limitations
 
-- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/export`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions.
+- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/transcript`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions.
 - **Main conversation only.** Styles apply to the main conversation; subagent sessions keep their own prompts (matching Claude Code).
 - **Truncation.** Style bodies longer than `maxStyleChars` are truncated with a marker.
 - **Skipped style files.** A bad style file is skipped with a warning and never breaks the profile.

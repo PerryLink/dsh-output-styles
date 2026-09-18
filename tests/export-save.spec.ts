@@ -53,7 +53,7 @@ describe('saveExportFile fail-closed matrix', () => {
   })
 })
 
-describe('/export --save integration', () => {
+describe('/transcript --save integration', () => {
   it('keeps the no-argument export as unsanitized output text (backward compatible)', async () => {
     const harness = await createStyleHarness()
     const session = harness.makeSession()
@@ -61,7 +61,7 @@ describe('/export --save integration', () => {
       content: [{ type: 'text', text: '<script>alert("x")</script>' }],
       source: { kind: 'user' },
     }), { surfaceOp: 'append' })
-    const execution = await harness.runExport(session, '/export md')
+    const execution = await harness.runExport(session, '/transcript md')
     expect(execution?.result).toMatchObject({ kind: 'success' })
     expect(execution?.result.text).toContain('## User')
     expect(execution?.result.text).toContain('<script>alert("x")</script>')
@@ -76,7 +76,7 @@ describe('/export --save integration', () => {
       content: [{ type: 'text', text: '<script>alert("x")</script>' }],
       source: { kind: 'user' },
     }), { surfaceOp: 'append' })
-    const execution = await harness.runExport(session, '/export md --save out.md')
+    const execution = await harness.runExport(session, '/transcript md --save out.md')
     expect(execution?.result).toMatchObject({ kind: 'success', text: 'saved markdown export to out.md' })
     const written = fs.read('out.md')
     expect(written).toContain('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;')
@@ -88,7 +88,7 @@ describe('/export --save integration', () => {
     const fs = new FakeFileSystem()
     const harness = await createStyleHarness({}, undefined, { fs, approval: new FakeApproval('rejected') })
     const session = harness.makeSession()
-    const execution = await harness.runExport(session, '/export md --save out.md')
+    const execution = await harness.runExport(session, '/transcript md --save out.md')
     expect(execution?.result).toMatchObject({ kind: 'error', text: expect.stringContaining('rejected') })
     expect(fs.written.has('out.md')).toBe(false)
     await harness.dispose()
@@ -98,7 +98,7 @@ describe('/export --save integration', () => {
     const fs = new FakeFileSystem()
     const harness = await createStyleHarness({}, undefined, { fs })
     const session = harness.makeSession()
-    const execution = await harness.runExport(session, '/export md --save out.md')
+    const execution = await harness.runExport(session, '/transcript md --save out.md')
     expect(execution?.result).toMatchObject({ kind: 'error', text: expect.stringContaining('approval service') })
     expect(fs.written.has('out.md')).toBe(false)
     await harness.dispose()
@@ -107,7 +107,7 @@ describe('/export --save integration', () => {
   it('fails loudly when approval grants but no fs service is composed', async () => {
     const harness = await createStyleHarness({}, undefined, { approval: new FakeApproval('allowed-once') })
     const session = harness.makeSession()
-    const execution = await harness.runExport(session, '/export md --save out.md')
+    const execution = await harness.runExport(session, '/transcript md --save out.md')
     expect(execution?.result).toMatchObject({ kind: 'error', text: expect.stringContaining('fs service') })
     await harness.dispose()
   })
