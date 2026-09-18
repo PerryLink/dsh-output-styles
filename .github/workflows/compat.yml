@@ -58,7 +58,13 @@ jobs:
             protobufjs: true
             '@google/genai': true
           YAML
-          pnpm add "$TARBALL" "@deepseek-ai/dsh-settings@>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0" >/dev/null
+          # The host provides the peers. Install the package's whole
+          # `@deepseek-ai/*` peer set: pnpm's autoInstallPeers skips these
+          # prerelease-only ranges, and the entry pulls a shared chunk that
+          # imports several of them (dsh-settings, dsh-storage-domain, ...).
+          PKG="$GITHUB_WORKSPACE/package.json"
+          PEERS=$(node -e "const p=require(process.argv[1]);console.log(Object.entries(p.peerDependencies).filter(([n])=>n.startsWith('@deepseek-ai/')).map(([n,r])=>n+'@'+r).join(' '))" "$PKG")
+          pnpm add "$TARBALL" $PEERS >/dev/null
           node --input-type=module -e "import('dsh-output-styles').then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1)})"
   profile:
     runs-on: ubuntu-latest
