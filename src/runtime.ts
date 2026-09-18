@@ -31,11 +31,18 @@ import { conversationLines, renderExport, sanitizeText } from './export.ts'
 /**
  * Session events with an old-host fallback: 0.1.2-alpha.5 renamed the
  * `Session.events` getter to `snapshotEvents()` while the peer floor
- * (>=0.1.0-rc.8) still exposes `.events`.
+ * (>=0.1.0-rc.8) still exposes `.events`. The preferred read path is the
+ * `sessionQuery` service (`readSurface`, see the /transcript handler); this
+ * fallback only serves hosts composed without that service.
  */
 function readSessionEvents(session: Session): readonly SessionEvent[] {
   if (typeof session.snapshotEvents === 'function') return session.snapshotEvents()
   return (session as unknown as { events: readonly SessionEvent[] }).events
+}
+
+/** Structural face of the optional `sessionQuery` service (dsh-session-query). */
+interface SessionQueryLike {
+  readSurface(sessionId: unknown): Promise<{ readonly events: readonly SessionEvent[] }>
 }
 
 /** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
@@ -562,7 +569,11 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           if (input.kind === 'error') {
             return { kind: 'error', text: 'usage: /transcript [markdown|html] [--renderer=<id>] [--save <path>]' }
           }
-          const lines = await conversationLines(readSessionEvents(agent.session))
+          const sessionQuery = ctx.get('sessionQuery') as SessionQueryLike | undefined
+          const events = sessionQuery === undefined
+            ? readSessionEvents(agent.session)
+            : (await sessionQuery.readSurface(agent.session.id)).events
+          const lines = await conversationLines(events)
           const rules: StyleRule[] = input.renderer === undefined
             ? [...effectiveRules]
             : [{ match: {}, style: input.renderer, priority: 0 }]

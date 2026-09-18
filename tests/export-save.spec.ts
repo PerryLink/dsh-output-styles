@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { parseExportInput, saveExportFile, type ExportApproval } from '../src/runtime.ts'
-import { createStyleHarness, FakeApproval, FakeFileSystem } from './harness.ts'
+import { createStyleHarness, FakeApproval, FakeFileSystem, FakeSessionQuery } from './harness.ts'
 
 describe('parseExportInput --save', () => {
   it('accepts md as a markdown alias and parses every --save form', () => {
@@ -50,6 +51,33 @@ describe('saveExportFile fail-closed matrix', () => {
     const result = await saveExportFile(fs, new FakeApproval('allowed-once'), {}, 'out.md', 'escaped <content>')
     expect(result).toMatchObject({ kind: 'written', path: 'out.md' })
     expect(fs.read('out.md')).toBe('escaped <content>')
+  })
+})
+
+describe('the sessionQuery read path', () => {
+  it('reads the surface through sessionQuery when the service is composed', async () => {
+    // A surface the session log does NOT contain: if the command output shows
+    // this text, the read really went through the service.
+    const events = [
+      {
+        type: 'user/message',
+        seq: 0,
+        time: 0,
+        data: createUserMessage({ content: [{ type: 'text', text: 'from the query service' }], source: { kind: 'user' } }),
+        surfaceOp: 'append',
+      },
+    ] as unknown as SessionEvent[]
+    const sessionQuery = new FakeSessionQuery(events)
+    const harness = await createStyleHarness({}, undefined, { sessionQuery })
+    try {
+      const session = harness.makeSession()
+      const execution = await harness.runExport(session, '/transcript md')
+      expect(execution?.result).toMatchObject({ kind: 'success' })
+      expect(execution?.result.text).toContain('from the query service')
+      expect(sessionQuery.reads).toHaveLength(1)
+    } finally {
+      await harness.dispose()
+    }
   })
 })
 
