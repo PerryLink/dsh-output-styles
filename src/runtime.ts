@@ -548,7 +548,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           if (input.kind === 'error') {
             return { kind: 'error', text: 'usage: /transcript [markdown|html] [--renderer=<id>] [--save <path>]' }
           }
-          const lines = conversationLines(readSessionEvents(agent.session))
+          const lines = await conversationLines(readSessionEvents(agent.session))
           const rules: StyleRule[] = input.renderer === undefined
             ? [...effectiveRules]
             : [{ match: {}, style: input.renderer, priority: 0 }]

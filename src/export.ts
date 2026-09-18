@@ -17,6 +17,30 @@ import { deriveEventMessage, foldSurface } from '@deepseek-ai/dsh-session/surfac
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { RendererRegistry, RenderedText } from './renderers.ts'
 
+/**
+ * Message-projection definitions for plugin-owned surface events (today only
+ * `image/offload`, owned by @deepseek-ai/dsh-compaction-image-offload). The
+ * package is an optional peer: importing it statically at module evaluation
+ * would fail the whole plugin load on hosts that predate the projection
+ * contract, so the import stays dynamic, lazy, and failure-tolerant — a host
+ * without the package folds the surface without projections (and an
+ * offload-bearing log then fails loudly on new-generation hosts, which is the
+ * honest signal that the owning plugin is missing).
+ */
+interface ProjectionLike {
+  readonly type: string
+  project(event: SessionEvent, context: unknown): unknown
+}
+
+let projectionsCache: Promise<readonly ProjectionLike[]> | undefined
+
+function loadProjections(): Promise<readonly ProjectionLike[]> {
+  projectionsCache ??= import('@deepseek-ai/dsh-compaction-image-offload')
+    .then((module): readonly ProjectionLike[] => [module.imageOffloadProjection])
+    .catch(() => [])
+  return projectionsCache
+}
+
 /** One exported conversation line. */
 export interface ExportLine {
   /** Speaker role: 'user', 'assistant', or 'tool'. */
@@ -51,10 +75,19 @@ export interface ExportDocument {
  * the first `## User` block, which is neither a user turn nor content the
  * transcript ever showed.
  * @param events - the session log, in seq order.
- * @returns the conversation lines in surface order.
+ * @returns a promise of the conversation lines in surface order; the load of
+ * the optional message projections is part of the promise.
  */
-export function conversationLines(events: readonly SessionEvent[]): ExportLine[] {
-  const { nodes } = foldSurface(events)
+export async function conversationLines(events: readonly SessionEvent[]): Promise<ExportLine[]> {
+  const projections = await loadProjections()
+  // New-generation hosts fold the surface with the projections the log's
+  // plugin-owned events require; hosts whose fold signature predates the
+  // projection contract ignore the extra argument. The cast keeps both type
+  // faces compilable (the published line types foldSurface with one argument).
+  const folded = projections.length === 0
+    ? foldSurface(events)
+    : (foldSurface as unknown as (evts: readonly SessionEvent[], projs: readonly ProjectionLike[]) => ReturnType<typeof foldSurface>)(events, projections)
+  const { nodes } = folded
   const lines: ExportLine[] = []
   for (const seq of nodes) {
     const event = events.find(item => item.seq === seq)

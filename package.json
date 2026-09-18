@@ -131,6 +131,7 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
     "@deepseek-ai/dsh-commands": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
+    "@deepseek-ai/dsh-compaction-image-offload": ">=0.1.6-alpha.1 <0.2.0",
     "@deepseek-ai/dsh-fs": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
     "@deepseek-ai/dsh-session": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
     "@deepseek-ai/dsh-session-projection": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
@@ -144,6 +145,9 @@
     "@deepseek-ai/dsh-client-ui-commands": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0"
   },
   "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-compaction-image-offload": {
+      "optional": true
+    },
     "@deepseek-ai/dsh-commands": {
       "optional": true
     },
