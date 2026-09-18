@@ -62,9 +62,12 @@ jobs:
           # `@deepseek-ai/*` peer set: pnpm's autoInstallPeers skips these
           # prerelease-only ranges, and the entry pulls a shared chunk that
           # imports several of them (dsh-settings, dsh-storage-domain, ...).
+          # Ranges contain spaces, so one peer per line and a bash array keep
+          # each spec a single argument.
           PKG="$GITHUB_WORKSPACE/package.json"
-          PEERS=$(node -e "const p=require(process.argv[1]);console.log(Object.entries(p.peerDependencies).filter(([n])=>n.startsWith('@deepseek-ai/')).map(([n,r])=>n+'@'+r).join(' '))" "$PKG")
-          pnpm add "$TARBALL" $PEERS >/dev/null
+          node -e "const p=require(process.argv[1]);console.log(Object.entries(p.peerDependencies).filter(([n])=>n.startsWith('@deepseek-ai/')).map(([n,r])=>n+'@'+r).join('\n'))" "$PKG" > peers.txt
+          mapfile -t PEER_ARR < peers.txt
+          pnpm add "$TARBALL" "${PEER_ARR[@]}" >/dev/null
           node --input-type=module -e "import('dsh-output-styles').then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1)})"
   profile:
     runs-on: ubuntu-latest
