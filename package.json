@@ -213,6 +213,7 @@
     "lint": "oxlint",
     "check:readmes": "node scripts/check-readme-sync.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmitOnError --pretty false && tsc -p tsconfig.vitest.json --pretty false",
+    "typecheck:ci": "tsc -p tsconfig.ci.json --noEmitOnError --pretty false",
     "verify": "pnpm run typecheck && pnpm test && pnpm run verify:self-contained",
     "verify:self-contained": "node scripts/verify-self-contained.mjs",
     "verify:artifacts": "node scripts/verify-artifacts.mjs"
