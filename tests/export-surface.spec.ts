@@ -145,7 +145,7 @@ describe('conversationLines over a V3 surface', () => {
       bareError = error
     }
     if (bareError === null) return
-    expect(String((bareError as Error).message ?? bareError)).toMatch(/projection/i)
+    expect(String((bareError as Error).message ?? bareError).toLowerCase()).toContain('projection')
   })
 })
 

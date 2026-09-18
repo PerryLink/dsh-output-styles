@@ -111,6 +111,14 @@ describe('dsh-output-styles client picker', () => {
     expect(options?.[0]).toMatchObject({ active: true })
   })
 
+  it('serves no rows to an already-aborted popup attempt (signal adoption)', async () => {
+    const { decorations } = await makeClient()
+    const controller = new AbortController()
+    controller.abort()
+    const options = await popupSelect(decorations[0]).options(session, controller.signal)
+    expect(options).toEqual([])
+  })
+
   it('submits the completed command line on select, including multi-word names and off', async () => {
     const { decorations, executes } = await makeClient()
     const decoration = decorations[0]
