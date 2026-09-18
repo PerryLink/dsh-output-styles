@@ -296,8 +296,22 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       + `(available: ${[...styles.keys()].join(', ') || 'none'})`,
     )
   }
+  // Storage domain: register the teardown effect BEFORE the open await (T1
+  // shape — the effect owns the close, a variable owns the handle). If the
+  // fiber is disposed while `open` is in flight, the post-await uid check
+  // closes the handle immediately instead of leaking it into a disposed
+  // effect registration (which would throw INACTIVE_EFFECT and lose the
+  // close forever).
+  let opened: Domain<typeof OUTPUT_STYLE_DOMAIN> | undefined
+  ctx.effect(() => () => {
+    void opened?.close()
+  }, 'dsh-output-styles: storage domain close')
   const domain = await storageDomain.open(OUTPUT_STYLE_DOMAIN)
-  ctx.effect(() => () => domain.close())
+  if (ctx.fiber.uid === null) {
+    await domain.close()
+    return
+  }
+  opened = domain
   const runtime = new OutputStyleRuntime(domain, styles, resolved)
 
   // Style-file hot reload: watch every library directory and atomically swap
