@@ -31,11 +31,18 @@ import { conversationLines, renderExport, sanitizeText } from './export.ts'
 /**
  * Session events with an old-host fallback: 0.1.2-alpha.5 renamed the
  * `Session.events` getter to `snapshotEvents()` while the peer floor
- * (>=0.1.0-rc.8) still exposes `.events`.
+ * (>=0.1.0-rc.8) still exposes `.events`. The preferred read path is the
+ * `sessionQuery` service (`readSurface`, see the /transcript handler); this
+ * fallback only serves hosts composed without that service.
  */
 function readSessionEvents(session: Session): readonly SessionEvent[] {
   if (typeof session.snapshotEvents === 'function') return session.snapshotEvents()
   return (session as unknown as { events: readonly SessionEvent[] }).events
+}
+
+/** Structural face of the optional `sessionQuery` service (dsh-session-query). */
+interface SessionQueryLike {
+  readSurface(sessionId: unknown): Promise<{ readonly events: readonly SessionEvent[] }>
 }
 
 /** Bundled style-library directory (package `styles/`), the lowest-priority `stylesDir` entry. */
@@ -296,8 +303,22 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       + `(available: ${[...styles.keys()].join(', ') || 'none'})`,
     )
   }
+  // Storage domain: register the teardown effect BEFORE the open await (T1
+  // shape — the effect owns the close, a variable owns the handle). If the
+  // fiber is disposed while `open` is in flight, the post-await uid check
+  // closes the handle immediately instead of leaking it into a disposed
+  // effect registration (which would throw INACTIVE_EFFECT and lose the
+  // close forever).
+  let opened: Domain<typeof OUTPUT_STYLE_DOMAIN> | undefined
+  ctx.effect(() => () => {
+    void opened?.close()
+  }, 'dsh-output-styles: storage domain close')
   const domain = await storageDomain.open(OUTPUT_STYLE_DOMAIN)
-  ctx.effect(() => () => domain.close())
+  if (ctx.fiber.uid === null) {
+    await domain.close()
+    return
+  }
+  opened = domain
   const runtime = new OutputStyleRuntime(domain, styles, resolved)
 
   // Style-file hot reload: watch every library directory and atomically swap
@@ -529,7 +550,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     rulesScope.watch(next => { adoptRules(next as unknown as { rules: readonly StyleRule[] }) })
   })
 
-  // The /export command: renders the current session's message surface to
+  // The /transcript command: renders the current session's message surface to
   // Markdown or sanitized HTML through the renderer pipeline. The document
   // itself is the visible artifact; the original lines are the session log
   // the export was projected from — rendered and original stay reconstructable.
@@ -540,15 +561,19 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   if (resolved.enableExport) {
     ctx.inject(['commands'], (commandCtx) => {
       commandCtx.commands.register({
-        name: 'export',
+        name: 'transcript',
         description: 'Export this session as Markdown or HTML (renderer-aware)',
         input: { hint: '[markdown|html] [--renderer=<id>] [--save <path>]' },
         handler: async ({ agent, rawInput, signal }) => {
           const input = parseExportInput(rawInput)
           if (input.kind === 'error') {
-            return { kind: 'error', text: 'usage: /export [markdown|html] [--renderer=<id>] [--save <path>]' }
+            return { kind: 'error', text: 'usage: /transcript [markdown|html] [--renderer=<id>] [--save <path>]' }
           }
-          const lines = conversationLines(readSessionEvents(agent.session))
+          const sessionQuery = ctx.get('sessionQuery') as SessionQueryLike | undefined
+          const events = sessionQuery === undefined
+            ? readSessionEvents(agent.session)
+            : (await sessionQuery.readSurface(agent.session.id)).events
+          const lines = await conversationLines(events)
           const rules: StyleRule[] = input.renderer === undefined
             ? [...effectiveRules]
             : [{ match: {}, style: input.renderer, priority: 0 }]
@@ -574,7 +599,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   }
 }
 
-/** Parsed `/export` invocation. */
+/** Parsed `/transcript` invocation. */
 type ExportInput = {
   kind: 'ok'
   format: 'markdown' | 'html'
@@ -582,7 +607,7 @@ type ExportInput = {
   save?: string
 } | { kind: 'error' }
 
-/** Parse `/export [markdown|html] [--renderer=<id>] [--save <path>]` from the raw command input. */
+/** Parse `/transcript [markdown|html] [--renderer=<id>] [--save <path>]` from the raw command input. */
 export function parseExportInput(rawInput: unknown): ExportInput {
   const raw = String(rawInput ?? '').trim()
   const parts = raw === '' ? [] : raw.split(/\s+/)
@@ -641,10 +666,10 @@ export interface ExportApproval {
   request(request: { agent: unknown; toolName: string; reason: string; signal?: AbortSignal }): Promise<ApprovalOutcome>
 }
 
-/** Error codes of the `/export --save` path; each is a stable machine-readable label. */
+/** Error codes of the `/transcript --save` path; each is a stable machine-readable label. */
 export type ExportSaveErrorCode = 'fs-unavailable' | 'approval-unavailable' | 'approval-denied' | 'approval-cancelled'
 
-/** Result of a `/export --save` attempt: the written path or a structured failure. */
+/** Result of a `/transcript --save` attempt: the written path or a structured failure. */
 export type ExportSaveResult =
   | { readonly kind: 'written'; readonly path: string }
   | { readonly kind: 'error'; readonly code: ExportSaveErrorCode; readonly text: string }
@@ -675,7 +700,7 @@ export async function saveExportFile(
     return {
       kind: 'error',
       code: 'approval-unavailable',
-      text: 'dsh-output-styles: /export --save requires an approval service (compose @deepseek-ai/dsh-user-approval); nothing was written',
+      text: 'dsh-output-styles: /transcript --save requires an approval service (compose @deepseek-ai/dsh-user-approval); nothing was written',
     }
   }
   let outcome: ApprovalOutcome
@@ -696,27 +721,27 @@ export async function saveExportFile(
       return {
         kind: 'error',
         code: 'approval-denied',
-        text: 'dsh-output-styles: /export --save was rejected; nothing was written',
+        text: 'dsh-output-styles: /transcript --save was rejected; nothing was written',
       }
     case 'cancelled':
       return {
         kind: 'error',
         code: 'approval-cancelled',
-        text: 'dsh-output-styles: /export --save was cancelled; nothing was written',
+        text: 'dsh-output-styles: /transcript --save was cancelled; nothing was written',
       }
     default:
       // 'unavailable' plus any out-of-vocabulary answer fail closed (never write).
       return {
         kind: 'error',
         code: 'approval-unavailable',
-        text: 'dsh-output-styles: /export --save approval is unavailable; nothing was written',
+        text: 'dsh-output-styles: /transcript --save approval is unavailable; nothing was written',
       }
   }
   if (fs === undefined) {
     return {
       kind: 'error',
       code: 'fs-unavailable',
-      text: 'dsh-output-styles: /export --save requires an fs service (compose @deepseek-ai/dsh-fs); nothing was written',
+      text: 'dsh-output-styles: /transcript --save requires an fs service (compose @deepseek-ai/dsh-fs); nothing was written',
     }
   }
   const target = await fs.resolve(path, signal === undefined ? undefined : { signal })

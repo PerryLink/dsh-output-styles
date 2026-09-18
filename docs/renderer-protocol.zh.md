@@ -4,7 +4,7 @@
 > 本文档只覆盖 0.4.0 新增的呈现层。
 
 渲染器协议把输出呈现变成扩展点：任何插件都可以注册一个**渲染器**——把原始模型可见文本
-映射为展示文本的纯函数——本插件面向外部的表面（`/export`、`ctx.outputRenderers.renderText`
+映射为展示文本的纯函数——本插件面向外部的表面（`/transcript`、`ctx.outputRenderers.renderText`
 服务）统一经一条可审计的流水线应用它们。
 
 ## 渲染器契约
@@ -87,7 +87,7 @@ config:
 呈现绝不销毁来源：
 
 - 每个结果对象在 `rendered` 旁边携带 `original`；
-- 导出会话的原始文本就是会话日志本身——`/export` 经官方 `deriveEventMessage` surface
+- 导出会话的原始文本就是会话日志本身——`/transcript` 经官方 `deriveEventMessage` surface
   规则投影它，与 harness 构建模型请求用的是同一条规则；
 - 渲染应用是确定性的（同样的规则 + 同样顺序的渲染器），因此渲染输出与其来源总是一起重建。
 
@@ -126,7 +126,7 @@ const result = await ctx.outputRenderers.renderText(rawText, { tool: 'sql', cont
 
 ## 导出到磁盘
 
-`/export` 把渲染后的文档作为命令输出文本返回。`/export [md|markdown|html]
+`/transcript` 把渲染后的文档作为命令输出文本返回。`/transcript [md|markdown|html]
 [--renderer=<id>] --save <path>` 另外把文档写入工作区路径：文档先经 `sanitizeText`
 纯函数净化，随后写入由审批服务（`ctx.get('approval')`，缺失则 fail-closed）把关、由
 fs 服务（`ctx.get('fs')`，缺失则大声失败）执行。渲染流水线本身不变——两种输出之前都应用

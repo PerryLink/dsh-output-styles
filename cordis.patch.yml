@@ -25,7 +25,7 @@
       #   watchStyles: true
       #   rules: []                  # per-session/per-tool render rules
       #                              # [{ match: { tool?, contentType?, session? }, style, priority? }]
-      #   enableExport: true         # register the /export command
+      #   enableExport: true         # register the /transcript command
       #                              # (md|html; --save <path> writes the
       #                              # sanitized document after approval)
 

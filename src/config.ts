@@ -59,9 +59,9 @@ export interface Config {
   includeBuiltins?: boolean
   /** Reload the library when a style file changes on disk (default true). */
   watchStyles?: boolean
-  /** Per-session/per-tool render rules (renderer registry); applied by `/export` and the render service. */
+  /** Per-session/per-tool render rules (renderer registry); applied by `/transcript` and the render service. */
   rules?: StyleRuleConfig[]
-  /** Register the `/export` command (Markdown/HTML session-export, renderer-aware). */
+  /** Register the `/transcript` command (Markdown/HTML session-export, renderer-aware). */
   enableExport?: boolean
   /**
    * Honor a detected core `outputStyles` capability: when true (default) and
@@ -92,7 +92,7 @@ export interface ResolvedConfig {
   watchStyles: boolean
   /** Per-session/per-tool render rules with resolved priorities. */
   rules: Array<{ match: { tool?: string; contentType?: 'text' | 'markdown' | 'html'; session?: string }; style: string; priority: number }>
-  /** Whether the `/export` command registers. */
+  /** Whether the `/transcript` command registers. */
   enableExport: boolean
   /** Whether a detected core `outputStyles` capability disables prompt injection. */
   respectCoreOutputStyles: boolean

@@ -146,14 +146,14 @@ describe('export document builders', () => {
 })
 
 describe('conversationLines', () => {
-  it('returns no lines for an empty log', () => {
-    expect(conversationLines([])).toEqual([])
+  it('returns no lines for an empty log', async () => {
+    expect(await conversationLines([])).toEqual([])
   })
 
-  it('tolerates a surface seq that no longer resolves to an event', () => {
+  it('tolerates a surface seq that no longer resolves to an event', async () => {
     // foldSurface over an empty list yields no nodes, so this path stays
     // covered by the empty-log case; a defensive direct call documents the
     // projection contract without inventing a corrupt log.
-    expect(conversationLines([])).toEqual([])
+    expect(await conversationLines([])).toEqual([])
   })
 })

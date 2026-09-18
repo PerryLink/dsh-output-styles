@@ -43,7 +43,7 @@ O `dsh-output-styles` é o equivalente do `outputStyles` do Claude Code para o D
 - **Paridade Claude Code** — `keep-coding-instructions`, `force-for-plugin` (alias `force`), compatibilidade JSON `outputStyles`, diretórios `stylesDir` em camadas, recarga a quente e fallback do projeto sobre a costura de settings do DSH.
 - **Registro de renderers (`output.render.*`)** — `ctx.outputRenderers` permite a qualquer plugin registrar um presenter puro, aplicado pela cascata `output.render/before`; renderers integrados `concise` e `step-by-step`.
 - **Regras por sessão/por ferramenta** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` nomeiam o renderer para solicitações coincidentes; editáveis pela seção de settings `output-style-rules`.
-- **`/export`** — renderiza a sessão atual para Markdown ou HTML saneado pela pipeline de render; `--save <path>` escreve o documento saneado nessa rota de workspace após aprovação do usuário. Cada render mantém o texto original ao lado do renderizado.
+- **`/transcript`** — renderiza a sessão atual para Markdown ou HTML saneado pela pipeline de render; `--save <path>` escreve o documento saneado nessa rota de workspace após aprovação do usuário. Cada render mantém o texto original ao lado do renderizado.
 
 ## Quick start
 
@@ -114,7 +114,7 @@ Todos os parâmetros são campos Schemastery `Config` (alteráveis pelo cordis.y
 | `includeBuiltins` | `true` | Incluir os `styles/` do pacote como camada de menor prioridade |
 | `watchStyles` | `true` | Recarregar a biblioteca quando um arquivo de estilo muda em disco |
 | `rules` | `[]` | Regras de render por sessão/ferramenta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | Registrar o comando `/export` (exportação de sessão Markdown/HTML, ciente do renderer; `--save` escreve com aprovação) |
+| `enableExport` | `true` | Registrar o comando `/transcript` (exportação de sessão Markdown/HTML, ciente do renderer; `--save` escreve com aprovação) |
 | `respectCoreOutputStyles` | `true` | Ao detectar um serviço core `outputStyles`, omitir a injeção de prompt deste plugin (manter hot-switch / rules / export) |
 
 ## Tools & surfaces
@@ -122,7 +122,7 @@ Todos os parâmetros são campos Schemastery `Config` (alteráveis pelo cordis.y
 | Surface | Kind | Notes |
 |---|---|---|
 | `/style` | command | Lista estilos, alterna ou restaura o padrão do projeto |
-| `/export` | command | Renderiza a sessão atual para Markdown ou HTML saneado; `--save` escreve com aprovação |
+| `/transcript` | command | Renderiza a sessão atual para Markdown ou HTML saneado; `--save` escreve com aprovação |
 | `output_style` | storage domain | Escolha de estilo por sessão, indexada por sessionId |
 | `systemPrompt.section()` | contribution | Injeta o corpo do estilo atual a cada montagem |
 | `output.render.*` | renderer registry | `ctx.outputRenderers` + a cascata `output.render/before` |
@@ -138,11 +138,11 @@ Todos os parâmetros são campos Schemastery `Config` (alteráveis pelo cordis.y
 | `/style Diagrams first` | Nomes com várias palavras são o restante inteiro |
 | `/style off` | Restaura o padrão do projeto (default de settings, depois `defaultStyle`) |
 | `/style nope` | `error: unknown output style "nope" (available: …)` |
-| `/export` | Renderiza a sessão atual para Markdown pela pipeline de render |
-| `/export md` | Renderiza para Markdown (`md` é a forma abreviada de `markdown`) |
-| `/export html` | Renderiza para HTML saneado |
-| `/export --renderer=concise` | Renderiza forçando um renderer (regras ignoradas) |
-| `/export md --save report.md` | Renderiza e então escreve o documento saneado em `report.md` após aprovação |
+| `/transcript` | Renderiza a sessão atual para Markdown pela pipeline de render |
+| `/transcript md` | Renderiza para Markdown (`md` é a forma abreviada de `markdown`) |
+| `/transcript html` | Renderiza para HTML saneado |
+| `/transcript --renderer=concise` | Renderiza forçando um renderer (regras ignoradas) |
+| `/transcript md --save report.md` | Renderiza e então escreve o documento saneado em `report.md` após aprovação |
 
 ## Style library
 
@@ -196,8 +196,8 @@ Filtrado contra o ecossistema DSH antes do desenvolvimento (instantânea 2026-08
 
 - **Somente serviços públicos.** Contribui `systemPrompt`, comandos, armazenamento e settings; sem alterações em engine / agent-loop / apiproxy / UI oficial.
 - **Visível para o modelo ⟺ registrado.** Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem novo tipo de evento de sessão, sem alterações no agent-loop.
-- **Original sempre conservado.** Cada render (e `/export`) mantém o texto original ao lado do renderizado; a exportação HTML usa HTML saneado.
-- **Escritas em disco controladas.** `/export --save` escreve somente após o serviço de aprovação conceder, e o conteúdo escrito passa primeiro pela função pura `sanitizeText`; sem um serviço de aprovação ou fs, nada é escrito (fail-closed).
+- **Original sempre conservado.** Cada render (e `/transcript`) mantém o texto original ao lado do renderizado; a exportação HTML usa HTML saneado.
+- **Escritas em disco controladas.** `/transcript --save` escreve somente após o serviço de aprovação conceder, e o conteúdo escrito passa primeiro pela função pura `sanitizeText`; sem um serviço de aprovação ou fs, nada é escrito (fail-closed).
 
 ## Known limitations
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createSystemMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { foldSurface } from '@deepseek-ai/dsh-session/surface'
 import { conversationLines, toHtml, toMarkdown } from '../src/export.ts'
 import { createStyleHarness } from './harness.ts'
 
@@ -34,7 +35,7 @@ describe('conversationLines over a V3 surface', () => {
 
       const events = session.snapshotEvents()
       expect(events.some(event => event.type === 'system/message')).toBe(true)
-      const lines = conversationLines(events)
+      const lines = await conversationLines(events)
       expect(lines).toEqual([{ role: 'user', text: 'ship it' }])
       const markdown = toMarkdown(lines)
       expect(markdown).toContain('## User\n\nship it')
@@ -62,7 +63,7 @@ describe('conversationLines over a V3 surface', () => {
         source: { kind: 'user' },
       }), { surfaceOp: 'append' })
 
-      expect(conversationLines(session.snapshotEvents())).toEqual([{ role: 'user', text: 'hello' }])
+      expect(await conversationLines(session.snapshotEvents())).toEqual([{ role: 'user', text: 'hello' }])
     } finally {
       await harness.dispose()
     }
@@ -87,11 +88,68 @@ describe('conversationLines over a V3 surface', () => {
         surfaceOp: 'append',
       },
     ] as unknown as SessionEvent[]
-    expect(conversationLines(legacy)).toEqual([{ role: 'user', text: 'legacy turn' }])
+    expect(await conversationLines(legacy)).toEqual([{ role: 'user', text: 'legacy turn' }])
+  })
+
+  it('folds an image/offload log through the loaded projection instead of throwing', async () => {
+    // New-generation hosts require a message projection for image/offload and
+    // throw without one; the export path loads the optional owning package
+    // (@deepseek-ai/dsh-compaction-image-offload) and folds cleanly. On a
+    // published line whose fold predates the projection contract the offload
+    // event is inert, so the assertion below stays satisfied either way.
+    const offloadLog = [
+      {
+        type: 'user/message',
+        seq: 0,
+        time: 0,
+        data: createUserMessage({ content: [{ type: 'text', text: 'send the diagram' }], source: { kind: 'user' } }),
+        surfaceOp: 'append',
+      },
+      {
+        type: 'image/offload',
+        seq: 1,
+        time: 0,
+        data: { targets: [{ seq: 0, imageIndexes: [0] }] },
+      },
+    ] as unknown as SessionEvent[]
+    const lines = await conversationLines(offloadLog)
+    expect(lines[0]?.text).toContain('send the diagram')
+  })
+
+  it('counter-lock: a bare fold without projections must throw on a projection-requiring log', async () => {
+    // Guard against a false-green P0-1: on a host whose fold implements the
+    // projection contract, a projection-requiring event without its definition
+    // must fail loudly. The probe is behavioral — arity probing is unreliable
+    // (a defaulted parameter does not change Function.length) — so a face that
+    // predates the contract folds the log inertly and the lock is vacuous
+    // there.
+    const offloadLog = [
+      {
+        type: 'user/message',
+        seq: 0,
+        time: 0,
+        data: createUserMessage({ content: [{ type: 'text', text: 'send the diagram' }], source: { kind: 'user' } }),
+        surfaceOp: 'append',
+      },
+      {
+        type: 'image/offload',
+        seq: 1,
+        time: 0,
+        data: { targets: [{ seq: 0, imageIndexes: [0] }] },
+      },
+    ] as unknown as SessionEvent[]
+    let bareError: unknown = null
+    try {
+      foldSurface(offloadLog)
+    } catch (error) {
+      bareError = error
+    }
+    if (bareError === null) return
+    expect(String((bareError as Error).message ?? bareError).toLowerCase()).toContain('projection')
   })
 })
 
-describe('/export over a V3 surface', () => {
+describe('/transcript over a V3 surface', () => {
   it('renders only the conversation, not the system prompt', async () => {
     const harness = await createStyleHarness()
     try {
@@ -102,14 +160,14 @@ describe('/export over a V3 surface', () => {
         source: { kind: 'user' },
       }), { surfaceOp: 'append' })
 
-      const execution = await harness.runExport(session, '/export md')
+      const execution = await harness.runExport(session, '/transcript md')
       expect(execution?.result).toMatchObject({ kind: 'success' })
       const text = execution?.result.text ?? ''
       expect(text).toContain('## User\n\nship it')
       expect(text).not.toContain('Output style')
       expect(text).not.toContain('保持简洁')
 
-      const html = await harness.runExport(session, '/export html')
+      const html = await harness.runExport(session, '/transcript html')
       expect(html?.result.text ?? '').not.toContain('Output style')
     } finally {
       await harness.dispose()

@@ -4,7 +4,7 @@
  * `presenter(text, meta)` maps args to presentation data and never touches
  * the DOM — matched by tool name and content type, ordered by priority.
  * Every rendered result carries its original text alongside, so any consumer
- * (this plugin's `/export`, third-party panels) can log both and keep the
+ * (this plugin's `/transcript`, third-party panels) can log both and keep the
  * "model-visible ⟺ reconstructable" invariant.
  *
  * This module is dependency-free (no DOM, no node: imports, no DSH imports)
@@ -37,7 +37,7 @@ export interface RenderContext {
 
 /** The renderer contract a third-party plugin registers. */
 export interface OutputRenderer {
-  /** Unique renderer id (kebab-case); the rule field and `/export --renderer` name it. */
+  /** Unique renderer id (kebab-case); the rule field and `/transcript --renderer` name it. */
   readonly id: string
   /** Human-readable name. */
   readonly name: string

@@ -110,10 +110,15 @@ export function apply(ctx: ClientContext): void {
       available: () => true,
       ui: {
         kind: 'popupSelect',
-        options: async (session) => {
+        options: async (session, signal) => {
+          // The shell passes an attempt-scoped signal: a popup closed before
+          // this read resolves must not receive rows. The projection read is
+          // synchronous, so the pre-check is the whole contract here.
+          if (signal.aborted) return []
           const binding = sessions.binding(session.sessionId)
           const view = binding?.session.projections.faceOf('style').getSnapshot() as StyleSelectionView | undefined
           if (view === undefined) return []
+          if (signal.aborted) return []
           return optionsOf(view, t)
         },
         onSelect: async (option, session) => {

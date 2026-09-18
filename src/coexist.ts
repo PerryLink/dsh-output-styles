@@ -5,7 +5,7 @@
  * plugin's system-prompt injection would duplicate it. The coexistence policy
  * detects the core capability through its reserved service seam and, when it
  * is present, degrades to the incremental surface this plugin uniquely adds —
- * runtime hot-switch, per-session/per-tool rules, and `/export` — while
+ * runtime hot-switch, per-session/per-tool rules, and `/transcript` — while
  * leaving prompt injection entirely to the core.
  *
  * Detection is a service probe, not a name guess: a core implementation

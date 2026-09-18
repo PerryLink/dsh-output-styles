@@ -7,7 +7,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import CommandRuntime from '@deepseek-ai/dsh-commands'
 import type { CommandExecution } from '@deepseek-ai/dsh-commands'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import type { Session } from '@deepseek-ai/dsh-session'
+import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import StorageService from '@deepseek-ai/dsh-storage'
 import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
@@ -115,8 +115,27 @@ export class FakeApproval {
   }
 }
 
-/** One composed test application: host services from the published rc.6 packages plus this plugin. */
-export interface StyleHarness {
+/**
+ * A structural `sessionQuery` service fake: records every `readSurface` call
+ * and returns one fixed surface-event list, so a test can prove the
+ * `/transcript` read path really goes through the service instead of reading
+ * the session log directly.
+ */
+export class FakeSessionQuery {
+  /** Every session id passed to `readSurface`, in call order. */
+  readonly reads: unknown[] = []
+
+  /** @param events - the surface events every read returns. */
+  constructor(private readonly events: readonly SessionEvent[]) {}
+
+  /** Record the read and return the fixed surface. */
+  async readSurface(sessionId: unknown): Promise<{ readonly events: readonly SessionEvent[] }> {
+    this.reads.push(sessionId)
+    return { events: this.events }
+  }
+}
+
+/** One composed test application: host services from the published rc.6 packages plus this plugin. */export interface StyleHarness {
   ctx: Context
   /** The plugin's own fiber; disposing it simulates a config hot-reload. */
   pluginFiber: Fiber
@@ -129,11 +148,13 @@ export interface StyleHarness {
   fs?: FakeFileSystem
   /** The composed approval fake, when `options.approval` was requested. */
   approval?: FakeApproval
+  /** The composed session-query fake, when `options.sessionQuery` was requested. */
+  sessionQuery?: FakeSessionQuery
   makeSession(id?: string): Session
   agentFor(session: Session): Agent
   /** Execute one `/style` line against a session through the real command registry. */
   runStyle(session: Session, line: string): Promise<CommandExecution | undefined>
-  /** Execute one `/export` line against a session through the real command registry. */
+  /** Execute one `/transcript` line against a session through the real command registry. */
   runExport(session: Session, line: string): Promise<CommandExecution | undefined>
   /** Assemble the system prompt for a session and return this plugin's section text. */
   sectionText(session: Session): Promise<string>
@@ -158,7 +179,7 @@ export interface StyleHarness {
 export async function createStyleHarness(
   config: outputStyles.Config = {},
   stylesDir?: string,
-  options: { settings?: boolean; invariants?: boolean; fs?: FakeFileSystem; approval?: FakeApproval; coreOutputStyles?: boolean } = {},
+  options: { settings?: boolean; invariants?: boolean; fs?: FakeFileSystem; approval?: FakeApproval; coreOutputStyles?: boolean; sessionQuery?: FakeSessionQuery } = {},
 ): Promise<StyleHarness> {
   const ctx = new Context()
   const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-output-styles-'))
@@ -184,6 +205,8 @@ export async function createStyleHarness(
   const approval = options.approval
   if (approval !== undefined) ctx.provide('approval', approval as never)
   if (options.coreOutputStyles === true) ctx.provide('outputStyles', {} as never)
+  const sessionQuery = options.sessionQuery
+  if (sessionQuery !== undefined) ctx.provide('sessionQuery', sessionQuery as never)
   const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config })
 
   const makeSession = (id?: string): Session => ctx.sessions.create(
@@ -211,6 +234,7 @@ export async function createStyleHarness(
     ...invariants === undefined ? {} : { invariants },
     ...fs === undefined ? {} : { fs },
     ...approval === undefined ? {} : { approval },
+    ...sessionQuery === undefined ? {} : { sessionQuery },
     makeSession,
     agentFor,
     runStyle,
