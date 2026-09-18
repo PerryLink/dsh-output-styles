@@ -6,7 +6,7 @@
 The renderer protocol turns output presentation into an extension point: any
 plugin can register a **renderer** — a pure function that maps raw
 model-visible text to display text — and the harness-facing surfaces of this
-plugin (`/export`, the `ctx.outputRenderers.renderText` service) apply them
+plugin (`/transcript`, the `ctx.outputRenderers.renderText` service) apply them
 through one auditable pipeline.
 
 ## Renderer contract
@@ -95,7 +95,7 @@ Presentation never destroys the source:
 
 - every result object carries `original` beside `rendered`;
 - the original text of an exported conversation is the session log itself —
-  `/export` projects it through the official `deriveEventMessage` surface
+  `/transcript` projects it through the official `deriveEventMessage` surface
   rule, the same rule the harness uses to build model requests;
 - the render application is deterministic (same rules + same renderers in the
   same order), so the rendered output and its source reconstruct together.
@@ -135,7 +135,7 @@ const result = await ctx.outputRenderers.renderText(rawText, { tool: 'sql', cont
 
 ## Export to disk
 
-`/export` returns the rendered document as command output text. `/export
+`/transcript` returns the rendered document as command output text. `/transcript
 [md|markdown|html] [--renderer=<id>] --save <path>` additionally writes the
 document to a workspace path: the document passes through the `sanitizeText`
 pure function first, then the write is gated by the approval service

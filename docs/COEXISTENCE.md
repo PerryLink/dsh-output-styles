@@ -23,7 +23,7 @@ const coreActive = detectCoreOutputStyles(ctx)
   (`systemPrompt.section('output-style:selection')` plus the
   `system-prompt/assemble` waterfall for `keep-coding-instructions: false`).
 - **Core present** → `degraded` mode: prompt injection is left to the core, and
-  the plugin keeps only hot-switch (`/style`), rules, and `/export`.
+  the plugin keeps only hot-switch (`/style`), rules, and `/transcript`.
 
 ## Runnable verification
 
@@ -55,7 +55,7 @@ In `degraded` mode the plugin still contributes:
   `output_style` domain, and the `style` session projection.
 - **Rules** — the `output.render.*` renderer registry, the
   `output.render/before` waterfall, and per-session/per-tool rules.
-- **Export** — `/export` (Markdown / sanitized HTML) through the renderer
+- **Export** — `/transcript` (Markdown / sanitized HTML) through the renderer
   pipeline, with approval-gated `--save`.
 
 Only the two prompt-injection registrations (the prompt section and the

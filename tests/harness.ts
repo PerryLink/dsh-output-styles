@@ -133,7 +133,7 @@ export interface StyleHarness {
   agentFor(session: Session): Agent
   /** Execute one `/style` line against a session through the real command registry. */
   runStyle(session: Session, line: string): Promise<CommandExecution | undefined>
-  /** Execute one `/export` line against a session through the real command registry. */
+  /** Execute one `/transcript` line against a session through the real command registry. */
   runExport(session: Session, line: string): Promise<CommandExecution | undefined>
   /** Assemble the system prompt for a session and return this plugin's section text. */
   sectionText(session: Session): Promise<string>
