@@ -28,6 +28,8 @@ jobs:
 
       - name: Typecheck
         run: pnpm run typecheck
+      - name: Typecheck (published line)
+        run: pnpm run typecheck:ci
 
       - name: Unit and integration tests
         run: pnpm test
