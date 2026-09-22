@@ -9,6 +9,7 @@
  */
 
 import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { ContextFormed } from '@deepseek-ai/dsh-llm'
 import { z as zod } from 'zod'
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain'
 import type { OutputRenderer, RenderContext, RenderedText } from './renderers.ts'
@@ -17,12 +18,31 @@ import type { StyleFoldState } from './style-command.ts'
 /** The reserved switch target that removes a session's selection. */
 export const OFF = 'off'
 
+/** Producer-owned source kind of this package's durable records. */
+export const STYLE_SOURCE_KIND = 'dsh-output-styles'
+
+/**
+ * Every producer declares its own `kind` in its own module; the shared
+ * `MessageSourceMap` has no catch-all `plugin` kind, and the session-format
+ * admission gate refuses the retired `kind: 'plugin'` wrapper outright. This
+ * merge gives the package its own well-known source instead.
+ */
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'dsh-output-styles': { kind: 'dsh-output-styles' } & ContextFormed
+  }
+}
+
 /**
  * Provenance marker stored with every selection record. It states who wrote
  * the record, so a session's style choice can be attributed to this plugin
  * when the log is rebuilt or audited.
+ *
+ * The `plugin` field is retained for records written by earlier versions
+ * (domain version 1); {@link STYLE_SOURCE_KIND} alone now identifies the
+ * producer.
  */
-export const STYLE_SOURCE = { kind: 'plugin', plugin: 'dsh-output-styles' } as const
+export const STYLE_SOURCE = { kind: STYLE_SOURCE_KIND, plugin: 'dsh-output-styles' } as const
 
 /** One durable per-session selection record. */
 export const styleSelectionSchema = zod.object({
@@ -30,8 +50,10 @@ export const styleSelectionSchema = zod.object({
   style: zod.string().min(1),
   /** Producer marker; always this plugin's own {@link STYLE_SOURCE}. */
   source: zod.object({
-    kind: zod.literal('plugin'),
-    plugin: zod.string().min(1),
+    /** Producer-owned source kind; never the retired `plugin` catch-all. */
+    kind: zod.literal(STYLE_SOURCE_KIND),
+    /** Legacy producer name, still carried on records written before the kind became producer-owned. */
+    plugin: zod.string().min(1).optional(),
   }),
 })
 
