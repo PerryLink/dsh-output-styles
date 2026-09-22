@@ -1,4 +1,4 @@
-// scripts/loader-runner.mjs — real Loader composition runner for
+// scripts/loader-runner.mjs 鈥?real Loader composition runner for
 // dsh-output-styles (community five-layer model, layer 4). An independent
 // process boots a real Context, mounts the vendored Loader with the Include
 // builtin, reads the given cordis.yml (service rows for session, system
@@ -50,6 +50,27 @@ try {
   })
   await ctx.loader.await()
 
+  // An entry whose Config failed validation never mounts its plugin, and the
+  // Loader keeps the reason on the fiber (it logs it, which is invisible here
+  // because this process attaches no log exporter). Surface that reason first,
+  // so an invalid config fails loud with its OWN message — including the
+  // schema's "expected boolean but got yes" line — instead of the downstream
+  // "contribution is missing" symptom the failure causes. Rows read from the
+  // included file live in that entry's subtree, so walk subtrees too.
+  const allEntries = []
+  const collect = (tree) => {
+    for (const entry of Object.values(tree.store)) {
+      allEntries.push(entry)
+      if (entry.subtree) collect(entry.subtree)
+    }
+  }
+  collect(ctx.loader)
+  const failed = allEntries.filter(entry => entry.fiber?.state === 3 /* FiberState.FAILED */)
+  if (failed.length > 0) {
+    const reasons = failed.map(entry => `${entry.options.id}: ${String(entry.fiber?._error)}`)
+    throw new Error(`Loader composition: entry failed to load: ${reasons.join('; ')}`)
+  }
+
   // Authoritative registries carry the plugin's contributions.
   const session = ctx.sessions.create(SessionId('dsh-output-styles-loader-runner'))
   const agent = /** @type {any} */ ({ id: session.id, session, options: {} })
@@ -85,3 +106,4 @@ try {
 } finally {
   await ctx.fiber.dispose()
 }
+
