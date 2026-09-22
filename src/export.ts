@@ -26,6 +26,11 @@ import type { RendererRegistry, RenderedText } from './renderers.ts'
  * without the package folds the surface without projections (and an
  * offload-bearing log then fails loudly on new-generation hosts, which is the
  * honest signal that the owning plugin is missing).
+ *
+ * The 0.1.7 generation moved the projection onto the package's `./projection`
+ * subpath and left the root exporting only the plugin face, so the subpath is
+ * tried first and the root is kept as the fallback for older generations that
+ * still exported it there.
  */
 interface ProjectionLike {
   readonly type: string
@@ -35,10 +40,20 @@ interface ProjectionLike {
 let projectionsCache: Promise<readonly ProjectionLike[]> | undefined
 
 function loadProjections(): Promise<readonly ProjectionLike[]> {
-  projectionsCache ??= import('@deepseek-ai/dsh-compaction-image-offload')
-    .then((module): readonly ProjectionLike[] => [module.imageOffloadProjection])
-    .catch(() => [])
+  projectionsCache ??= loadImageOffloadProjection()
   return projectionsCache
+}
+
+/** Resolve the optional `image/offload` projection from either generation's location. */
+async function loadImageOffloadProjection(): Promise<readonly ProjectionLike[]> {
+  const fromSubpath = await import('@deepseek-ai/dsh-compaction-image-offload/projection')
+    .then(module => module.imageOffloadProjection)
+    .catch(() => undefined)
+  if (fromSubpath !== undefined) return [fromSubpath]
+  const fromRoot = await import('@deepseek-ai/dsh-compaction-image-offload')
+    .then(module => module.imageOffloadProjection)
+    .catch(() => undefined)
+  return fromRoot === undefined ? [] : [fromRoot]
 }
 
 /** One exported conversation line. */
