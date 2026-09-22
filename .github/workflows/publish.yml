@@ -54,7 +54,24 @@ jobs:
           if npm view "dsh-output-styles@${version}" version >/dev/null 2>&1; then
             echo "dsh-output-styles@${version} is already published; skipping npm publish"
           else
-            npm publish --provenance
+            # `npm view` reads the registry's read replica, which can lag a publish that
+            # is still propagating ("may take a few minutes to become available"). When
+            # that happens the guard above misses an already-published version and npm
+            # rejects the duplicate with E409 rather than a hard failure. A re-pushed tag
+            # for a version that IS on the registry is the idempotent case this guard
+            # exists to absorb, so treat E409 as success and surface every other error.
+            set +e
+            out="$(npm publish --provenance 2>&1)"
+            status=$?
+            set -e
+            printf '%s\n' "$out"
+            if [ "$status" -ne 0 ]; then
+              if printf '%s' "$out" | grep -q 'E409'; then
+                echo "dsh-output-styles@${version} is already on the registry (E409); treating the publish as done"
+              else
+                exit "$status"
+              fi
+            fi
           fi
 
       # Advisory only: npm's read side can lag minutes behind a successful publish, and a hard
