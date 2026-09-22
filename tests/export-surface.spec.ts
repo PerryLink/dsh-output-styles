@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSystemMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { foldSurface } from '@deepseek-ai/dsh-session/surface'
 import { conversationLines, toHtml, toMarkdown } from '../src/export.ts'
@@ -19,8 +20,28 @@ const STYLE_PROMPT = [
 ].join('\n')
 
 function systemEvent(text: string) {
-  return createSystemMessage(text, 'dsh-output-styles')
+  return createSystemMessage(text)
 }
+
+/**
+ * One structurally valid durable image reference. The offload projection
+ * resolves `targets[].imageIndexes` against the message's own content blocks,
+ * so a fixture that claims to offload index 0 must actually carry an image
+ * block at index 0 — otherwise the projection rejects the log with
+ * "image index 0 does not exist". The block is NOT pre-marked `offloaded`: the
+ * `image/offload` event is what marks it, and a block that already carries the
+ * flag is rejected as "already offloaded".
+ */
+const OFFLOADED_IMAGE = {
+  type: 'image',
+  attachment: {
+    attachmentId: 'img-1',
+    mediaType: 'image/png',
+    bytes: 68,
+    width: 1,
+    height: 1,
+  },
+} as unknown as ContentBlock
 
 describe('conversationLines over a V3 surface', () => {
   it('excludes the system/message surface node and keeps the user turn', async () => {
@@ -102,7 +123,10 @@ describe('conversationLines over a V3 surface', () => {
         type: 'user/message',
         seq: 0,
         time: 0,
-        data: createUserMessage({ content: [{ type: 'text', text: 'send the diagram' }], source: { kind: 'user' } }),
+        data: createUserMessage({
+          content: [{ type: 'text', text: 'send the diagram' }, OFFLOADED_IMAGE],
+          source: { kind: 'user' },
+        }),
         surfaceOp: 'append',
       },
       {

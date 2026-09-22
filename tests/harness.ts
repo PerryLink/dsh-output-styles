@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import type { Fiber } from '@deepseek-ai/cordis'
+import type { Fiber, Volatile } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import CommandRuntime from '@deepseek-ai/dsh-commands'
 import type { CommandExecution } from '@deepseek-ai/dsh-commands'
@@ -13,40 +13,108 @@ import StorageService from '@deepseek-ai/dsh-storage'
 import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import SettingsProvider from '@deepseek-ai/dsh-settings'
-import type { SettingsNamespace, SettingsRegisterOptions, SettingsScope } from '@deepseek-ai/dsh-settings'
-import type z from '@deepseek-ai/schemastery'
+// Type-only: the `settings` service and the Loader's `loader/volatile-update`
+// augmentation this harness drives by hand.
+import type {} from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/cordis-plugin-loader'
 import * as outputStyles from '../src/index.ts'
+import type { NormalizedConfig } from '../src/index.ts'
 
 /**
- * Minimal in-memory settings provider for tests. It records the last
- * registered namespace scope so a test can drive the user-settings layer of
- * the plugin's own `output-style` namespace.
+ * Minimal stand-in for the settings forms service (`SettingsForms`), which
+ * replaced the removed `SettingsProvider`. It records the page-policy
+ * registrations a plugin makes so a test can prove the plugin opts out of the
+ * auto-generated card, and it lets a test commit a volatile Config value and
+ * dispatch `loader/volatile-update` exactly as the Loader does.
+ *
+ * The value side is real: volatile fields are genuine `Volatile` references
+ * from the plugin's own schema, so "a committed value reaches the running
+ * plugin without a remount" is exercised for real rather than stubbed.
  */
-export class FakeSettings extends SettingsProvider {
-  readonly writable = true
-  /** The most recent namespace scope registered. */
-  lastScope?: SettingsScope<{ style: string }>
-  /** Every namespace scope registered, keyed by the settings namespace. */
-  readonly scopes = new Map<string, SettingsScope<unknown>>()
-  private readonly doc: Record<string, unknown> = {}
-  protected async load(): Promise<Record<string, unknown>> {
-    return this.doc
+export class FakeSettings {
+  /** Every page policy passed to `configure`, in registration order. */
+  readonly configured: Array<{ auto?: boolean; owner: unknown }> = []
+
+  /** The plugin context whose volatile references this fake commits into. */
+  private owner?: Context
+  /** The plugin's normalized Config, carrying its live `Volatile` references. */
+  private config?: NormalizedConfig
+
+  /**
+   * Register the calling plugin instance's page policy.
+   * @param presentation - the page policy (`auto: false` opts out of the generated card).
+   * @param owner - the plugin fiber the policy belongs to.
+   * @returns the disposer, as the real service returns one.
+   */
+  configure(presentation: { auto?: boolean }, owner: unknown): () => void {
+    this.configured.push({ ...presentation, owner })
+    return () => {
+      const index = this.configured.findIndex(entry => entry.owner === owner)
+      if (index >= 0) this.configured.splice(index, 1)
+    }
   }
-  protected async persist(ns: SettingsNamespace, section: Record<string, unknown>): Promise<void> {
-    this.doc[ns] = section
+
+  /**
+   * Bind the running plugin instance so {@link update} can commit into it.
+   * @param owner - the plugin's own context (its fiber's context).
+   * @param config - the plugin's normalized Config carrying the volatile references.
+   */
+  bind(owner: Context, config: NormalizedConfig): void {
+    this.owner = owner
+    this.config = config
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the alpha.2 register signature is generically constrained on a non-exported namespace input; the fake widens the parameter.
-  override register<T>(ns: any, schema: z<T>, options?: SettingsRegisterOptions<T>): SettingsScope<T> {
-    const scope = super.register(ns, schema, options)
-    this.lastScope = scope as unknown as SettingsScope<{ style: string }>
-    this.scopes.set(String(ns), scope as unknown as SettingsScope<unknown>)
-    return scope
+
+  /** Whether the plugin has registered a page policy yet. */
+  get isConfigured(): boolean {
+    return this.configured.length > 0
   }
-  /** The scope registered for one namespace (e.g. `output-style`). */
-  scope(ns: string): SettingsScope<{ style: string }> | undefined {
-    return this.scopes.get(ns) as SettingsScope<{ style: string }> | undefined
+
+  /**
+   * Commit a new value into one volatile field and dispatch
+   * `loader/volatile-update` the way the Loader does — value first, then the
+   * event, so a listener always observes the already-committed value. The
+   * dispatch is filtered to the plugin's own fiber, exactly as the Loader's
+   * is (`fiber.ctx.emit(self, 'loader/volatile-update', paths)`), so the
+   * plugin's `ctx.on` listener is the one that runs.
+   * @param field - which volatile Config field to commit into.
+   * @param value - the next value for that field.
+   */
+  update(field: 'defaultStyle' | 'rules', value: string | unknown[]): void {
+    const owner = this.owner
+    const config = this.config
+    if (owner === undefined || config === undefined || owner.fiber.uid === null) {
+      throw new Error('FakeSettings: no plugin instance is bound yet')
+    }
+    updateVolatile(config[field] as Volatile<unknown>, createVolatile(value))
+    void owner.fiber.ctx.parallel('loader/volatile-update', [[field]])
   }
+}
+
+/**
+ * Replace one volatile reference's value, mirroring cosmokit's internal
+ * `updateVolatile`. The write symbol is the shared cross-copy protocol key, so
+ * this reaches a reference created by another copy of the library.
+ * @param target - the live reference to commit into.
+ * @param source - a reference holding the new value.
+ */
+function updateVolatile(target: Volatile<unknown>, source: Volatile<unknown>): void {
+  const write = (target as unknown as Record<symbol, ((value: unknown) => void) | undefined>)[Symbol.for('cosmokit.volatile.write')]
+  if (write === undefined) throw new Error('FakeSettings: the bound value is not a volatile reference')
+  write(source.get())
+}
+
+/**
+ * Build a real `Volatile` reference around one value, without importing
+ * cosmokit directly (the write symbol is the documented cross-copy protocol).
+ * @param value - the value the reference should hold.
+ * @returns a frozen reference whose `get()` returns `value`.
+ */
+function createVolatile<T>(value: T): Volatile<T> {
+  let current: T = value
+  return Object.freeze({
+    get: () => current,
+    [Symbol.for('cosmokit.volatile.write')]: (next: unknown) => { current = next as T },
+  }) as Volatile<T>
 }
 
 /**
@@ -135,12 +203,12 @@ export class FakeSessionQuery {
   }
 }
 
-/** One composed test application: host services from the published rc.6 packages plus this plugin. */export interface StyleHarness {
+/** One composed test application: host services from the published alpha packages plus this plugin. */export interface StyleHarness {
   ctx: Context
   /** The plugin's own fiber; disposing it simulates a config hot-reload. */
   pluginFiber: Fiber
   storageRoot: string
-  /** The composed settings provider, when `options.settings` was requested. */
+  /** The composed settings forms stand-in, when `options.settings` was requested. */
   settings?: FakeSettings
   /** The composed invariant registry, when `options.invariants` was requested. */
   invariants?: FakeInvariants
@@ -192,8 +260,8 @@ export async function createStyleHarness(
   await ctx.plugin(SessionProjectionRegistry)
   let settings: FakeSettings | undefined
   if (options.settings === true) {
-    await ctx.plugin(FakeSettings)
-    settings = ctx.get('settings') as FakeSettings
+    settings = new FakeSettings()
+    ctx.provide('settings', settings as never)
   }
   let invariants: FakeInvariants | undefined
   if (options.invariants === true) {
@@ -207,7 +275,12 @@ export async function createStyleHarness(
   if (options.coreOutputStyles === true) ctx.provide('outputStyles', {} as never)
   const sessionQuery = options.sessionQuery
   if (sessionQuery !== undefined) ctx.provide('sessionQuery', sessionQuery as never)
-  const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config })
+  // The plugin receives plain config here — exactly like a direct caller or a
+  // test — and normalizes the two editable fields into real `Volatile`
+  // references itself. Binding those lets a test commit a value the same way
+  // the Loader does.
+  const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config } as never)
+  if (settings !== undefined) settings.bind(pluginFiber.ctx, outputStyles.normalizeConfig(pluginFiber.config))
 
   const makeSession = (id?: string): Session => ctx.sessions.create(
     id === undefined ? undefined : SessionId(id),
@@ -249,6 +322,17 @@ export async function createStyleHarness(
         fs?.dispose()
       }
     },
+  }
+}
+
+/**
+ * Wait out an asynchronous injection scope's activation, so a test can assert
+ * on what that scope registered without racing it.
+ * @param expectation - predicate that becomes true once activation happened.
+ */
+export async function untilSettled(expectation: () => boolean): Promise<void> {
+  for (let i = 0; i < 50 && !expectation(); i++) {
+    await new Promise(resolve => setTimeout(resolve, 0))
   }
 }
 

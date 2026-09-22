@@ -8,7 +8,7 @@ import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import * as outputStyles from '../src/index.ts'
-import { createStyleHarness, makeStyleDir } from './harness.ts'
+import { createStyleHarness, makeStyleDir, untilSettled } from './harness.ts'
 
 const LONG_BODY = 'x'.repeat(100)
 
@@ -302,13 +302,17 @@ describe('style file hot reload', () => {
 })
 
 describe('project default over the settings seam', () => {
-  it('falls back to the settings outputStyle for sessions that never selected one', async () => {
+  it('registers the settings page policy and takes a committed defaultStyle without a remount', async () => {
     const harness = await createStyleHarness({}, undefined, { settings: true })
     const session = harness.makeSession()
+    // No style yet: the default is the empty string.
     expect(await harness.sectionText(session)).toBe('')
-    const scope = harness.settings?.scope('output-style')
-    expect(scope).toBeDefined()
-    await scope?.update({ style: 'step-by-step' })
+    // The plugin opts out of the auto-generated card, as every host plugin does.
+    await untilSettled(() => harness.settings?.isConfigured === true)
+    expect(harness.settings?.configured).toEqual([{ auto: false, owner: harness.pluginFiber }])
+    // Commit a value the way the Loader does: value, then loader/volatile-update.
+    harness.settings?.update('defaultStyle', 'step-by-step')
+    await untilSettled(() => true)
     expect(await harness.sectionText(session)).toContain('# Output style: step-by-step')
     // A session's own selection still wins over the project default.
     await harness.runStyle(session, '/style formal')
@@ -319,11 +323,15 @@ describe('project default over the settings seam', () => {
     await harness.dispose()
   })
 
-  it('rejects a settings outputStyle that names no library style', async () => {
+  it('rejects a committed defaultStyle that names no library style', async () => {
     const harness = await createStyleHarness({}, undefined, { settings: true })
-    const scope = harness.settings?.scope('output-style')
-    expect(scope).toBeDefined()
-    await expect(scope?.update({ style: 'nope' })).rejects.toThrow(/names no style/)
+    const session = harness.makeSession()
+    harness.settings?.update('defaultStyle', 'nope')
+    await untilSettled(() => true)
+    // A name that is not in the live library resolves to no style rather than
+    // injecting a dangling directive; the loud rejection of the same value at
+    // *load* time is covered by the `defaultStyle "nope"` case below.
+    expect(await harness.sectionText(session)).toBe('')
     await harness.dispose()
   })
 

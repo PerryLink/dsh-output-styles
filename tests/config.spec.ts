@@ -3,8 +3,13 @@ import { resolveConfig, Config } from '../src/config.ts'
 
 describe('Config schema', () => {
   it('fills every default when the composition supplies nothing', () => {
-    expect(Config({})).toEqual({
-      stylesDir: [],
+    const parsed = Config({})
+    // The two user-editable fields are `volatile()` on the new settings seam,
+    // so they arrive as stable references; everything else is a plain value.
+    expect(parsed.defaultStyle.get()).toBe('')
+    expect(parsed.rules.get()).toEqual([])
+    expect(resolveConfig(parsed, 'package/styles')).toEqual({
+      stylesDirs: ['package/styles'],
       maxStyleChars: 4000,
       defaultStyle: '',
       compatJson: true,
@@ -24,11 +29,9 @@ describe('Config schema', () => {
   })
 
   it('accepts deployment values', () => {
-    expect(Config({ maxStyleChars: 8000, defaultStyle: 'concise', compatJson: false })).toMatchObject({
-      maxStyleChars: 8000,
-      defaultStyle: 'concise',
-      compatJson: false,
-    })
+    const parsed = Config({ maxStyleChars: 8000, defaultStyle: 'concise', compatJson: false })
+    expect(parsed).toMatchObject({ maxStyleChars: 8000, compatJson: false })
+    expect(parsed.defaultStyle.get()).toBe('concise')
   })
 
   it('passes a bare string stylesDir through; resolveConfig normalizes it to a list', () => {
