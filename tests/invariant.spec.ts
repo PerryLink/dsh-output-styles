@@ -47,7 +47,7 @@ describe('installInvariant checks', () => {
     const { ctx, fail } = install({ knownStyles: () => new Set(['concise']) })
     ctx.emit('domain/changed', {
       domain: 'output_style', table: 'selection', key: 's-1', operation: 'put',
-      value: { style: 'stale', source: { kind: 'plugin', plugin: 'dsh-output-styles' } },
+      value: { style: 'stale', source: { kind: 'dsh-output-styles' } },
     })
     expect(fail).toHaveBeenCalledWith(expect.stringContaining('not in the style library'))
   })
@@ -56,7 +56,7 @@ describe('installInvariant checks', () => {
     const { ctx, fail } = install({ knownStyles: () => undefined })
     ctx.emit('domain/changed', {
       domain: 'output_style', table: 'selection', key: 's-1', operation: 'put',
-      value: { style: 'bad name!', source: { kind: 'plugin', plugin: 'dsh-output-styles' } },
+      value: { style: 'bad name!', source: { kind: 'dsh-output-styles' } },
     })
     expect(fail).toHaveBeenCalledWith(expect.stringContaining('invalid style'))
   })

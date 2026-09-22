@@ -77,7 +77,7 @@ style body in logged system prompt: true
 harness identity alongside style: true
 ```
 
-即：模型可见的风格正文在派发前完整写入 `request/header`（模型可见 ⟺ 已记录），有风格会话与无风格会话可区分；风格名由 `command/run`（`/style` 命令生命周期）与 `output_style` 域记录（含 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 来源标记）重建。`keep-coding-instructions: false` 的会话则 `harness identity alongside style: false`。
+即：模型可见的风格正文在派发前完整写入 `request/header`（模型可见 ⟺ 已记录），有风格会话与无风格会话可区分；风格名由 `command/run`（`/style` 命令生命周期）与 `output_style` 域记录（含 `{ kind: 'dsh-output-styles' }` 来源标记）重建。`keep-coding-instructions: false` 的会话则 `harness identity alongside style: false`。
 
 ## 5. Web UI 入口
 

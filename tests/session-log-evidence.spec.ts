@@ -24,7 +24,7 @@ function systemMessageEvent(text: string, seq = 0) {
       message: {
         role: 'system',
         content: [{ type: 'text', text }],
-        source: { kind: 'plugin', plugin: 'dsh-output-styles' },
+        source: { kind: 'dsh-output-styles' },
       },
     },
     surfaceOp: 'append',
