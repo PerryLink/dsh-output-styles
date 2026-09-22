@@ -20,7 +20,8 @@ export const name = 'dsh-output-styles'
 export const inject = ['systemPrompt', 'storageDomain']
 
 /** Service Definition — the public contract: Config schema, output-style types, and the coexistence service identifier. */
-export { Config, resolveConfig } from './config.ts'
+export { Config, normalizeConfig, resolveConfig, validateRules } from './config.ts'
+export type { NormalizedConfig } from './config.ts'
 export type { ResolvedConfig } from './config.ts'
 export { CORE_OUTPUT_STYLES_SERVICE, coexistenceReport, detectCoreOutputStyles } from './coexist.ts'
 export type { CoexistenceMode, CoexistenceReport } from './coexist.ts'
@@ -45,6 +46,7 @@ export {
   OFF,
   OUTPUT_STYLE_DOMAIN,
   STYLE_SOURCE,
+  STYLE_SOURCE_KIND,
   styleFoldStateSchema,
   styleSelectionSchema,
   styleSelectionViewSchema,

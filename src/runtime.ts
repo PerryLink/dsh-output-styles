@@ -17,9 +17,12 @@ import type {} from '@deepseek-ai/dsh-commands'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type { Domain, DomainFacility, KvTable } from '@deepseek-ai/dsh-storage-domain'
-import z from '@deepseek-ai/schemastery'
-import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
-import { resolveConfig, type Config } from './config.ts'
+// Type-only: brings in the `settings` service, and the Loader's
+// `loader/volatile-update` merge, without a runtime import — so hosts without
+// either package still load this plugin.
+import type {} from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/cordis-plugin-loader'
+import { normalizeConfig, resolveConfig, type Config } from './config.ts'
 import { detectCoreOutputStyles } from './coexist.ts'
 import { installInvariant, PACKAGE_NAME, type InvariantFacts, type InvariantRegistry } from './invariant.ts'
 import { loadStyleLibrary, truncateStyle, type OutputStyle } from './style-library.ts'
@@ -50,9 +53,6 @@ export const DEFAULT_STYLES_DIR = fileURLToPath(new URL('../styles/', import.met
 
 /** Prompt-section name; a fixed registry key a scoped composition could shadow. */
 export const STYLE_SECTION_NAME = 'output-style:selection'
-
-/** Settings namespace owning the project-level default (`outputStyle`). */
-const SETTINGS_NS = 'output-style' as SettingsNamespace
 
 /** Coalescing delay for style-file change events; an internal implementation constant, not a deployment knob. */
 const WATCH_DEBOUNCE_MS = 250
@@ -283,7 +283,17 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       + 'mount the storage facility (see README) or declare the inject',
     )
   }
-  const resolved = resolveConfig(config, DEFAULT_STYLES_DIR)
+  // The Loader already turned the `volatile()` fields into stable references;
+  // a direct caller (a test, or a host mounting this plugin without the
+  // Loader) hands over plain values. Normalizing here gives both the same
+  // shape, and every read below stays deferred through `.get()` so a
+  // `loader/volatile-update` commit is always visible.
+  const live = normalizeConfig(config)
+  // `resolveConfig` fails loud on an out-of-range budget / section order and on
+  // a malformed rule, replacing the write-time `validate` callback of the
+  // removed settings API. `defaultStyle` is checked against the library below,
+  // once it is loaded.
+  const resolved = resolveConfig(live, DEFAULT_STYLES_DIR)
   // Coexistence with a core outputStyles capability: when it is composed (and
   // respectCoreOutputStyles is true), prompt injection belongs to the core —
   // this plugin keeps hot-switch / rules / export and skips the two injections
@@ -365,30 +375,28 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     })
   }
 
-  // Project-level default over the settings seam: sessions that never
-  // selected a style fall back to `output-style.style` (user settings layer,
-  // then the composition defaultStyle). Stays inactive until a settings
-  // provider is composed; the settings namespace validates names against the
-  // live library at write time. The 0.1.2-alpha.2 settings seam registers a
-  // namespace schema and returns an owner scope (`get`/`watch`); the removed
-  // `installSettingsSection` helper no longer exists.
+  // Project-level default for sessions that never selected a style: the
+  // `defaultStyle` Config field. The field is volatile, so the read is
+  // deferred to call time (`.get()`) and a `loader/volatile-update` commit is
+  // visible to the very next prompt assembly without a remount — the thunk
+  // stays lazy, it never freezes a value. The field was already the
+  // user-configurable default before the seam changed (it backed the
+  // `output-style` namespace's `base` layer), so it stays user-configurable:
+  // it is now edited on the Web Plugins page instead of through a
+  // plugin-owned settings section.
+  //
+  // A committed name that is not in the live library is refused (warned and
+  // ignored) rather than resolving to a dangling directive. Setting it is
+  // consequently a no-op; the value that would break the load is caught by the
+  // `defaultStyle ... names no style` check above, which runs at load time.
   ctx.inject(['settings'], (settingsCtx) => {
-    const scope = settingsCtx.settings.register(
-      SETTINGS_NS,
-      z.object({ style: z.string().default('') }),
-      {
-        base: { style: resolved.defaultStyle },
-        validate: (value: { style: string }): void => {
-          if (value.style !== '' && !runtime.styles.has(value.style)) {
-            throw new Error(
-              `dsh-output-styles: settings outputStyle "${value.style}" names no style `
-              + `(available: ${[...runtime.styles.keys()].join(', ') || 'none'})`,
-            )
-          }
-        },
-      },
-    )
-    runtime.setProjectDefault(() => scope.get().style)
+    settingsCtx.effect(() => settingsCtx.settings.configure({ auto: false }, ctx.fiber))
+    runtime.setProjectDefault(() => {
+      const next = live.defaultStyle.get()
+      if (next === '' || runtime.styles.has(next)) return next
+      ctx.logger.warn(`dsh-output-styles: defaultStyle "${next}" names no style (available: ${runtime.names.join(', ') || 'none'}); ignoring`)
+      return ''
+    })
   })
 
   if (!coreActive) {
@@ -514,40 +522,21 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   }
   ctx.provide('outputRenderers', renderService)
 
-  // Per-session/per-tool rules over the settings seam: the `output-style-rules`
-  // namespace carries the rule table (composition `base` + user overrides);
-  // rules referencing an unknown renderer fail at write time, and rendering
-  // fails loudly at call time if a renderer left the registry.
-  ctx.inject(['settings'], (settingsCtx) => {
-    const rulesScope = settingsCtx.settings.register(
-      'output-style-rules' as SettingsNamespace,
-      z.object({
-        rules: z.array(z.object({
-          match: z.object({
-            tool: z.string().required(false),
-            contentType: z.union([z.const('text'), z.const('markdown'), z.const('html')]).required(false),
-            session: z.string().required(false),
-          }).required(false),
-          style: z.string().min(1),
-          priority: z.number().required(false),
-        })).default([]),
-      }),
-      {
-        base: { rules: resolved.rules } as never,
-        validate: (value: { rules: ReadonlyArray<{ style: string }> }): void => {
-          for (const rule of value.rules) {
-            if (rule.style === '' || /[^a-z0-9-]/.test(rule.style)) {
-              throw new Error(`dsh-output-styles: rule style ${JSON.stringify(rule.style)} must be a kebab-case renderer id`)
-            }
-          }
-        },
-      },
-    )
-    const adoptRules = (next: { rules: readonly StyleRule[] }): void => {
-      effectiveRules = next.rules
-    }
-    adoptRules(rulesScope.get() as unknown as { rules: readonly StyleRule[] })
-    rulesScope.watch(next => { adoptRules(next as unknown as { rules: readonly StyleRule[] }) })
+  // Per-session/per-tool rules: the `rules` Config field, which carries the
+  // composition table and any user override on a host with the settings forms
+  // seam. The field is volatile, so `loader/volatile-update` commits are
+  // adopted without a remount. The schema's cross-field check rejects a
+  // malformed rule id loudly at load / commit time; a rule naming a renderer
+  // that is not registered still fails loudly at render call time.
+  const adoptRules = (next: readonly StyleRule[]): void => {
+    effectiveRules = next
+  }
+  adoptRules(resolved.rules)
+  // A volatile commit re-reads the whole Config and re-runs the same
+  // normalization the load used, so the live rule table can never drift from
+  // what a fresh load of the same Config would produce.
+  ctx.on('loader/volatile-update', () => {
+    adoptRules(resolveConfig(live, DEFAULT_STYLES_DIR).rules)
   })
 
   // The /transcript command: renders the current session's message surface to
