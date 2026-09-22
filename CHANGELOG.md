@@ -6,6 +6,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.17] - 2026-09-22
+
 ### Changed
 
 - Rename the session-export command from `/export` to `/transcript`. The `export` name collided with the official `session-log-export` command — on hosts that ship it, the duplicate registration failed with `already registered` and the plugin half-mounted. The command now registers as `/transcript` (usage: `/transcript [markdown|html] [--renderer=<id>] [--save <path>]`); every user-facing reference (five READMEs, docs, error strings) follows the new name. There is no transitional dual registration — `/export` is gone as soon as this version loads. The internal `src/export.ts` module keeps its name; only the registered command changed.
