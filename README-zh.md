@@ -43,9 +43,9 @@
 - **`/style` 命令** —— 无参数时列出风格（含描述）与当前选择；`/style <name>` 切换；`/style off` 恢复项目默认。
 - **会话级持久化** —— 选择存于 `output_style` 存储域，按 sessionId 隔离，重启后仍保留。
 - **系统提示注入** —— `systemPrompt.section()` 贡献（顺序 `sectionOrder`）在每次组装时注入当前会话的风格正文，按可配置预算截断。
-- **Claude Code 对齐** —— `keep-coding-instructions`、`force-for-plugin`（别名 `force`）、`outputStyles` JSON 兼容、分层 `stylesDir` 目录、热重载，以及通过 DSH settings 接缝的项目默认回退。
+- **Claude Code 对齐** —— `keep-coding-instructions`、`force-for-plugin`（别名 `force`）、`outputStyles` JSON 兼容、分层 `stylesDir` 目录、热重载，以及可在 Web 的 **Plugins** 页面实时编辑的项目默认回退。
 - **渲染器注册表（`output.render.*`）** —— `ctx.outputRenderers` 允许任意插件注册纯 presenter，经 `output.render/before` waterfall 应用；内置渲染器 `concise` 与 `step-by-step`。
-- **按会话/按工具规则** —— `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` 为匹配请求指定渲染器；可通过 `output-style-rules` 设置区编辑。
+- **按会话/按工具规则** —— `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` 为匹配请求指定渲染器；可在 Web 的 **Plugins** 页面实时编辑。
 - **`/transcript`** —— 经渲染管线把当前会话导出为 Markdown 或净化 HTML；`--save <path>` 经用户审批后把净化文档写入该工作区路径。每次渲染都保留原文与渲染结果并列。
 
 ## Quick start
@@ -93,7 +93,7 @@ flowchart LR
     M -->|full system prompt| H[system/message logged]
 ```
 
-模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
+模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
 
 ## Install & uninstall
 
@@ -106,19 +106,23 @@ flowchart LR
 
 所有可调项均为 Schemastery `Config` 字段（可在 cordis.yml 中修改）。非法值在加载期失败。
 
-| Key | Default | Meaning |
-|---|---|---|
-| `stylesDir` | `[]` | 风格库目录，相对 cwd 解析；后者覆盖前者。`[]` = 仅内置 `styles/` |
-| `maxStyleChars` | `4000` | 风格正文预算（≥ 1）；超长正文带标记截断 |
-| `defaultStyle` | `''` | 从未选择过风格的会话所用风格（且无 settings 默认）；`''` = 无风格 |
-| `compatJson` | `true` | 加载 Claude Code `outputStyles` JSON 条目（单对象或数组） |
-| `sectionOrder` | `90` | 注入段的顺序（0 = persona，100–199 = 工具指引） |
-| `truncationMarker` | `"\n\n[style truncated]"` | 追加在截断点的标记 |
-| `includeBuiltins` | `true` | 将包内置 `styles/` 作为最低优先级层 |
-| `watchStyles` | `true` | 风格文件在磁盘上变化时重载库 |
-| `rules` | `[]` | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | 注册 `/transcript` 命令（Markdown/HTML 会话导出，感知渲染器；`--save` 经审批写入） |
-| `respectCoreOutputStyles` | `true` | 检测到核心 `outputStyles` 服务时跳过本插件的提示词注入（保留热切换 / rules / export） |
+`defaultStyle` 与 `rules` 声明为 `volatile()`，因此在组合了 settings forms seam 的宿主上它们是**可实时编辑的 Web 字段**：在 Web UI 的 **Plugins → dsh-output-styles** 中修改后，运行中的插件会直接采用新值，无需重新挂载。其余字段仍仅在组合期生效，需要重载。提交的值会先校验再应用 —— 非法值会被拒绝，运行中的值保持不变。
+
+| Key | Default | Web 可编辑 | Meaning |
+|---|---|---|---|
+| `stylesDir` | `[]` | 否 | 风格库目录，相对 cwd 解析；后者覆盖前者。`[]` = 仅内置 `styles/` |
+| `maxStyleChars` | `4000` | 否 | 风格正文预算（≥ 1）；超长正文带标记截断 |
+| `defaultStyle` | `''` | **是** | 从未选择过风格的会话所用风格；`''` = 无风格。不在实时库中的名称会被拒绝，而不会被注入 |
+| `compatJson` | `true` | 否 | 加载 Claude Code `outputStyles` JSON 条目（单对象或数组） |
+| `sectionOrder` | `90` | 否 | 注入段的顺序（0 = persona，100–199 = 工具指引） |
+| `truncationMarker` | `"\n\n[style truncated]"` | 否 | 追加在截断点的标记 |
+| `includeBuiltins` | `true` | 否 | 将包内置 `styles/` 作为最低优先级层 |
+| `watchStyles` | `true` | 否 | 风格文件在磁盘上变化时重载库 |
+| `rules` | `[]` | **是** | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
+| `enableExport` | `true` | 否 | 注册 `/transcript` 命令（Markdown/HTML 会话导出，感知渲染器；`--save` 经审批写入） |
+| `respectCoreOutputStyles` | `true` | 否 | 检测到核心 `outputStyles` 服务时跳过本插件的提示词注入（保留热切换 / rules / export） |
+
+**从 0.1.6 及更早版本迁移。** 那些版本保留了两个插件自有的设置区：`output-style`（`style`）与 `output-style-rules`（`rules`）。0.1.7 宿主删除了它们所依赖的 API，因此这两个设置区都不复存在。请把原先填在那里的值迁移到对应的 `Config` 字段 —— `output-style.style` → `defaultStyle`，`output-style-rules.rules` → `rules` —— 写在你的 profile patch（`cordis.yml`）中，或在 Plugins 页面上设置。用 `/style` 做出的按会话选择不受影响：它们存放在 `output_style` 存储域中。
 
 ## Tools & surfaces
 
@@ -183,7 +187,7 @@ flowchart LR
 | 旧版 JSON | `settings.json` 中的 `outputStyles` 数组 | 原样加载（`compatJson: true`） |
 | 生效时机 | `/clear` 之后或新会话 | 立即——系统提示按请求重新组装 |
 | 子代理 | 风格不适用 | 相同——子代理会话保留各自提示 |
-| 切换 | `/config` 菜单或 `outputStyle` 设置（`/output-style` 命令已在 v2.1.91 移除） | `/style` 命令 + Web picker + settings `output-style.style` |
+| 切换 | `/config` 菜单或 `outputStyle` 设置（`/output-style` 命令已在 v2.1.91 移除） | `/style` 命令 + Web picker + Web Plugins 页面的 `defaultStyle` 字段 |
 
 ## Conflict check
 
@@ -193,7 +197,7 @@ flowchart LR
 
 - **Permissions**：workshop 清单声明 `fs:read`、`fs:write`、`fs:watch`、`storage:read`、`storage:write` 与 `settings:read`。
 - **Data**：风格选择存于 `output_style` 存储域（按 sessionId 隔离）；不持久化其他状态，无网络请求。
-- **Session log**：风格名来自 `command/run`，精确注入文本来自 `system/message`；来源标记 `{ kind: 'plugin', plugin: 'dsh-output-styles' }` 随域记录携带。
+- **Session log**：风格名来自 `command/run`，精确注入文本来自 `system/message`；来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。
 
 ## Security boundaries
 

@@ -41,9 +41,9 @@
 - **`/style` कमांड** — बिना तर्क शैलियों (विवरण सहित) और वर्तमान चयन को सूचीबद्ध करता है; `/style <name>` बदलता है; `/style off` परियोजना डिफ़ॉल्ट बहाल करता है।
 - **सत्र-स्कोप्ड स्थायित्व** — चयन `output_style` स्टोरेज डोमेन में रहता है, sessionId से अनुक्रमित, और पुनःआरंभ के बाद भी बना रहता है।
 - **सिस्टम-प्रॉम्प्ट इंजेक्शन** — एक `systemPrompt.section()` योगदान (क्रम `sectionOrder`) हर संयोजन पर वर्तमान सत्र की शैली का मुख्य भाग इंजेक्ट करता है, एक विन्यास-योग्य बजट पर काटा गया।
-- **Claude Code समानता** — `keep-coding-instructions`, `force-for-plugin` (उपनाम `force`), `outputStyles` JSON संगतता, स्तरित `stylesDir` निर्देशिकाएँ, हॉट रीलोड और DSH settings सीम पर परियोजना-डिफ़ॉल्ट फ़ॉलबैक।
+- **Claude Code समानता** — `keep-coding-instructions`, `force-for-plugin` (उपनाम `force`), `outputStyles` JSON संगतता, स्तरित `stylesDir` निर्देशिकाएँ, हॉट रीलोड और Web के **Plugins** पेज से लाइव-संपादन-योग्य परियोजना-डिफ़ॉल्ट फ़ॉलबैक।
 - **रेंडरर रजिस्ट्री (`output.render.*`)** — `ctx.outputRenderers` किसी भी प्लगइन को एक शुद्ध presenter पंजीकृत करने देता है, जो `output.render/before` वॉटरफ़ॉल से लागू होता है; अंतर्निहित रेंडरर `concise` और `step-by-step`।
-- **प्रति-सत्र/प्रति-टूल नियम** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` मिलान वाले अनुरोधों के लिए रेंडरर नामित करते हैं; `output-style-rules` settings अनुभाग से संपादन-योग्य।
+- **प्रति-सत्र/प्रति-टूल नियम** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` मिलान वाले अनुरोधों के लिए रेंडरर नामित करते हैं; Web के **Plugins** पेज से लाइव-संपादन-योग्य।
 - **`/transcript`** — रेंडर पाइपलाइन से वर्तमान सत्र को Markdown या सैनिटाइज़्ड HTML में प्रस्तुत करता है; `--save <path>` उपयोगकर्ता की स्वीकृति के बाद सैनिटाइज़्ड दस्तावेज़ को उस workspace पथ पर लिखता है। हर रेंडर मूल पाठ को रेंडर किए गए के साथ रखता है।
 
 ## Quick start
@@ -91,7 +91,7 @@ flowchart LR
     M -->|full system prompt| H[system/message logged]
 ```
 
-मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं। शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से, और स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है। शैलियाँ केवल मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
+मॉडल जो देखता है वह सब सत्र लॉग से पुनर्निर्माण-योग्य है — कोई नया सत्र घटना प्रकार नहीं, कोई agent-loop बदलाव नहीं। शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से, और स्रोत मार्कर `{ kind: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है। शैलियाँ केवल मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
 
 ## Install & uninstall
 
@@ -104,19 +104,23 @@ flowchart LR
 
 सभी ट्यूनेबल Schemastery `Config` फ़ील्ड हैं (cordis.yml से बदले जा सकते हैं)। अमान्य मान लोड को विफल करते हैं।
 
-| Key | Default | Meaning |
-|---|---|---|
-| `stylesDir` | `[]` | शैली-पुस्तकालय निर्देशिकाएँ, cwd के सापेक्ष; बाद की प्रविष्टियाँ पहले वालों को ओवरराइड करती हैं। `[]` = केवल अंतर्निहित `styles/` |
-| `maxStyleChars` | `4000` | शैली-मुख्य बजट (≥ 1); लंबे भाग एक मार्कर से काटे जाते हैं |
-| `defaultStyle` | `''` | उन सत्रों की शैली जिन्होंने कभी चयन नहीं किया (और कोई settings डिफ़ॉल्ट नहीं); `''` = कोई शैली नहीं |
-| `compatJson` | `true` | Claude Code `outputStyles` JSON प्रविष्टियाँ लोड करें (एकल ऑब्जेक्ट या ऐरे) |
-| `sectionOrder` | `90` | इंजेक्ट किए गए अनुभाग का क्रम (0 = persona, 100–199 = टूल मार्गदर्शन) |
-| `truncationMarker` | `"\n\n[style truncated]"` | काटने के बिंदु पर जोड़ा गया मार्कर |
-| `includeBuiltins` | `true` | पैकेज के अंतर्निहित `styles/` को निम्नतम-प्राथमिकता परत के रूप में शामिल करें |
-| `watchStyles` | `true` | डिस्क पर शैली फ़ाइल बदलने पर पुस्तकालय फिर से लोड करें |
-| `rules` | `[]` | प्रति-सत्र/प्रति-टूल रेंडर नियम: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | `/transcript` कमांड पंजीकृत करें (Markdown/HTML सत्र निर्यात, रेंडरर-जागरूक; `--save` स्वीकृति से लिखता है) |
-| `respectCoreOutputStyles` | `true` | कोर `outputStyles` सेवा का पता चलने पर इस प्लगइन का prompt इंजेक्शन छोड़ें (hot-switch / rules / export बनाए रखें) |
+`defaultStyle` और `rules` को `volatile()` घोषित किया गया है, इसलिए settings forms सीम को संयोजित करने वाले host पर वे **लाइव, Web-संपादन-योग्य फ़ील्ड** हैं: उन्हें Web UI के **Plugins → dsh-output-styles** में संपादित करें और चल रहा प्लगइन बिना रीमाउंट के नया मान अपना लेता है। अन्य सभी फ़ील्ड केवल composition तक सीमित रहते हैं और उनके लिए रीलोड चाहिए। कमिट किया गया मान लागू करने से पहले मान्य किया जाता है — अमान्य होने पर वह अस्वीकार कर दिया जाता है और चल रहे मान अपरिवर्तित रहते हैं।
+
+| Key | Default | वेब-संपादन योग्य | Meaning |
+|---|---|---|---|
+| `stylesDir` | `[]` | नहीं | शैली-पुस्तकालय निर्देशिकाएँ, cwd के सापेक्ष; बाद की प्रविष्टियाँ पहले वालों को ओवरराइड करती हैं। `[]` = केवल अंतर्निहित `styles/` |
+| `maxStyleChars` | `4000` | नहीं | शैली-मुख्य बजट (≥ 1); लंबे भाग एक मार्कर से काटे जाते हैं |
+| `defaultStyle` | `''` | **हाँ** | उन सत्रों की शैली जिन्होंने कभी चयन नहीं किया; `''` = कोई शैली नहीं। लाइव पुस्तकालय में न मौजूद नाम इंजेक्ट करने के बजाय अस्वीकार कर दिया जाता है |
+| `compatJson` | `true` | नहीं | Claude Code `outputStyles` JSON प्रविष्टियाँ लोड करें (एकल ऑब्जेक्ट या ऐरे) |
+| `sectionOrder` | `90` | नहीं | इंजेक्ट किए गए अनुभाग का क्रम (0 = persona, 100–199 = टूल मार्गदर्शन) |
+| `truncationMarker` | `"\n\n[style truncated]"` | नहीं | काटने के बिंदु पर जोड़ा गया मार्कर |
+| `includeBuiltins` | `true` | नहीं | पैकेज के अंतर्निहित `styles/` को निम्नतम-प्राथमिकता परत के रूप में शामिल करें |
+| `watchStyles` | `true` | नहीं | डिस्क पर शैली फ़ाइल बदलने पर पुस्तकालय फिर से लोड करें |
+| `rules` | `[]` | **हाँ** | प्रति-सत्र/प्रति-टूल रेंडर नियम: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
+| `enableExport` | `true` | नहीं | `/transcript` कमांड पंजीकृत करें (Markdown/HTML सत्र निर्यात, रेंडरर-जागरूक; `--save` स्वीकृति से लिखता है) |
+| `respectCoreOutputStyles` | `true` | नहीं | कोर `outputStyles` सेवा का पता चलने पर इस प्लगइन का prompt इंजेक्शन छोड़ें (hot-switch / rules / export बनाए रखें) |
+
+**0.1.6 या पुराने से माइग्रेशन।** उन संस्करणों में प्लगइन के अपने दो settings अनुभाग थे — `output-style` (`style`) और `output-style-rules` (`rules`)। 0.1.7 host ने जिस API पर वे बने थे उसे हटा दिया, इसलिए दोनों अनुभाग अब नहीं हैं। वहाँ रखा कोई भी मान संबंधित `Config` फ़ील्ड में ले जाएँ — `output-style.style` → `defaultStyle`, `output-style-rules.rules` → `rules` — अपने profile patch (`cordis.yml`) में, या उसे Plugins पेज पर सेट करें। `/style` से किए गए प्रति-सत्र चयन अप्रभावित रहते हैं: वे `output_style` storage डोमेन में रहते हैं।
 
 ## Tools & surfaces
 
@@ -181,7 +185,7 @@ flowchart LR
 | लीगेसी JSON | `settings.json` में `outputStyles` ऐरे | शब्दशः लोड (`compatJson: true`) |
 | प्रभावी होने का समय | `/clear` के बाद या नया सत्र | तुरंत — सिस्टम प्रॉम्प्ट प्रति-अनुरोध पुनः संयोजित होता है |
 | उप-एजेंट | शैलियाँ लागू नहीं होतीं | समान — उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं |
-| बदलना | `/config` मेनू या `outputStyle` सेटिंग (`/output-style` कमांड v2.1.91 में हटाया गया) | `/style` कमांड + Web picker + settings `output-style.style` |
+| बदलना | `/config` मेनू या `outputStyle` सेटिंग (`/output-style` कमांड v2.1.91 में हटाया गया) | `/style` कमांड + Web picker + Web के Plugins पेज पर `defaultStyle` फ़ील्ड |
 
 ## Conflict check
 
@@ -191,7 +195,7 @@ flowchart LR
 
 - **Permissions**: workshop मैनिफ़ेस्ट `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` और `settings:read` घोषित करता है।
 - **Data**: शैली चयन `output_style` स्टोरेज डोमेन में रहता है (sessionId से अनुक्रमित); कोई अन्य स्थिति स्थायी नहीं, कोई नेटवर्क अनुरोध नहीं।
-- **Session log**: शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से; स्रोत मार्कर `{ kind: 'plugin', plugin: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है।
+- **Session log**: शैली नाम `command/run` से आता है, सटीक इंजेक्ट किया गया पाठ `system/message` से; स्रोत मार्कर `{ kind: 'dsh-output-styles' }` डोमेन रिकॉर्ड में चलता है।
 
 ## Security boundaries
 

@@ -41,9 +41,9 @@
 - **Comando `/style`** — sin argumento lista los estilos (con descripciones) más la selección actual; `/style <name>` cambia; `/style off` restaura el valor por defecto del proyecto.
 - **Persistencia por sesión** — la elección vive en el dominio de almacenamiento `output_style`, indexada por sessionId, y sobrevive a los reinicios.
 - **Inyección en el prompt del sistema** — una contribución `systemPrompt.section()` (orden `sectionOrder`) inyecta el cuerpo del estilo actual en cada ensamblado, truncado a un presupuesto configurable.
-- **Paridad Claude Code** — `keep-coding-instructions`, `force-for-plugin` (alias `force`), compatibilidad JSON `outputStyles`, directorios `stylesDir` por capas, recarga en caliente y fallback del proyecto sobre la costura de settings de DSH.
+- **Paridad Claude Code** — `keep-coding-instructions`, `force-for-plugin` (alias `force`), compatibilidad JSON `outputStyles`, directorios `stylesDir` por capas, recarga en caliente y un fallback del proyecto editable en vivo desde la página **Plugins** de la Web.
 - **Registro de renderers (`output.render.*`)** — `ctx.outputRenderers` permite a cualquier plugin registrar un presenter puro, aplicado a través de la cascada `output.render/before`; renderers integrados `concise` y `step-by-step`.
-- **Reglas por sesión/por herramienta** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` nombran el renderer para solicitudes coincidentes; editables mediante la sección de settings `output-style-rules`.
+- **Reglas por sesión/por herramienta** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` nombran el renderer para solicitudes coincidentes; editables en vivo desde la página **Plugins** de la Web.
 - **`/transcript`** — renderiza la sesión actual a Markdown o HTML saneado a través de la tubería de render; `--save <path>` escribe el documento saneado en esa ruta de workspace tras la aprobación del usuario. Cada render conserva el texto original junto al renderizado.
 
 ## Quick start
@@ -91,7 +91,7 @@ flowchart LR
     M -->|full system prompt| H[system/message logged]
 ```
 
-Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin un nuevo tipo de evento de sesión, sin cambios en el agent-loop. El nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`, y el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio. Los estilos se aplican solo a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
+Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin un nuevo tipo de evento de sesión, sin cambios en el agent-loop. El nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`, y el marcador de procedencia `{ kind: 'dsh-output-styles' }` viaja en el registro del dominio. Los estilos se aplican solo a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
 
 ## Install & uninstall
 
@@ -104,19 +104,23 @@ Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin u
 
 Todos los parámetros son campos Schemastery `Config` (modificables desde cordis.yml). Los valores inválidos fallan la carga.
 
-| Key | Default | Meaning |
-|---|---|---|
-| `stylesDir` | `[]` | Directorios de la librería, resueltos contra cwd; las entradas posteriores sobrescriben las anteriores. `[]` = solo los `styles/` integrados |
-| `maxStyleChars` | `4000` | Presupuesto del cuerpo del estilo (≥ 1); los cuerpos más largos se truncan con un marcador |
-| `defaultStyle` | `''` | Estilo para sesiones que nunca eligieron uno (y sin valor por defecto en settings); `''` = sin estilo |
-| `compatJson` | `true` | Cargar entradas JSON `outputStyles` de Claude Code (objetos sueltos o arrays) |
-| `sectionOrder` | `90` | Orden de la sección inyectada (0 = persona, 100–199 = guía de herramientas) |
-| `truncationMarker` | `"\n\n[style truncated]"` | Marcador añadido en el punto de truncado |
-| `includeBuiltins` | `true` | Incluir los `styles/` del paquete como capa de menor prioridad |
-| `watchStyles` | `true` | Recargar la librería cuando un archivo de estilo cambia en disco |
-| `rules` | `[]` | Reglas de render por sesión/herramienta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | Registrar el comando `/transcript` (exportación de sesión Markdown/HTML, consciente del renderer; `--save` escribe con aprobación) |
-| `respectCoreOutputStyles` | `true` | Al detectar un servicio core `outputStyles`, omitir la inyección de prompt de este plugin (mantener hot-switch / rules / export) |
+`defaultStyle` y `rules` están declarados `volatile()`, así que en un host que compone la costura de formularios de settings son **campos vivos, editables en la Web**: edítalos en **Plugins → dsh-output-styles** de la interfaz Web y el plugin en ejecución adopta el nuevo valor sin remontarse. Todos los demás campos siguen siendo solo de composición y requieren una recarga. Un valor confirmado se valida antes de aplicarse — si es inválido se rechaza y los valores en ejecución no cambian.
+
+| Key | Default | Editable en Web | Meaning |
+|---|---|---|---|
+| `stylesDir` | `[]` | No | Directorios de la librería, resueltos contra cwd; las entradas posteriores sobrescriben las anteriores. `[]` = solo los `styles/` integrados |
+| `maxStyleChars` | `4000` | No | Presupuesto del cuerpo del estilo (≥ 1); los cuerpos más largos se truncan con un marcador |
+| `defaultStyle` | `''` | **Sí** | Estilo para sesiones que nunca eligieron uno; `''` = sin estilo. Un nombre que no está en la librería viva se rechaza en lugar de inyectarse |
+| `compatJson` | `true` | No | Cargar entradas JSON `outputStyles` de Claude Code (objetos sueltos o arrays) |
+| `sectionOrder` | `90` | No | Orden de la sección inyectada (0 = persona, 100–199 = guía de herramientas) |
+| `truncationMarker` | `"\n\n[style truncated]"` | No | Marcador añadido en el punto de truncado |
+| `includeBuiltins` | `true` | No | Incluir los `styles/` del paquete como capa de menor prioridad |
+| `watchStyles` | `true` | No | Recargar la librería cuando un archivo de estilo cambia en disco |
+| `rules` | `[]` | **Sí** | Reglas de render por sesión/herramienta: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
+| `enableExport` | `true` | No | Registrar el comando `/transcript` (exportación de sesión Markdown/HTML, consciente del renderer; `--save` escribe con aprobación) |
+| `respectCoreOutputStyles` | `true` | No | Al detectar un servicio core `outputStyles`, omitir la inyección de prompt de este plugin (mantener hot-switch / rules / export) |
+
+**Migración desde 0.1.6 o anterior.** Esas versiones mantenían dos secciones de settings propias del plugin, `output-style` (`style`) y `output-style-rules` (`rules`). El host 0.1.7 eliminó la API sobre la que se construyeron, así que ambas secciones ya no existen. Mueve cualquier valor que tuvieras ahí al campo `Config` correspondiente — `output-style.style` → `defaultStyle`, `output-style-rules.rules` → `rules` — en el patch de tu perfil (`cordis.yml`), o defínelo en la página Plugins. Las elecciones por sesión hechas con `/style` no se ven afectadas: viven en el dominio de almacenamiento `output_style`.
 
 ## Tools & surfaces
 
@@ -181,7 +185,7 @@ La entrada `dsh.client` decora la invocación desnuda del comando `/style` con u
 | JSON heredado | array `outputStyles` en `settings.json` | Cargado textualmente (`compatJson: true`) |
 | Cuándo entra en vigor | Después de `/clear` o una sesión nueva | Inmediatamente — el prompt del sistema se reensambla por solicitud |
 | Subagentes | Los estilos no se aplican | Igual — las sesiones de subagente conservan sus propios prompts |
-| Cambio | menú `/config` o ajuste `outputStyle` (el comando `/output-style` se eliminó en v2.1.91) | comando `/style` + Web picker + settings `output-style.style` |
+| Cambio | menú `/config` o ajuste `outputStyle` (el comando `/output-style` se eliminó en v2.1.91) | comando `/style` + Web picker + campo `defaultStyle` en la página Plugins de la Web |
 
 ## Conflict check
 
@@ -191,7 +195,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 
 - **Permissions**: el manifiesto de workshop declara `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write` y `settings:read`.
 - **Data**: la elección de estilo vive en el dominio de almacenamiento `output_style` (indexada por sessionId); no se persiste otro estado, sin solicitudes de red.
-- **Session log**: el nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`; el marcador de procedencia `{ kind: 'plugin', plugin: 'dsh-output-styles' }` viaja en el registro del dominio.
+- **Session log**: el nombre del estilo viene de `command/run`, el texto exacto inyectado de `system/message`; el marcador de procedencia `{ kind: 'dsh-output-styles' }` viaja en el registro del dominio.
 
 ## Security boundaries
 
