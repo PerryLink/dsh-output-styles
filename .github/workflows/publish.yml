@@ -42,6 +42,18 @@ jobs:
       - name: Verify (typecheck + tests + self-contained)
         run: pnpm run verify
 
+      - name: DIAG oidc
+        run: |
+          echo "ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+YES}"
+          echo "ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+YES}"
+          echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+          echo "npm=$(npm --version) node=$(node --version)"
+          echo "repository=$(node -p "require('./package.json').repository.url")"
+          echo "--- npmrc that npm will read:"
+          cat ~/.npmrc 2>/dev/null || echo "(no ~/.npmrc)"
+          cat .npmrc 2>/dev/null || echo "(no local .npmrc)"
+          echo "--- npm config registry: $(npm config get registry)"
+
       - name: Publish to npm
         # A tag push without the secret, or for a version already on the
         # registry (e.g. published manually before the tag), no longer skips
