@@ -73,15 +73,21 @@ async function makeClient(options?: {
     },
     bind: () => (key: string) => key,
   })
-  ctx.provide('remote', {
-    commands: {
-      execute: (sessionId: string, line: string) => {
-        executes.push({ sessionId, line })
-        return options?.execute?.(sessionId, line)
-          ?? Promise.resolve({ ok: true, value: { result: { kind: 'success', text: 'ok' } } })
-      },
+  // The host exposes `remote` as a chained proxy, so `ctx.remote.commands`
+  // resolves a separate service registered under the full name
+  // `remote.commands` — which is why the plugin declares both. Mirror that
+  // shape here: one commands object, reachable under both names. A flat
+  // `remote` carrying a `commands` property would satisfy the code path while
+  // hiding a missing `remote.commands` declaration from the inject gate.
+  const commands = {
+    execute: (sessionId: string, line: string) => {
+      executes.push({ sessionId, line })
+      return options?.execute?.(sessionId, line)
+        ?? Promise.resolve({ ok: true, value: { result: { kind: 'success', text: 'ok' } } })
     },
-  })
+  }
+  ctx.provide('remote', { commands })
+  ctx.provide('remote.commands', commands)
   await ctx.plugin(client)
   return { ctx, decorations, executes, dictionaries }
 }
@@ -89,6 +95,16 @@ async function makeClient(options?: {
 const session: ClientSessionContext = { sessionId: SessionId('s-1') }
 
 describe('dsh-output-styles client picker', () => {
+  // The doubles above provide a FLAT `remote` service, so they cannot exercise
+  // the host's nested-accessor rule. The picker reaches
+  // `ctx.remote.commands.execute`, and on 0.1.7 hosts that throws
+  // `cannot get property "remote.commands" without inject` unless the nested
+  // accessor is declared in full — the picker then renders its rows and fails
+  // on the first selection. Pin the declared contract here.
+  it('declares the nested command Remote accessor it calls', () => {
+    expect(client.inject).toContain('remote.commands')
+  })
+
   it('decorates the host /style command with projection-backed options', async () => {
     const { decorations, dictionaries } = await makeClient({ current: 'concise' })
     expect(decorations).toHaveLength(1)
@@ -158,7 +174,10 @@ describe('dsh-output-styles client picker', () => {
     })
     ctx.provide('sessions', { binding: () => undefined })
     ctx.provide('locale', { register: () => () => {}, bind: () => (key: string) => key })
-    ctx.provide('remote', { commands: { execute: async () => ({ ok: true, value: { result: {} } }) } })
+    // Same chained-proxy shape as `makeClient`: both names, one commands object.
+    const commands = { execute: async () => ({ ok: true, value: { result: {} } }) }
+    ctx.provide('remote', { commands })
+    ctx.provide('remote.commands', commands)
     await ctx.plugin(client)
     const decoration = decorations[decorations.length - 1]
     const options = await popupSelect(decoration).options(session, new AbortController().signal)
