@@ -4,7 +4,21 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.19] - 2026-09-23
+
+### Changed
+
+- The `@deepseek-ai/dsh-*` dev/test pins move from `0.1.7-alpha.1` to `0.1.7-alpha.2` (23 keys), so the suite executes the host packages this release targets. `pnpm-lock.yaml` re-resolved and carries no `0.1.7-alpha.1` reference. No test expectation had to change: the bump turned nothing red.
+- Every declared host range gains the trailing clause `|| >=0.1.7-0 <0.2.0`: `engines.dsh` and the 14 three-segment `@deepseek-ai/dsh-*` peers, plus the optional peer `@deepseek-ai/dsh-compaction-image-offload`, whose one-segment form is widened the same way. This is a correctness fix, not a tightening: under semver's prerelease rule a comparator set whose only prerelease comparators sit on earlier version tuples cannot admit a later alpha, so the previous bands excluded `0.1.7-alpha.2`, the very host this release targets. No existing segment was removed, reordered or narrowed.
+- `dshWorkshop.compatibility.dshVersions` records `0.1.7-alpha.2` alongside `0.1.2-rc.1` and `0.1.5-rc.2`.
+- `@deepseek-ai/cordis` moves to `^4.0.4` in both `peerDependencies` (which had declared the union `^4.0.2 || ^4.0.3`) and `devDependencies` (which had declared `^4.0.3`). Declaration alignment only: the published 4.0.3 and 4.0.4 tarballs are byte-identical in all 31 code and `.d.ts` files, `package.json` being the only difference.
+- Two resolutions refresh inside the already-declared caret ranges: `@deepseek-ai/schemastery` 3.18.3 to 3.18.4 and `@deepseek-ai/cosmokit` 1.8.4 to 1.8.5 in the lockfile. Without them `typecheck` and `typecheck:ci` failed with `TS2883` ("The inferred type of 'Config' cannot be named without a reference to 'Schema' ..."): the alpha.2 host graph pulls schemastery 3.18.4 / cosmokit 1.8.5 while this lockfile still held the alpha.1-era 3.18.3 / 1.8.4, so the exported `Config` schema's type straddled two type identities of the schemastery/cosmokit pair and declaration emit could not name the result. No source, test or assertion changed.
+- The Harness row of all five READMEs names `dsh-v0.1.7-alpha.2`; the dated verification narration beside it is left as written.
+- The monthly Compat workflow installs and profile-adds the `0.1.7-alpha.2` host (`@deepseek-ai/dsh`, `@deepseek-ai/dsh-base`, `@deepseek-ai/dsh-headless`) on both host-line points, so the CLI and the bundle come from the same line. It had kept proving compatibility with a superseded line, silently: the job runs on a schedule, so nothing failed and nothing warned.
+
+### Fixed
+
+- The optional peer `@deepseek-ai/dsh-compaction-image-offload` admitted no `0.1.7` host. It had been left at `>=0.1.6-alpha.1 <0.2.0` when the other ranges were widened, because it uses a different shape from the family's three-segment baseline — but it is a live install-time constraint, and the `0.1.7-alpha.2` host ships `@deepseek-ai/dsh-compaction-image-offload@0.1.7-alpha.2`. It now reads `>=0.1.6-alpha.1 <0.2.0 || >=0.1.7-0 <0.2.0`.
 
 ## [0.6.18] - 2026-09-22
 
