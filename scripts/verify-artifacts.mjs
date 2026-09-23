@@ -1,12 +1,15 @@
 // Verify the built artifacts after `pnpm run build`: syntax-check the host,
 // invariant, and client bundles, import the ESM host faces under plain Node,
-// and assert the shipped files the plugin's public exports need. Guards
-// against TypeScript-only syntax leaking into shipped output and against a
-// tarball missing the bundle patch.
+// assert the client bundle registers itself the way the browser module system
+// requires, and assert the shipped files the plugin's public exports need.
+// Guards against TypeScript-only syntax leaking into shipped output, against a
+// client artifact that the page's classic <script> cannot register, and against
+// a tarball missing the bundle patch.
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import vm from 'node:vm'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 
@@ -39,10 +42,41 @@ if (typeof invariant.installInvariant !== 'function' || invariant.PACKAGE_NAME !
   throw new Error('lib/invariant.js exports an unexpected invariant face')
 }
 
-// 4. The client bundle is a plain ESM plugin face (decorate plugin).
-const client = await import(pathToFileURL(path.join(root, 'lib/client.js')).href)
+// 4. The client bundle is a CLASSIC script, not an ES module: the Host serves
+//    the built bytes verbatim and the page injects them with a plain <script>
+//    tag, so the bundle has to register a lazy factory through
+//    window.__ModuleLoader__.load({ id, factory }). A top-level `export`
+//    statement is a parse error there: the row never registers and Settings →
+//    Plugins reports `loaded without registering "dsh-output-styles" via
+//    __ModuleLoader__.load`. Evaluate the artifact under classic-script
+//    semantics with a recording loader to pin the contract down.
+const clientRegistrations = []
+vm.runInNewContext(readFileSync(path.join(root, 'lib/client.js'), 'utf8'), {
+  window: {
+    __ModuleLoader__: {
+      load: (registration) => {
+        clientRegistrations.push(registration)
+      },
+    },
+  },
+})
+if (clientRegistrations.length !== 1) {
+  throw new Error(
+    `lib/client.js must register exactly one __ModuleLoader__ factory, saw ${String(clientRegistrations.length)}`,
+  )
+}
+const [registration] = clientRegistrations
+if (registration.id !== 'dsh-output-styles') {
+  throw new Error(`lib/client.js registered under "${String(registration.id)}", expected "dsh-output-styles"`)
+}
+if (typeof registration.factory !== 'function') {
+  throw new Error('lib/client.js registered without a factory')
+}
+const client = registration.factory((request) => {
+  throw new Error(`lib/client.js must not require externals, asked for ${String(request)}`)
+})
 if (typeof client.apply !== 'function' || client.name !== 'dsh-output-styles-client') {
-  throw new Error('lib/client.js exports an unexpected client face')
+  throw new Error('lib/client.js factory returns an unexpected client face')
 }
 
-console.log('artifacts OK: syntax + ESM imports + bundle patch present')
+console.log('artifacts OK: syntax + ESM host imports + classic-script client registration + bundle patch present')

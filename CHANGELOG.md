@@ -6,6 +6,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Web client bundle is now the classic script the browser module system loads, not an ES module.** The Host serves the built `lib/client.js` bytes verbatim from `/plugins` and the page injects them with a plain `<script>` tag, so the bundle must register a lazy factory through `window.__ModuleLoader__.load({ id, factory })`. The previous artifact ended in `export { apply, inject, name }`; a top-level `export` is a parse error in that context, so nothing registered and Settings → Plugins reported `client-modules: could not load "dsh-output-styles": … loaded without registering "dsh-output-styles" via __ModuleLoader__.load` on DeepSeek Harness 0.1.7. Only the browser half of the picker was missing — `/style`, the prompt injection, `rules` and the `output_style` storage domain were unaffected. Both client bundle configs (the repository `build` and the consumer-side `prepare` that Git and tarball installs run) now consume one shared envelope and emit the CommonJS body wrapped in the loader factory, matching the artifact DeepSeek Harness's own `clientBundle()` tsdown preset emits: `format: ['cjs']`, `outExtensions: () => ({ js: '.js' })` so the file stays `lib/client.js`, and `outputOptions.banner` / `footer` for the factory envelope. `scripts/verify-artifacts.mjs` now evaluates the built bundle under classic-script semantics with a recording loader instead of importing it as ESM, and `tests/client-bundle-envelope.spec.ts` pins the envelope and keeps both configs on it.
+
 ## [0.6.18] - 2026-09-22
 
 ### Changed
