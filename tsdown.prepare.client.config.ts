@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsdown'
+import { clientFactoryBanner, clientFactoryFooter } from './tsdown.client.shared.ts'
 
 /**
  * Consumer-side browser bundle for Git and tarball installs: the `dsh.client`
@@ -9,11 +10,17 @@ export default defineConfig({
     client: 'src/client/index.ts',
   },
   outDir: 'lib',
-  format: ['esm'],
-  platform: 'neutral',
+  // The same classic-script contract as the repository build; see
+  // `tsdown.client.shared.ts`.
+  format: ['cjs'],
+  platform: 'browser',
   target: 'es2022',
-  fixedExtension: false,
+  outExtensions: () => ({ js: '.js' }),
   dts: false,
   clean: false,
   tsconfig: 'tsconfig.prepare.json',
+  outputOptions: {
+    banner: clientFactoryBanner,
+    footer: clientFactoryFooter,
+  },
 })

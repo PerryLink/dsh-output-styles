@@ -27,8 +27,19 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** Client plugin name; keep stable after publishing. */
 export const name = 'dsh-output-styles-client'
 
-/** Required client services: the command surface, the sessions face, the command Remote, and locale. */
-export const inject = ['commandUi', 'locale', 'remote', 'sessions']
+/**
+ * Required client services: the command surface, the sessions face, the command
+ * Remote, and locale.
+ *
+ * `remote.commands` is a NESTED service accessor, so it has to be named in full
+ * next to `remote`. Declaring only `remote` leaves `ctx.remote.commands`
+ * unreachable: the Cordis context proxy throws
+ * `cannot get property "remote.commands" without inject` on the first
+ * selection. First-party client plugins that submit command lines declare both
+ * (`@deepseek-ai/dsh-client-ui-plan` injects `remote` and `remote.commands`
+ * side by side).
+ */
+export const inject = ['commandUi', 'locale', 'remote', 'remote.commands', 'sessions']
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'style'
@@ -97,7 +108,7 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-output-styles: style dictionaries')
   const t = ctx.locale.bind(NS)
 
-  ctx.inject(['commandUi', 'remote', 'sessions'], (scope: ClientContext) => {
+  ctx.inject(['commandUi', 'remote', 'remote.commands', 'sessions'], (scope: ClientContext) => {
     const commandUi = scope.get('commandUi') as CommandUiContract
     // The client sessions service is read through the local structural
     // contract above: its owner package changed across harness lines while
