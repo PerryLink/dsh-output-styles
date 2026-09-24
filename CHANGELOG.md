@@ -4,8 +4,7 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
+## [0.6.20] - 2026-09-24
 ### Fixed
 
 - `scripts/loader-runner.mjs` opened with a mojibake em dash in its first-line comment, so the file had never been free of encoding artifacts since that line was written. The dash is restored verbatim from the pre-regression blob; the file now matches the text it carried before the artifact was introduced.
