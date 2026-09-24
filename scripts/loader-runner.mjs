@@ -1,4 +1,4 @@
-// scripts/loader-runner.mjs 鈥?real Loader composition runner for
+// scripts/loader-runner.mjs — real Loader composition runner for
 // dsh-output-styles (community five-layer model, layer 4). An independent
 // process boots a real Context, mounts the vendored Loader with the Include
 // builtin, reads the given cordis.yml (service rows for session, system
