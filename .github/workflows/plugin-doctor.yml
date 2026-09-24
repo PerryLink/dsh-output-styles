@@ -44,29 +44,29 @@ jobs:
       #     someone else's package and none of these checks run.
       #     Always: @perrylink/dsh-plugin-doctor@<exact version>
       #
-      # ⚠️  `cd /tmp` is REQUIRED, not tidiness. `npm exec` resolves the command
+      # ⚠️  cd-ing OUT of the checkout is REQUIRED, not tidiness. `npm exec` resolves the command
       #     name against the current package.json first, so running this inside a
       #     checkout that declares a `bin` of the same name makes npx invoke the
       #     LOCAL bin instead of the published one — and with no node_modules
       #     present that is `sh: 1: dsh-plugin-doctor: not found`, exit 127.
       #     Measured on ubuntu-latest, npm 10.9.8, node 22:
       #       from the checkout  -> exit 127, no JSON      (this repository)
-      #       from /tmp          -> exit 0, JSON written   (every other repo)
+      #       from outside it    -> exit 0, JSON written   (every other repo)
       #     So this repository's own gate failed while 42 others passed. Running
       #     from outside the tree removes the ambiguity; --repo is absolute
       #     because the working directory is no longer the checkout.
       - name: Run dsh-plugin-doctor (static R/K on the committed tree)
         run: |
           set +e
-          cd /tmp
-          out="$(npx --yes @perrylink/dsh-plugin-doctor@0.4.4 --repo "$GITHUB_WORKSPACE" --no-smoke --only "R,K" --json /tmp/doctor.json 2>&1)"
+          cd "$RUNNER_TEMP"
+          out="$(npx --yes @perrylink/dsh-plugin-doctor@0.4.4 --repo "$GITHUB_WORKSPACE" --no-smoke --only "R,K" --json "$RUNNER_TEMP/doctor.json" 2>&1)"
           set -e
           printf '%s\n' "$out"
           echo "$out" | grep -q 'R0 ' || { echo "::error::doctor ran no R checks"; exit 1; }
           echo "$out" | grep -q 'K1 ' || { echo "::error::doctor ran no K checks"; exit 1; }
-          if [ ! -f /tmp/doctor.json ]; then echo "::error::doctor produced no JSON report"; exit 1; fi
+          if [ ! -f "$RUNNER_TEMP/doctor.json" ]; then echo "::error::doctor produced no JSON report"; exit 1; fi
           node -e '
-            const r = JSON.parse(require("fs").readFileSync("/tmp/doctor.json", "utf8")).results
+            const r = JSON.parse(require("fs").readFileSync(require("path").join(process.env.RUNNER_TEMP, "doctor.json"), "utf8")).results
             const buildDep = r.filter((x) => /^R[24] /.test(x.name))
             const gated = r.filter((x) => !/^R[24] /.test(x.name))
             const bad = gated.filter((x) => x.status === "fail" || x.status === "error")
