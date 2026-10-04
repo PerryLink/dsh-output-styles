@@ -13,3 +13,26 @@ minimumReleaseAgeExclude:
   - '@deepseek-ai/*'
 
 verifyDepsBeforeRun: false
+
+# One copy of the bare peer edges. `@deepseek-ai/cordis`, `@deepseek-ai/cosmokit`
+# and `@deepseek-ai/schemastery` reach this package as transitive peers (cordis
+# and schemastery both depend on cosmokit), and package.json can only constrain a
+# DIRECT dependency. Without an override pnpm links a second cosmokit for this
+# package's own caret edge: semver's prerelease rule means a caret range written
+# on a stable release never selects a prerelease, so the graph carried cosmokit
+# 1.8.5 beside the 1.8.6-alpha.1 copy that schemastery 3.18.5-alpha.1 vendors.
+# The exported `Config` schema's inferred type is
+# `Schema<ObjectS<...>, ObjectT<...>>`, and schemastery's `ObjectS`/`ObjectT` are
+# `& Dict` with `Dict` taken from ITS cosmokit copy, so declaration emit
+# straddled two declarations of one name and failed with
+#
+#   src/config.ts(132,14): error TS2883: The inferred type of 'Config' cannot be
+#   named without a reference to 'Dict' ...
+#
+# which also stopped `build` and left the published artifact `lib/index.js`
+# missing. The rows below pin the three edges to the versions this host line
+# vendors; the ranges declared in package.json are deliberately left untouched.
+overrides:
+  '@deepseek-ai/cordis': 4.0.5-alpha.1
+  '@deepseek-ai/cosmokit': 1.8.6-alpha.1
+  '@deepseek-ai/schemastery': 3.18.5-alpha.1
