@@ -231,6 +231,24 @@ pnpm pack            # tarball para dsh plugin add
 
 Lançamentos: empurrar uma etiqueta `v*` cujo sufixo coincide com a versão de `package.json` dispara o workflow Publish — verificação completa e depois publicação no npm com procedência.
 
+## Interoperability with other DSH plugins
+
+Verificado contra **DSH `0.2.0-rc.2`** (o runtime para o qual este README é publicado) e o conjunto de plugins com mais estrelas pesquisado em 2026-10-05.
+
+Este plugin **não interfere** em outros plugins, incluindo os de mais estrelas:
+
+- **Sem colisão de nome de ferramenta.** Todas as ferramentas têm namespace; nenhuma ocupa um nome puro já pertencente a uma ferramenta embutida ou a outro plugin.
+- **Sem colisão de chave de serviço.** Fornece apenas `outputRenderers`; essa chave não é uma costura embutida nem é fornecida por nenhum plugin de mais estrelas.
+- **Sem colisão de slot.** Não registra nenhuma chave de slot de cliente, então não disputa um assento `shadows-shipped-ui`.
+- **Sem colisão de rota HTTP.** Não registra nenhum prefixo `webServer`.
+- **Sem colisão na camada de patch.** O patch do bundle apenas faz `insert` da própria linha; nunca sobrescreve o `config` de uma linha embutida.
+- **Sem mutação global.** Não altera protótipos, não reescreve `process.env` nem substitui o dispatcher global de fetch.
+
+**Listeners de eventos compartilhados não interferem por construção.** Observa os eventos sensíveis à ordem `system-prompt/assemble` com `ctx.on()` — o registro de difusão do Cordis, onde cada listener executa e nenhum pode privar outro do turno. **Todos os listeners aqui delegam via `next()`**, então a cadeia nunca é curto-circuitada:
+  - `system-prompt/assemble` — also used by `dsh-routing-suite` (7000★, 13 listeners).
+
+Evidência estática: `dsh-plugin-doctor` K10–K13 retornam `pass` em todas as verificações deste repositório.
+
 ## Topics
 
 `deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`

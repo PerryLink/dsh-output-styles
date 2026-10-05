@@ -233,6 +233,24 @@ pnpm pack            # 供 dsh plugin add 的 tarball
 
 发布：推送后缀与 `package.json` 版本一致的 `v*` 标签会触发 Publish workflow —— 完整验证后带 provenance 发布到 npm。
 
+## Interoperability with other DSH plugins
+
+已对照 **DSH `0.2.0-rc.2`**（本 README 面向的运行时）与 2026-10-05 实测的高星插件集验证。
+
+本插件**不干扰**其他插件，包括广泛安装的高星插件：
+
+- **无工具名冲突。** 所有工具都带命名空间，不占用任何已被内置工具或其他插件持有的裸名。
+- **无服务键冲突。** 只提供 `outputRenderers`；该键既不是内置 seam，也没有被任何已调研的高星插件提供。
+- **无 slot 冲突。** 不注册客户端 slot key，因此不参与 `shadows-shipped-ui` 座位争抢。
+- **无 HTTP 路由冲突。** 不注册任何 `webServer` 前缀。
+- **无 patch 层冲突。** 组合包 patch 只 `insert` 自己那一行，从不覆写内置行的 `config`。
+- **无全局改写。** 不改原型、不改写 `process.env`、不替换全局 fetch dispatcher。
+
+**共享事件监听器在构造上就不互相干扰。** 它用 `ctx.on()` 监听顺序敏感事件 `system-prompt/assemble` —— Cordis 的**广播**语义：每个监听器都会运行，任何一个都无法饿死其他监听器。**此处每个监听器都通过 `next()` 委托**，因此链条绝不会被短路；改写作用在 `next()` 产出的值上，而不是用它顶替返回：
+  - `system-prompt/assemble` — also used by `dsh-routing-suite` (7000★, 13 listeners).
+
+静态证据：`dsh-plugin-doctor` 的 K10–K13 在本仓全部为 `pass`。
+
 ## Topics
 
 `deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
