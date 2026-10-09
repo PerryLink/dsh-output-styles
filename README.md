@@ -38,6 +38,12 @@
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
 
 
+## What is dsh-output-styles?
+
+`/style concise` — and every reply from now on is terse. `/style off` — back to the project default.
+
+![Terminal demo of dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -63,8 +69,12 @@
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-output-styles
@@ -109,7 +119,7 @@ Everything the model sees is reconstructable from the session log — no new ses
 
 ## Install & uninstall
 
-- **git channel** (latest `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — the `prepare` script builds with production dependencies only.
+- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — the `prepare` script builds with production dependencies only.
 - **npm channel** (published releases): `dsh plugin --profile web add dsh-output-styles`.
 - **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
 - **uninstall**: `dsh plugin --profile web remove dsh-output-styles`.

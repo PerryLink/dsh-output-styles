@@ -34,6 +34,12 @@
 यह प्लगइन [DSH प्लगइन परिवार](https://github.com/PerryLink) का हिस्सा है (40+ प्लगइन, सभी Apache-2.0)। अगर यह उपयोगी लगे, तो **एक स्टार दें** — इससे कोई सुविधा अनलॉक नहीं होती, पर अगला व्यक्ति इसे खोज में आसानी से पा लेता है।
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-output-styles?
+
+`/style concise` — और अब से हर उत्तर संक्षिप्त। `/style off` — वापस परियोजना के डिफ़ॉल्ट पर।
+
+![dsh-output-styles का टर्मिनल डेमो: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -59,8 +65,12 @@
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-output-styles
@@ -105,7 +115,7 @@ flowchart LR
 
 ## Install & uninstall
 
-- **git चैनल** (नवीनतम `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — `prepare` स्क्रिप्ट केवल उत्पादन निर्भरताओं से बनाती है।
+- **git चैनल** (नवीनतम `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — `prepare` स्क्रिप्ट केवल उत्पादन निर्भरताओं से बनाती है।
 - **npm चैनल** (प्रकाशित रिलीज़): `dsh plugin --profile web add dsh-output-styles`.
 - **tarball चैनल**: इस रेपो में `pnpm pack`, फिर `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
 - **uninstall**: `dsh plugin --profile web remove dsh-output-styles`.

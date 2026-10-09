@@ -34,6 +34,12 @@
 Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryLink) (más de 40, todos Apache-2.0). Si te resulta útil, **dale una estrella**: no desbloquea nada, pero ayuda a que la siguiente persona lo encuentre antes.
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-output-styles?
+
+`/style concise` — y a partir de ahora toda respuesta es concisa. `/style off` — de vuelta al valor por defecto del proyecto.
+
+![Demostración de terminal de dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -59,8 +65,12 @@ Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryL
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-output-styles
@@ -105,7 +115,7 @@ Todo lo que el modelo ve es reconstruible desde el registro de sesión — sin u
 
 ## Install & uninstall
 
-- **canal git** (último `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — el script `prepare` compila solo con dependencias de producción.
+- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — el script `prepare` compila solo con dependencias de producción.
 - **canal npm** (versiones publicadas): `dsh plugin --profile web add dsh-output-styles`.
 - **canal tarball**: `pnpm pack` en este repo, luego `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
 - **desinstalar**: `dsh plugin --profile web remove dsh-output-styles`.

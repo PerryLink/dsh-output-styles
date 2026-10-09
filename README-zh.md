@@ -36,6 +36,12 @@
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-output-styles?
+
+`/style concise` —— 从此每条回复都简洁。`/style off` —— 回到项目默认。
+
+![dsh-output-styles 终端演示：dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -61,8 +67,12 @@
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-output-styles
@@ -107,7 +117,7 @@ flowchart LR
 
 ## Install & uninstall
 
-- **git channel**（最新 `main`）：`dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` —— `prepare` 脚本仅用生产依赖构建。
+- **git channel**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-output-styles` —— `prepare` 脚本仅用生产依赖构建。
 - **npm channel**（发布版本）：`dsh plugin --profile web add dsh-output-styles`。
 - **tarball channel**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`。
 - **uninstall**：`dsh plugin --profile web remove dsh-output-styles`。

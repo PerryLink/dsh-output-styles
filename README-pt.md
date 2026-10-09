@@ -34,6 +34,12 @@
 Este plugin faz parte da [família de plugins DSH](https://github.com/PerryLink) (mais de 40, todos Apache-2.0). Se for útil, **deixe uma estrela**: não desbloqueia nada, mas ajuda a próxima pessoa a encontrá-lo.
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-output-styles?
+
+`/style concise` — e a partir de agora toda resposta é concisa. `/style off` — de volta ao padrão do projeto.
+
+![Demonstração de terminal do dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -59,8 +65,12 @@ O `dsh-output-styles` é o equivalente do `outputStyles` do Claude Code para o D
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"
+dsh plugin --profile web add github:PerryLink/dsh-output-styles
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-output-styles
@@ -105,7 +115,7 @@ Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem nov
 
 ## Install & uninstall
 
-- **canal git** (último `main`): `dsh plugin --profile web add "github:PerryLink/dsh-output-styles#main"` — o script `prepare` compila apenas com dependências de produção.
+- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — o script `prepare` compila apenas com dependências de produção.
 - **canal npm** (versões publicadas): `dsh plugin --profile web add dsh-output-styles`.
 - **canal tarball**: `pnpm pack` neste repo, depois `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
 - **desinstalar**: `dsh plugin --profile web remove dsh-output-styles`.
