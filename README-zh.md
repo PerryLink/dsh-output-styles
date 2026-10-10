@@ -43,6 +43,10 @@
 
 ![dsh-output-styles 终端演示：dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
 
+![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+
+*同一次运行，动图版。*
+
 ## Compatibility
 
 | Surface | Status |

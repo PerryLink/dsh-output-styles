@@ -41,6 +41,10 @@ Este plugin faz parte da [família de plugins DSH](https://github.com/PerryLink)
 
 ![Demonstração de terminal do dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
 
+![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+
+*A mesma execução, animada.*
+
 ## Compatibility
 
 | Surface | Status |

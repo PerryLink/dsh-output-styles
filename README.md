@@ -44,6 +44,10 @@
 
 ![Terminal demo of dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
 
+![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+
+*The same run, animated.*
+
 ## Compatibility
 
 | Surface | Status |
