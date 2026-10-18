@@ -391,7 +391,9 @@ pnpm pack            # 供 dsh plugin add 的 tarball
 
 </details>
 
-</details>## License
+</details>
+
+## License
 
 [Apache License 2.0](LICENSE) © 2026 dsh-output-styles contributors
 
