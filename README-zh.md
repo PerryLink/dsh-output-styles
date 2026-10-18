@@ -23,6 +23,11 @@
 
 [English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
 
+```sh
+dsh plugin --profile <name> add dsh-output-styles
+```
+
+
 </div>
 
 ---
@@ -31,6 +36,13 @@
 **📖 生态实测知识库**（实测数据，不是营销）：[插件开发指南 · 选型实测数据 · 维护取舍判据](https://perrylink.github.io/dsh-plugin-guide/)。
 
 <!-- star-cta -->
+## Install & uninstall
+
+- **git channel**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-output-styles` —— `prepare` 脚本仅用生产依赖构建。
+- **npm channel**（发布版本）：`dsh plugin --profile web add dsh-output-styles`。
+- **tarball channel**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`。
+- **uninstall**：`dsh plugin --profile web remove dsh-output-styles`。
+
 ## ⭐ 如果它帮到了你
 
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
@@ -119,13 +131,6 @@ flowchart LR
 ```
 
 模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
-
-## Install & uninstall
-
-- **git channel**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-output-styles` —— `prepare` 脚本仅用生产依赖构建。
-- **npm channel**（发布版本）：`dsh plugin --profile web add dsh-output-styles`。
-- **tarball channel**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`。
-- **uninstall**：`dsh plugin --profile web remove dsh-output-styles`。
 
 ## Configuration
 

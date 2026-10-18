@@ -21,6 +21,11 @@
 
 [English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
 
+```sh
+dsh plugin --profile <name> add dsh-output-styles
+```
+
+
 </div>
 
 ---
@@ -29,6 +34,13 @@
 **📖 Base de conhecimento do ecossistema** — dados medidos, não marketing: [guia de desenvolvimento · dados de seleção · critérios de manutenção](https://perrylink.github.io/dsh-plugin-guide/).
 
 <!-- star-cta -->
+## Install & uninstall
+
+- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — o script `prepare` compila apenas com dependências de produção.
+- **canal npm** (versões publicadas): `dsh plugin --profile web add dsh-output-styles`.
+- **canal tarball**: `pnpm pack` neste repo, depois `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
+- **desinstalar**: `dsh plugin --profile web remove dsh-output-styles`.
+
 ## ⭐ 如果它帮到了你
 
 Este plugin faz parte da [família de plugins DSH](https://github.com/PerryLink) (mais de 40, todos Apache-2.0). Se for útil, **deixe uma estrela**: não desbloqueia nada, mas ajuda a próxima pessoa a encontrá-lo.
@@ -117,13 +129,6 @@ flowchart LR
 ```
 
 Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem novo tipo de evento de sessão, sem alterações no agent-loop. O nome do estilo vem de `command/run`, o texto exato injetado de `system/message`, e o marcador de procedência `{ kind: 'dsh-output-styles' }` viaja no registro do domínio. Os estilos se aplicam apenas à conversa principal; sessões de subagente mantêm seus próprios prompts (como no Claude Code).
-
-## Install & uninstall
-
-- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — o script `prepare` compila apenas com dependências de produção.
-- **canal npm** (versões publicadas): `dsh plugin --profile web add dsh-output-styles`.
-- **canal tarball**: `pnpm pack` neste repo, depois `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
-- **desinstalar**: `dsh plugin --profile web remove dsh-output-styles`.
 
 ## Configuration
 
