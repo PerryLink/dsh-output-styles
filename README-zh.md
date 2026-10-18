@@ -41,7 +41,7 @@
 
 `/style concise` —— 从此每条回复都简洁。`/style off` —— 回到项目默认。
 
-![dsh-output-styles 终端演示：dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+![dsh-output-styles 终端演示：dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
 
 ![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
 
@@ -51,7 +51,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-11 对照 dsh-v0.1.7-alpha.1 master checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-11 对照 dsh-v0.2.1-rc.2 checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | 全部（host + Web 客户端） |
 | Model | 任意（系统提示注入） |
@@ -233,6 +233,7 @@ flowchart LR
 
 ## Known limitations
 
+- **核心共存。** 若官方推出第一方 `outputStyles` 能力，本插件检测到其 `outputStyles` 服务后降级到增量面（热切换 / rules / `/transcript`），提示词注入交给核心 —— 见 [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) 与导出的 `detectCoreOutputStyles` / `coexistenceReport`。**降级状态会写在你看得到的地方**：每次 `/style <风格>` 与 `/style off` 的回复都带一条 `degraded coexistence mode` 说明，`style` 会话 projection 也暴露 `promptInjection: 'enabled' | 'disabled'`，任何界面都不会在风格未生效时暗示它已生效。（0.7.0 之前唯一的痕迹是一行 `ctx.logger.info`，它进不了会话转录。）
 - **仅主会话。** 风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
 - **截断。** 超过 `maxStyleChars` 的风格正文带标记截断。
 - **跳过坏文件。** 损坏的风格文件带警告跳过，绝不破坏 profile。

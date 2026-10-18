@@ -72,7 +72,9 @@ function optionsOf(view: StyleSelectionView, t: TranslateNS<typeof NS>): SelectO
   const rows: SelectOption[] = [{
     id: OFF_ID,
     label: t('option.off'),
-    detail: t('option.offDetail'),
+    detail: view.promptInjection === 'disabled'
+      ? `${t('option.offDetail')} · ${t('option.injectionDisabled')}`
+      : t('option.offDetail'),
     active: view.currentValue === null,
   }]
   for (const option of view.options) {

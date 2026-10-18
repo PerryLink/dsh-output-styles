@@ -4,7 +4,7 @@
 // against TypeScript-only syntax leaking into shipped output and against a
 // tarball missing the bundle patch.
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -39,10 +39,16 @@ if (typeof invariant.installInvariant !== 'function' || invariant.PACKAGE_NAME !
   throw new Error('lib/invariant.js exports an unexpected invariant face')
 }
 
-// 4. The client bundle is a plain ESM plugin face (decorate plugin).
-const client = await import(pathToFileURL(path.join(root, 'lib/client.js')).href)
-if (typeof client.apply !== 'function' || client.name !== 'dsh-output-styles-client') {
-  throw new Error('lib/client.js exports an unexpected client face')
+// 4. The client bundle is a classic-script __ModuleLoader__ factory, not ESM.
+const clientText = readFileSync(path.join(root, 'lib/client.js'), 'utf8')
+if (!clientText.startsWith('window.__ModuleLoader__.load({')) {
+  throw new Error('lib/client.js is not a __ModuleLoader__ factory')
+}
+if (!clientText.includes('id: "dsh-output-styles"')) {
+  throw new Error('lib/client.js has the wrong loader id')
+}
+if (/^export\s/m.test(clientText)) {
+  throw new Error('lib/client.js still contains top-level export')
 }
 
-console.log('artifacts OK: syntax + ESM imports + bundle patch present')
+console.log('artifacts OK: syntax + host ESM imports + loader-factory client + bundle patch present')

@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.8.1] - 2026-10-18
+
+### Changed
+
+- Add a 1280×720 hero and a 960×540, 4-second terminal GIF rendered from the test run; `screenshots.json` is an object array and `capture.json` records the command.
+
+## [Unreleased]
+
+### Changed
+
+- Compatibility docs: five READMEs now name `dsh-v0.2.1-rc.2` and the current 156-test count; `dshVersions` records `0.2.1-rc.2`.
+
+## [0.8.0] - 2026-10-18
+
+### Added
+
+- **The `/style` picker states when prompt injection is disabled.** When the core `outputStyles` service is active, the projection reports `promptInjection: "disabled"`; the off row now carries the localized reason instead of leaving the user to wonder why a chosen style does nothing (C2).
+
+## [0.7.1] - 2026-10-17
+
+### Fixed
+
+- **The client is a `window.__ModuleLoader__.load` factory, not bare ESM.** `tsdown.client.config.ts` emitted `export { apply, inject, name }`; the host executes `lib/client.js` as a classic script, so the `/style` picker never loaded. A post-build `scripts/bundle-client.mjs` wraps the bundle, and `verify-artifacts` now asserts the loader shape instead of dynamic-importing it.
+- Compatibility: `engines.dsh` -> `>=0.2.1-0 <0.3.0`; the existing 0.2.x peer band is unchanged.
+
 All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -24,6 +49,31 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
 ## [Unreleased]
+
+### Fixed
+
+- **Coexistence degradation was invisible to the user.** When a core
+  `outputStyles` service is composed, this plugin skips prompt injection and
+  keeps only hot-switch / rules / export. That state was announced by a single
+  `ctx.logger.info` line — and a logger line never reaches the session
+  transcript, so on a degraded composition `/style concise` answered exactly
+  `switched to concise`, in the same words as a working standalone run, while
+  nothing was injected. Reported by *someone looking at the phone*: the log is
+  invisible there, so the honest reading of that reply was "the style is broken".
+
+  Two user-visible traces now exist, neither of which existed before:
+
+  - every mutating `/style` reply (`/style <name>` and `/style off`) appends a
+    `degraded coexistence mode` note naming the setting that overrides it
+    (`respectCoreOutputStyles: false`);
+  - the `style` session projection exposes `promptInjection: 'enabled' |
+    'disabled'`, so a client (Web picker, any projection reader) can state the
+    fact instead of implying the style is in force.
+
+  No behaviour changes in standalone mode: the reply text is byte-identical and
+  the projection's new field is `'enabled'`. The projection wire value is
+  additive — the field is required in the sealed view schema, so hosts and
+  clients built against this version agree on it.
 
 ## [0.6.24] - 2026-10-05
 

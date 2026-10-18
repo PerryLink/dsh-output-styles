@@ -1,5 +1,14 @@
-{
-  "screenshots": [
-    "docs/assets/dsh-output-styles-demo.png"
-  ]
-}
+[
+  {
+    "path": "docs/assets/dsh-output-styles-hero.png",
+    "kind": "hero",
+    "alt": "dsh-output-styles terminal output",
+    "caption": "Real dsh-output-styles test run; 156 tests passed."
+  },
+  {
+    "path": "docs/assets/dsh-output-styles-demo.gif",
+    "kind": "demo",
+    "alt": "Animated dsh-output-styles terminal session",
+    "caption": "The same run, assembled line by line."
+  }
+]

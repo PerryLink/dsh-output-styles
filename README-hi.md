@@ -39,7 +39,7 @@
 
 `/style concise` — और अब से हर उत्तर संक्षिप्त। `/style off` — वापस परियोजना के डिफ़ॉल्ट पर।
 
-![dsh-output-styles का टर्मिनल डेमो: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+![dsh-output-styles का टर्मिनल डेमो: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
 
 ![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
 
@@ -49,7 +49,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (2026-09-09 को अनुकूलित): सत्र लिफ़ाफ़ा अपना ignorable फ़ील्ड केवल संग्रहीत-लॉग पठन संगतता के लिए रखता है - Session.append अभी भी इसे स्टैम्प नहीं कर सकता, इसलिए गेट व्यवहार अपरिवर्तित है। 2026-09-11 को dsh-v0.1.7-alpha.1 master checkout के विरुद्ध सत्यापित (पूर्ण गेट श्रृंखला + प्रोफ़ाइल इंस्टॉल स्मोक)। |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (2026-09-09 को अनुकूलित): सत्र लिफ़ाफ़ा अपना ignorable फ़ील्ड केवल संग्रहीत-लॉग पठन संगतता के लिए रखता है - Session.append अभी भी इसे स्टैम्प नहीं कर सकता, इसलिए गेट व्यवहार अपरिवर्तित है। 2026-09-11 को dsh-v0.2.1-rc.2 checkout के विरुद्ध सत्यापित (पूर्ण गेट श्रृंखला + प्रोफ़ाइल इंस्टॉल स्मोक)। |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | सभी (host + वेब क्लाइंट) |
 | Model | कोई भी (सिस्टम-प्रॉम्प्ट इंजेक्शन) |
@@ -231,6 +231,7 @@ flowchart LR
 
 ## Known limitations
 
+- **कोर के साथ सहअस्तित्व।** यदि कोई फ़र्स्ट-पार्टी `outputStyles` क्षमता आती है, तो यह प्लगइन उसकी `outputStyles` सेवा पहचानकर इंक्रीमेंटल सतह (hot-switch, rules, `/transcript`) पर डिग्रेड हो जाता है और prompt इंजेक्शन कोर को छोड़ देता है — देखें [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) तथा निर्यातित `detectCoreOutputStyles` / `coexistenceReport`. **डिग्रेडेड मोड वहाँ लिखा जाता है जहाँ आप उसे देख सकें**: हर `/style <शैली>` और `/style off` के उत्तर में `degraded coexistence mode` नोट आता है, और `style` सेशन projection `promptInjection: 'enabled' | 'disabled'` देता है, इसलिए कोई सतह शैली को लागू बताकर भ्रम नहीं फैलाती। (0.7.0 से पहले इसका एकमात्र निशान एक `ctx.logger.info` पंक्ति थी, जो सेशन ट्रांसक्रिप्ट तक कभी नहीं पहुँचती।)
 - **केवल मुख्य वार्तालाप।** शैलियाँ मुख्य वार्तालाप पर लागू होती हैं; उप-एजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code की तरह)।
 - **कटाव।** `maxStyleChars` से लंबे शैली मुख्य भाग एक मार्कर से काटे जाते हैं।
 - **छोड़ी गई फ़ाइलें।** एक ख़राब शैली फ़ाइल चेतावनी से छोड़ दी जाती है और profile को कभी नहीं तोड़ती।
@@ -240,7 +241,7 @@ flowchart LR
 ```sh
 pnpm install
 pnpm run typecheck   # दोनों tsc परियोजनाएँ
-pnpm test            # vitest — 148 tests
+pnpm test            # vitest — 156 tests
 pnpm run verify      # typecheck + tests + self-contained (prepublishOnly द्वार)
 pnpm run build       # lib/ कलाकृतियाँ (host + client बंडल)
 pnpm pack            # dsh plugin add के लिए tarball

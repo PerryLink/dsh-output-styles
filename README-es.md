@@ -39,7 +39,7 @@ Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryL
 
 `/style concise` — y a partir de ahora toda respuesta es concisa. `/style off` — de vuelta al valor por defecto del proyecto.
 
-![Demostración de terminal de dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+![Demostración de terminal de dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
 
 ![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
 
@@ -49,7 +49,7 @@ Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryL
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (adaptado el 2026-09-09): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-09-11 contra el checkout master dsh-v0.1.7-alpha.1 (cadena de puertas completa + smoke de instalación del perfil). |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (adaptado el 2026-09-09): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-09-11 contra el checkout master dsh-v0.1.7-alpha.1 (cadena de puertas completa + smoke de instalación del perfil). |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | Todas (host + cliente web) |
 | Model | Cualquiera (inyección en el prompt del sistema) |
@@ -231,6 +231,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 
 ## Known limitations
 
+- **Coexistencia con el core.** Si aparece una capacidad `outputStyles` de primera parte, este plugin detecta su servicio `outputStyles` y degrada a la superficie incremental (hot-switch, rules, `/transcript`) dejando la inyección del prompt al core — ver [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) y las funciones exportadas `detectCoreOutputStyles` / `coexistenceReport`. **El modo degradado se declara donde se ve**: cada respuesta de `/style <estilo>` y `/style off` lleva una nota `degraded coexistence mode`, y la proyección de sesión `style` expone `promptInjection: 'enabled' | 'disabled'`, así que ninguna superficie insinúa que el estilo está en vigor cuando no lo está. (Antes de 0.7.0 el único rastro era una línea `ctx.logger.info`, que nunca llega a la transcripción.)
 - **Solo conversación principal.** Los estilos se aplican a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
 - **Truncado.** Los cuerpos de estilo más largos que `maxStyleChars` se truncan con un marcador.
 - **Archivos omitidos.** Un archivo de estilo defectuoso se omite con una advertencia y nunca rompe el profile.
@@ -240,7 +241,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 ```sh
 pnpm install
 pnpm run typecheck   # ambos proyectos tsc
-pnpm test            # vitest — 148 tests
+pnpm test            # vitest — 156 tests
 pnpm run verify      # typecheck + tests + self-contained (la puerta de prepublishOnly)
 pnpm run build       # artefactos lib/ (bundles host + client)
 pnpm pack            # tarball para dsh plugin add

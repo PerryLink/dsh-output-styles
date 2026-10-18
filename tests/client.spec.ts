@@ -20,13 +20,14 @@ function popupSelect(decoration: CommandDecoration | undefined) {
   return ui
 }
 
-function makeView(current: string | null): StyleSelectionView {
+function makeView(current: string | null, promptInjection: 'enabled' | 'disabled' = 'enabled'): StyleSelectionView {
   return {
     options: [
       { value: 'concise', name: 'concise', description: 'Terse.', whenToUse: 'Daily work' },
       { value: 'Diagrams first', name: 'Diagrams first', description: 'Lead with a diagram.' },
     ],
     currentValue: current,
+    promptInjection,
   }
 }
 
@@ -40,6 +41,7 @@ interface ClientDouble {
 /** Compose a bare context with the client service doubles and apply the client plugin. */
 async function makeClient(options?: {
   current?: string | null
+  injection?: 'enabled' | 'disabled'
   execute?: (sessionId: string, line: string) => Promise<{ ok: true; value: { result: unknown } } | { ok: false; error: { code: string; message: string } }>
 }): Promise<ClientDouble> {
   const ctx = new Context()
@@ -59,7 +61,7 @@ async function makeClient(options?: {
       session: {
         projections: {
           faceOf: (key: string) => ({
-            getSnapshot: () => (key === 'style' ? makeView(options?.current ?? null) : undefined),
+            getSnapshot: () => (key === 'style' ? makeView(options?.current ?? null, options?.injection ?? 'enabled') : undefined),
             subscribe: () => () => {},
           }),
         },
@@ -163,5 +165,14 @@ describe('dsh-output-styles client picker', () => {
     const decoration = decorations[decorations.length - 1]
     const options = await popupSelect(decoration).options(session, new AbortController().signal)
     expect(options).toEqual([])
+  })
+})
+
+describe('picker degradation note', () => {
+  it('states promptInjection=disabled in the off row detail', async () => {
+    const client = await makeClient({ current: null, injection: 'disabled' })
+    const decoration = client.decorations[0]
+    const options = await popupSelect(decoration).options({ sessionId: 's1' } as never, new AbortController().signal)
+    expect(options?.[0]?.detail).toContain('option.injectionDisabled')
   })
 })

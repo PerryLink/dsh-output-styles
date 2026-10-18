@@ -1,6 +1,6 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.6.26",
+  "version": "0.8.1",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "sideEffects": false,
@@ -20,7 +20,7 @@
   "packageManager": "pnpm@11.7.0",
   "engines": {
     "node": "^22.19.0 || >=24.0.0",
-    "dsh": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0 || >=0.2.0-0 <0.3.0 || >=0.2.1-0 <0.3.0"
+    "dsh": ">=0.2.1-0 <0.3.0"
   },
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -108,8 +108,15 @@
       "settings:read"
     ],
     "compatibility": {
-      "dshVersions": ["0.1.2-rc.1","0.1.5-rc.2","0.1.7-alpha.2","0.1.7-rc.1", "0.1.7-rc.2",
-        "0.2.1-alpha.1"]
+      "dshVersions": [
+        "0.1.2-rc.1",
+        "0.1.5-rc.2",
+        "0.1.7-alpha.2",
+        "0.1.7-rc.1",
+        "0.1.7-rc.2",
+        "0.2.1-alpha.1",
+        "0.2.1-rc.2"
+      ]
     },
     "capability": {
       "id": "style-command",
@@ -229,7 +236,7 @@
     "vitest": "^4.1.8"
   },
   "scripts": {
-    "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.json --noEmitOnError --pretty false && tsdown && tsdown -c tsdown.client.config.ts && node scripts/fix-dts.mjs",
+    "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.json --noEmitOnError --pretty false && tsdown && tsdown -c tsdown.client.config.ts && node scripts/fix-dts.mjs && node scripts/bundle-client.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "oxlint",

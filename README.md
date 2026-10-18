@@ -42,7 +42,7 @@
 
 `/style concise` — and every reply from now on is terse. `/style off` — back to the project default.
 
-![Terminal demo of dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.png)
+![Terminal demo of dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
 
 ![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
 
@@ -52,7 +52,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (adapted 2026-09-09): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-11 against the dsh-v0.1.7-alpha.1 master checkout (full gate chain + profile install smoke). |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (adapted 2026-09-09): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-11 against the dsh-v0.2.1-rc.2 checkout (full gate chain + profile install smoke). |
 | Node | `^22.19.0 || >=24.0.0` |
 | Platforms | All (host + web client) |
 | Model | Any (system-prompt injection) |
@@ -240,7 +240,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 
 ## Known limitations
 
-- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/transcript`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions.
+- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/transcript`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions. **Degraded mode is stated where you can see it**: every `/style` switch and `/style off` reply carries a `degraded coexistence mode` note, and the `style` session projection exposes `promptInjection: 'enabled' | 'disabled'`, so no surface implies the style is in force when it is not. (Before 0.7.0 the only trace was a `ctx.logger.info` line, which never reaches the session transcript.)
 - **Main conversation only.** Styles apply to the main conversation; subagent sessions keep their own prompts (matching Claude Code).
 - **Truncation.** Style bodies longer than `maxStyleChars` are truncated with a marker.
 - **Skipped style files.** A bad style file is skipped with a warning and never breaks the profile.
@@ -250,7 +250,7 @@ Screened against the DSH ecosystem before development (2026-08 snapshot): no `st
 ```sh
 pnpm install
 pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 148 tests
+pnpm test            # vitest — 156 tests
 pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
 pnpm run build       # lib/ artifacts (host + client bundles)
 pnpm pack            # tarball for dsh plugin add
