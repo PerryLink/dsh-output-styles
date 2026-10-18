@@ -90,6 +90,14 @@ export interface StyleSelectionView {
   options: StyleOption[]
   /** Current selection, or null when the session has none. */
   currentValue: string | null
+  /**
+   * Whether this plugin injects the style section into the system prompt.
+   * `disabled` is the coexistence-degraded state: a core `outputStyles`
+   * capability owns injection, and the selection still drives hot-switch,
+   * rules and `/transcript`. Clients and session projections read this to
+   * state the fact instead of implying the style is in force.
+   */
+  promptInjection: 'enabled' | 'disabled'
 }
 
 /** Validates the `style` projection's wire payload before it leaves the host. */
@@ -101,6 +109,7 @@ export const styleSelectionViewSchema = zod.object({
     whenToUse: zod.string().min(1).optional(),
   })),
   currentValue: zod.string().min(1).nullable(),
+  promptInjection: zod.union([zod.literal('enabled'), zod.literal('disabled')]),
 })
 
 /**

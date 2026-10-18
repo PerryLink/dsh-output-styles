@@ -81,6 +81,7 @@ describe('style session projection', () => {
         },
       ],
       currentValue: null,
+      promptInjection: 'enabled',
     })
     await harness.runStyle(session, '/style step-by-step')
     expect(harness.ctx.sessionProjections.snapshot(session).values.style?.currentValue).toBe('step-by-step')

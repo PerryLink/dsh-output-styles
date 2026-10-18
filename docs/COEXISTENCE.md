@@ -60,3 +60,21 @@ In `degraded` mode the plugin still contributes:
 
 Only the two prompt-injection registrations (the prompt section and the
 `system-prompt/assemble` waterfall) are skipped.
+
+## How degraded mode reaches the user
+
+`ctx.logger.info` is not a user-visible channel: the plugin log never reaches the
+session transcript, and on a phone the log is not reachable at all. Until
+0.7.0 the only trace of degraded mode was that one logger line, so a degraded
+`/style concise` answered `switched to concise` — the same reply as a working
+standalone run — while the style was not injected. That is why degraded mode is
+stated on two surfaces that are visible:
+
+- **Command reply** — `/style <name>` and `/style off` append a
+  `degraded coexistence mode` note that names the override
+  (`respectCoreOutputStyles: false`). Standalone replies are unchanged.
+- **Session projection** — the `style` projection's wire value carries
+  `promptInjection: 'enabled' | 'disabled'`, so the Web picker and any other
+  projection reader can render the state instead of implying the style is in
+  force. The field is part of the sealed `StyleSelectionView` schema, so a
+  client never guesses it.

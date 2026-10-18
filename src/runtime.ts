@@ -247,7 +247,7 @@ export class OutputStyleRuntime {
 }
 
 /** Build the `style` projection's wire value for one folded state. */
-function viewStyleSelection(runtime: OutputStyleRuntime, state: StyleFoldState): StyleSelectionView {
+function viewStyleSelection(runtime: OutputStyleRuntime, state: StyleFoldState, promptInjection: 'enabled' | 'disabled'): StyleSelectionView {
   // The library-membership guard covers a settled selection whose style later
   // left the library: the view degrades to "no selection" until the session
   // switches again.
@@ -260,6 +260,7 @@ function viewStyleSelection(runtime: OutputStyleRuntime, state: StyleFoldState):
       ...style.whenToUse === undefined ? {} : { whenToUse: style.whenToUse },
     })),
     currentValue,
+    promptInjection,
   }
 }
 
@@ -302,6 +303,20 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   if (coreActive) {
     ctx.logger.info('dsh-output-styles: core outputStyles detected — degrading to hot-switch + rules + export (no prompt injection)')
   }
+  /**
+   * The coexistence note appended to every mutating `/style` reply.
+   *
+   * A logger line is not a user-visible channel: `ctx.logger.info` never
+   * reaches the session transcript, so on a degraded composition the user saw
+   * exactly `switched to concise` and nothing else — a reply identical to the
+   * standalone one, while the style was no longer injected into the prompt.
+   * The command result *is* the user's channel, so the fact is stated there.
+   * @returns the note line, or '' in standalone mode.
+   */
+  const degradedNote = (): string => coreActive
+    ? '\nnote: this session is in degraded coexistence mode — a core `outputStyles` capability is composed, so this plugin does not inject the style into the prompt; the selection still drives hot-switch, rules and /transcript.'
+      + ' Set `respectCoreOutputStyles: false` to force this plugin\'s injection.'
+    : ''
   const styles = loadStyleLibrary(
     resolved.stylesDirs,
     { compatJson: resolved.compatJson },
@@ -451,16 +466,16 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           const forced = runtime.forcedName
           return {
             kind: 'success',
-            text: forced === undefined
+            text: (forced === undefined
               ? 'output style off'
-              : `output style off (style "${forced}" remains in force)`,
+              : `output style off (style "${forced}" remains in force)`) + degradedNote(),
           }
         }
         if (runtime.get(input.name) === undefined) {
           return { kind: 'error', text: runtime.unknownStyleLine(input.name) }
         }
         await runtime.select(agent.session, input.name)
-        return { kind: 'success', text: `switched to ${input.name}` }
+        return { kind: 'success', text: `switched to ${input.name}${degradedNote()}` }
       },
     })
   })
@@ -476,7 +491,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       apply: applyStyleEvent,
       wire: {
         viewSchema: styleSelectionViewSchema,
-        view: state => viewStyleSelection(runtime, state),
+        view: state => viewStyleSelection(runtime, state, coreActive ? 'disabled' : 'enabled'),
       },
       stateVersion: 2,
     })
