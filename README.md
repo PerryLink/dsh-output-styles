@@ -287,6 +287,8 @@ Static evidence: `dsh-plugin-doctor` K10–K13 report `pass` for every check on 
 
 ## Contributors
 
+- [@kskazuha](https://github.com/kskazuha) — the Web style picker revival on 0.1.7 (#8).
+- [@Bingtang1019](https://github.com/Bingtang1019) — the module-table handoff report for `lib/client.js` (#10).
 - [@PerryLink](https://github.com/PerryLink) — author and maintainer: plugin architecture, style library, bundle install, Web picker, five-language docs, and CI/release tooling.
 
 ## PerryLink DSH Plugin Family
