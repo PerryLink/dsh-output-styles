@@ -282,7 +282,7 @@ pnpm pack            # 供 dsh plugin add 的 tarball
 
 - [@PerryLink](https://github.com/PerryLink) —— 作者与维护者：插件架构、风格库、bundle 安装、Web picker、五语文档与 CI/发布工具链。
 
-## PerryLink DSH 插件家族
+## PerryLink DSH Plugin Family
 
 本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员。完整名单默认折叠，避免每个 README 的首屏被长表淹没；点击展开可查看每一行及其状态。
 
