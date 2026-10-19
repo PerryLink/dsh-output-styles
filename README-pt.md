@@ -137,7 +137,19 @@ São os pontos de entrada reais; instale e chame um.
 
 #### Exemplo detalhado
 
-- `/style`
+**Comando**
+
+~~~sh
+/style concise
+~~~
+
+**Saída**
+
+~~~text
+switched to concise
+~~~
+
+*Observado em `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
 #### Exemplos breves
 

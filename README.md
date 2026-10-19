@@ -139,7 +139,19 @@ These are the plugin's real entry points; install once, then call one.
 
 #### Detailed example
 
-- `/style`
+**Command**
+
+~~~sh
+/style concise
+~~~
+
+**Output**
+
+~~~text
+switched to concise
+~~~
+
+*Observed from `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
 #### Brief examples
 

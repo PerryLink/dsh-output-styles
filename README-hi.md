@@ -137,7 +137,19 @@ flowchart LR
 
 #### विस्तृत उदाहरण
 
-- `/style`
+**कमांड**
+
+~~~sh
+/style concise
+~~~
+
+**आउटपुट**
+
+~~~text
+switched to concise
+~~~
+
+*स्रोत `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
 #### संक्षिप्त उदाहरण
 

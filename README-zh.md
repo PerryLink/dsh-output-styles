@@ -139,7 +139,19 @@ flowchart LR
 
 #### 详细示例
 
-- `/style`
+**命令**
+
+~~~sh
+/style concise
+~~~
+
+**输出**
+
+~~~text
+switched to concise
+~~~
+
+*来源 `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
 #### 简短示例
 
