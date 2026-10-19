@@ -53,9 +53,10 @@ dsh plugin --profile <name> add dsh-output-styles
 
 `/style concise` —— 从此每条回复都简洁。`/style off` —— 回到项目默认。
 
-![dsh-output-styles 终端演示：dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
+![dsh-output-styles 工作流图：安装 → 打开面板 → 操作。](docs/assets/dsh-output-styles-flow.svg)
 
-![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+*工作流概览：安装 → 打开面板 → 操作。下面的示例使用实际命令面。*
+
 
 *同一次运行，动图版。*
 
@@ -131,6 +132,19 @@ flowchart LR
 ```
 
 模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
+
+### 示例
+
+以下为插件真实入口；安装后调用一个即可。
+
+#### 详细示例
+
+- `/style`
+
+#### 简短示例
+
+- `/transcript`
+- `output_style`
 
 ## Configuration
 

@@ -54,11 +54,11 @@ dsh plugin --profile <name> add dsh-output-styles
 
 `/style concise` — and every reply from now on is terse. `/style off` — back to the project default.
 
-![Terminal demo of dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
+![Workflow diagram for dsh-output-styles: install → open panel → act.](docs/assets/dsh-output-styles-flow.svg)
 
-![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+*Workflow overview: install → open panel → act. The examples below use the real command surface.*
 
-*The same run, animated.*
+
 
 ## Compatibility
 
@@ -132,6 +132,19 @@ flowchart LR
 ```
 
 Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `system/message`, and the provenance marker `{ kind: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
+
+### Examples
+
+These are the plugin's real entry points; install once, then call one.
+
+#### Detailed example
+
+- `/style`
+
+#### Brief examples
+
+- `/transcript`
+- `output_style`
 
 ## Configuration
 

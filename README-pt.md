@@ -51,9 +51,10 @@ Este plugin faz parte da [família de plugins DSH](https://github.com/PerryLink)
 
 `/style concise` — e a partir de agora toda resposta é concisa. `/style off` — de volta ao padrão do projeto.
 
-![Demonstração de terminal do dsh-output-styles: dsh-output-styles — /style lists, then switches at runtime](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-hero.png)
+![Diagrama de fluxo de dsh-output-styles: instalar → abrir painel → agir.](docs/assets/dsh-output-styles-flow.svg)
 
-![Animated terminal demo of dsh-output-styles](https://raw.githubusercontent.com/PerryLink/dsh-output-styles/main/docs/assets/dsh-output-styles-demo.gif)
+*Visão geral do fluxo: instalar → abrir painel → agir. Os exemplos abaixo usam a superfície real de comandos.*
+
 
 *A mesma execução, animada.*
 
@@ -129,6 +130,19 @@ flowchart LR
 ```
 
 Tudo o que o modelo vê é reconstruível a partir do log de sessão — sem novo tipo de evento de sessão, sem alterações no agent-loop. O nome do estilo vem de `command/run`, o texto exato injetado de `system/message`, e o marcador de procedência `{ kind: 'dsh-output-styles' }` viaja no registro do domínio. Os estilos se aplicam apenas à conversa principal; sessões de subagente mantêm seus próprios prompts (como no Claude Code).
+
+### Exemplos
+
+São os pontos de entrada reais; instale e chame um.
+
+#### Exemplo detalhado
+
+- `/style`
+
+#### Exemplos breves
+
+- `/transcript`
+- `output_style`
 
 ## Configuration
 
