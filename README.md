@@ -153,6 +153,22 @@ switched to concise
 
 *Observed from `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
+#### Failure branch
+
+**Input**
+
+~~~text
+/style nope
+~~~
+
+**Output**
+
+~~~text
+unknown output style "nope" (available: concise, explanatory, formal, learning, proactive, step-by-step)
+~~~
+
+*Observed from `plugins/dsh-output-styles/src/runtime.ts:213-214,474-475; plugins/dsh-output-styles/tests/runtime.spec.ts:118-125`*
+
 #### Brief examples
 
 - `/transcript`

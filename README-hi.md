@@ -151,6 +151,22 @@ switched to concise
 
 *स्रोत `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
+#### विफलता शाखा
+
+**इनपुट**
+
+~~~text
+/style nope
+~~~
+
+**आउटपुट**
+
+~~~text
+unknown output style "nope" (available: concise, explanatory, formal, learning, proactive, step-by-step)
+~~~
+
+*स्रोत `plugins/dsh-output-styles/src/runtime.ts:213-214,474-475; plugins/dsh-output-styles/tests/runtime.spec.ts:118-125`*
+
 #### संक्षिप्त उदाहरण
 
 - `/transcript`
