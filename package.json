@@ -1,6 +1,6 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "sideEffects": false,
@@ -133,7 +133,7 @@
   },
   "dependencies": {
     "yaml": "^2.8.0",
-    "zod": "^4.4.3"
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.5-alpha.1",

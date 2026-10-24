@@ -13,6 +13,10 @@ updates:
       # Major upgrades are reviewed by hand; security updates are separate.
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # zod is pinned to the host's 4.4.3: 4.6.x duplicates the type identity
+      # used by @deepseek-ai/schemastery and breaks `tsc`. Re-enable when the
+      # host packages move to 4.6.x.
+      - dependency-name: "zod"
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.2] - 2026-10-24
+
+### Fixed
+
+- **Pin `zod` to 4.4.3 and ignore its dependabot bumps until the host packages align.** The grouped npm update pulled `zod@4.6.7` alongside the host's `4.4.3`; the two copies have distinct `ZodType`/`ZodCheck` identities, so `src/types.ts` failed with TS2379 and `bare-import`/`profile` also failed. The exact pin keeps a single zod identity; remove the ignore when `@deepseek-ai/schemastery`/`dsh-*` move to 4.6.x.
+
 ## [0.8.1] - 2026-10-18
 
 ### Changed
