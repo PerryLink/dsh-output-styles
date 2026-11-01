@@ -58,7 +58,9 @@
     "README-es.md",
     "README-pt.md",
     "README-hi.md",
-    "docs"
+    "docs",
+    "PRIVACY.md",
+    "icon.svg"
   ],
   "keywords": [
     "deepseek-harness",
@@ -250,5 +252,6 @@
   "funding": {
     "type": "individual",
     "url": "https://github.com/sponsors/PerryLink"
-  }
+  },
+  "icon": "icon.svg"
 }
