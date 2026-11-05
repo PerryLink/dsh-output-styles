@@ -280,7 +280,7 @@ export async function createStyleHarness(
   // references itself. Binding those lets a test commit a value the same way
   // the Loader does.
   const pluginFiber = await ctx.plugin(outputStyles, { stylesDir: stylesDir ?? '', ...config } as never)
-  if (settings !== undefined) settings.bind(pluginFiber.ctx, outputStyles.normalizeConfig(pluginFiber.config))
+  if (settings !== undefined) settings.bind(pluginFiber.ctx, outputStyles.normalizeConfig(pluginFiber.effectiveConfig ?? pluginFiber.config))
 
   const makeSession = (id?: string): Session => ctx.sessions.create(
     id === undefined ? undefined : SessionId(id),
