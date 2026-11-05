@@ -1,107 +1,61 @@
 <div align="center">
 
-# 🎨 dsh-output-styles
-- **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-output-styles` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
-[![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-output-styles)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-dark.svg">
+  <img src="docs/assets/dsh-output-styles-flow-light.svg" width="100%" alt="dsh-output-styles 工作流：/style concise 写入 output_style 存储域，systemPrompt.section() 按 order 90 注入，模型请求记录为 system/message；/transcript 经 output.render/before 渲染">
+</picture>
+
+# dsh-output-styles
+
+**在运行时切换模型的输出风格——一次 `/style concise`，之后每条回复都简洁。**
+
+DeepSeek Harness 的 Claude Code `outputStyles` 等价实现：风格写成 Markdown 文件，选择按会话持久化，并在每次提示组装时注入。
+
+[安装](#三步上手) · [配置](#配置) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-3366CC?style=flat-square&labelColor=2B3245)](LICENSE)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.1%20%3C0.3.0-4B67B4?style=flat-square&labelColor=2B3245)](#兼容性)
+[![npm](https://img.shields.io/npm/v/dsh-output-styles?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-output-styles)
+[![CI](https://img.shields.io/github/actions/workflow/status/PerryLink/dsh-output-styles/ci.yml?branch=main&label=CI&style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-output-styles/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24.9-339933?style=flat-square&labelColor=2B3245)](#兼容性)
+
+[![Stars](https://img.shields.io/github/stars/PerryLink/dsh-output-styles?style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-output-styles/stargazers)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-output-styles)
 [![dshfind](https://dshfind.com/api/badge/PerryLink/dsh-output-styles?metric=downloads)](https://dshfind.com/plugins/PerryLink/dsh-output-styles?ref=badge)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-output-styles/badge)](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-output-styles)
-
-**Claude Code `outputStyles` for DeepSeek Harness** — switch the model's output style at runtime, per session, durably.
-
-*`/style concise` — and every reply from now on is terse. `/style off` — back to the project default.*
-
-> **Official repository.** This is the only official repository of dsh-output-styles, maintained by PerryLink. Same-name repositories under other accounts are not affiliated.
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![DSH plugin](https://img.shields.io/badge/dsh--plugin-✅-green)](https://github.com/topics/dsh-plugin)
-[![dsh-doctor](https://raw.githubusercontent.com/PerryLink/dsh-plugin-doctor/main/badges/PerryLink__dsh-output-styles.svg)](https://github.com/PerryLink/dsh-plugin-doctor#verified-徽章)
-[![DSH Market](https://raw.githubusercontent.com/2BingLing/dsh-market/master/assets/readme/badge-listed-en.svg)](https://dsh.market/)
-[![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
-[![CI](https://img.shields.io/github/actions/workflow/status/PerryLink/dsh-output-styles/ci.yml?branch=main&label=CI)](https://github.com/PerryLink/dsh-output-styles/actions)
-[![Version](https://img.shields.io/github/v/tag/PerryLink/dsh-output-styles?label=version)](https://github.com/PerryLink/dsh-output-styles/releases)
-[![npm version](https://img.shields.io/npm/v/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
-[![npm downloads](https://img.shields.io/npm/dm/dsh-output-styles)](https://www.npmjs.com/package/dsh-output-styles)
-
-[English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-output-styles/badge)](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-output-styles)
+[![DSH Market](https://img.shields.io/badge/DSH_Market-listed-4B67B4?style=flat-square&labelColor=2B3245)](https://dsh.market/)
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-C71D23?style=flat-square&labelColor=2B3245&logo=gitee)](https://gitee.com/perrylink/dsh-output-styles)
 
 ```sh
 dsh plugin --profile <name> add dsh-output-styles
 ```
 
-
 </div>
 
----
+<sub>社区插件，与 DeepSeek 官方无关。唯一仓库：<https://github.com/PerryLink/dsh-output-styles>（Gitee 为镜像）。</sub>
 
-**📖 Ecosystem knowledge base** — measured data, not marketing: [plugin development guide · plugin-selection data · maintenance criteria](https://perrylink.github.io/dsh-plugin-guide/).
+## 它是什么
 
-<!-- star-cta -->
-## Install & uninstall
+`/style concise` —— 从此每条回复都简洁；`/style off` —— 回到项目默认。`dsh-output-styles` 把 Claude Code 的 `outputStyles` 搬到 DeepSeek Harness：风格是 Markdown 文件（frontmatter 存元数据，正文即模型指令），六种内置开箱可用；选择存在 `output_style` 存储域里、按会话隔离、重启不丢；每次提示组装都会把当前风格的正文注入系统提示，并按预算截断。它只作用于主会话，子代理会话保留自己的提示（与 Claude Code 一致）。
 
-- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-output-styles` — the `prepare` script builds with production dependencies only.
-- **npm channel** (published releases): `dsh plugin --profile web add dsh-output-styles`.
-- **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-output-styles-<version>.tgz`.
-- **uninstall**: `dsh plugin --profile web remove dsh-output-styles`.
+### 工作方式
 
-## ⭐ 如果它帮到了你
-
-这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（95 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
-
-*English:* part of a 95 plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
-
-
-## What is dsh-output-styles?
-
-`/style concise` — and every reply from now on is terse. `/style off` — back to the project default.
-
-![Workflow diagram for dsh-output-styles: install → open panel → act.](docs/assets/dsh-output-styles-flow.svg)
-
-*Workflow overview: install → open panel → act. The examples below use the real command surface.*
-
-
-
-## Compatibility
-
-| Surface | Status |
-|---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (adapted 2026-09-09): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-11 against the dsh-v0.2.1-rc.2 checkout (full gate chain + profile install smoke). |
-| Node | `^22.19.0 || >=24.0.0` |
-| Platforms | All (host + web client) |
-| Model | Any (system-prompt injection) |
-
-## What you get
-
-`dsh-output-styles` is the Claude Code `outputStyles` equivalent for DeepSeek Harness: a `/style` command that switches the model's output style at runtime, persisted per session, injected at every prompt assembly.
-
-- **Style library** — one Markdown file per style (`styles/*.md`); frontmatter for metadata, body = the model directive. Six built-ins ship in the box (`concise`, `explanatory`, `formal`, `learning`, `proactive`, `step-by-step`), including Claude Code-parity `proactive` and `learning`.
-- **`/style` command** — no argument lists styles (with descriptions) plus the current selection; `/style <name>` switches; `/style off` restores the project default.
-- **Session-scoped persistence** — the choice lives in the `output_style` storage domain, keyed by sessionId, and survives restarts.
-- **System-prompt injection** — a `systemPrompt.section()` contribution (order `sectionOrder`) injects the current session's style body at every assembly, truncated at a configurable budget.
-- **Claude Code parity** — `keep-coding-instructions`, `force-for-plugin` (`force` alias), `outputStyles` JSON compatibility, layered `stylesDir` directories, hot reload, and a project-default fallback that is live-editable from the Web Plugins page.
-- **Renderer registry (`output.render.*`)** — `ctx.outputRenderers` lets any plugin register a pure presenter, applied through the `output.render/before` waterfall; built-in renderers `concise` and `step-by-step`.
-- **Per-session/per-tool rules** — `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` name the renderer for matching requests; live-editable from the Web Plugins page.
-- **`/transcript`** — render the current session to Markdown or sanitized HTML through the render pipeline; `--save <path>` writes the sanitized document to that workspace path after user approval. Every render keeps the original text beside the rendered one.
-
-## Quick start
-
-```sh
-dsh plugin --profile web add github:PerryLink/dsh-output-styles
+```mermaid
+flowchart LR
+    U[You type /style concise] --> C[command registry]
+    C -->|command/run logged| L[(session log)]
+    C -->|put {style, source}| D[(output_style domain)]
+    D --> R[OutputStyleRuntime]
+    R -->|body at every assembly| S[systemPrompt section order 90]
+    S --> M[Model request]
+    M -->|full system prompt| H[system/message logged]
 ```
 
-```sh
-# 1. install the bundle into your profile
-dsh plugin --profile web add github:PerryLink/dsh-output-styles
+模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。风格名来自 `command/run`，精确注入文本来自 `system/message`，来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。
 
-# or from npm (published releases)
-dsh plugin --profile web add dsh-output-styles
+### 演示
 
-# 2. restart and verify the row
-dsh --profile web --dump-config | grep -A3 'id: output-styles'
-```
-
-## Demo
-
-```
+```text
 You > /style
       output style off
       concise — Terse, direct answers — minimal prose, no preamble. (Daily coding work, tool-heavy sessions, or when prompt length matters.)
@@ -118,242 +72,348 @@ You > 请只用一句话介绍你自己。
 AI  > 我是运行在 DeepSeek Harness 插件化平台上、基于 deepseek-v4-pro 模型的 AI 编码代理。
 ```
 
-## How it works
+## 三步上手
 
-```mermaid
-flowchart LR
-    U[You type /style concise] --> C[command registry]
-    C -->|command/run logged| L[(session log)]
-    C -->|put {style, source}| D[(output_style domain)]
-    D --> R[OutputStyleRuntime]
-    R -->|body at every assembly| S[systemPrompt section order 90]
-    S --> M[Model request]
-    M -->|full system prompt| H[system/message logged]
-```
+1. **安装**（三选一）：
 
-Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes. The style name comes from `command/run`, the exact injected text from `system/message`, and the provenance marker `{ kind: 'dsh-output-styles' }` rides in the domain record. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
+   ```sh
+   # git 通道（最新 main；prepare 脚本仅用生产依赖构建）
+   dsh plugin --profile web add github:PerryLink/dsh-output-styles
+   # npm 通道（发布版本）
+   dsh plugin --profile web add dsh-output-styles
+   # tarball 通道：本仓库 pnpm pack 后
+   dsh plugin --profile web add ./dsh-output-styles-<version>.tgz
+   ```
 
-### Examples
+2. **最小配置**（默认即可用；按需给新会话指定项目默认风格）：
 
-These are the plugin's real entry points; install once, then call one.
+   ```yaml
+   - insert:
+       - id: output-styles
+         name: dsh-output-styles
+         config:
+           defaultStyle: concise
+   ```
 
-#### Detailed example
+3. **验证已生效**：
 
-**Command**
+   ```sh
+   dsh --profile web --dump-config | grep -A3 'id: output-styles'
+   ```
 
-~~~sh
-/style concise
-~~~
+   ```text
+   > /style
+         output style off
+         concise — Terse, direct answers — minimal prose, no preamble. (…)
+   > /style concise
+         switched to concise
+   ```
 
-**Output**
+**卸载**：`dsh plugin --profile web remove dsh-output-styles`（或从 profile patch 删掉该行）。
 
-~~~text
+<details>
+<summary>从 DSH Desktop 市场安装</summary>
+
+所有 PerryLink 插件均可在 DSH Desktop 内置市场中浏览：**市场 → 来源 → 添加来源 → 粘贴** `https://perrylink-dsh-catalog.perrylink.workers.dev/catalog-source.json` **→ 选中**。安装仍需通过市场的 npm 身份校验与你的确认。
+
+</details>
+
+## 核心能力
+
+`dsh-output-styles` 是 DeepSeek Harness 的 Claude Code `outputStyles` 等价实现：一个 `/style` 命令，在运行时切换模型输出风格，按会话持久化，并在每次提示组装时注入。
+
+- **风格库** —— 每种风格一个 Markdown 文件（`styles/*.md`）；frontmatter 存元数据，正文即模型指令。内置六种（`concise`、`explanatory`、`formal`、`learning`、`proactive`、`step-by-step`），含与 Claude Code 对齐的 `proactive` 与 `learning`。
+- **`/style` 命令** —— 无参数时列出风格（含描述）与当前选择；`/style <name>` 切换；`/style off` 恢复项目默认。
+- **会话级持久化** —— 选择存于 `output_style` 存储域，按 sessionId 隔离，重启后仍保留。
+- **系统提示注入** —— `systemPrompt.section()` 贡献（顺序 `sectionOrder`）在每次组装时注入当前会话的风格正文，按可配置预算截断。
+- **Claude Code 对齐** —— `keep-coding-instructions`、`force-for-plugin`（别名 `force`）、`outputStyles` JSON 兼容、分层 `stylesDir` 目录、热重载，以及可在 Web 的 **Plugins** 页面实时编辑的项目默认回退。
+- **渲染器注册表（`output.render.*`）** —— `ctx.outputRenderers` 允许任意插件注册纯 presenter，经 `output.render/before` waterfall 应用；内置渲染器 `concise` 与 `step-by-step`。
+- **按会话/按工具规则** —— `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` 为匹配请求指定渲染器；可在 Web 的 **Plugins** 页面实时编辑。
+- **`/transcript`** —— 经渲染管线把当前会话导出为 Markdown 或净化 HTML；`--save <path>` 经用户审批后把净化文档写入该工作区路径。每次渲染都保留原文与渲染结果并列。
+
+### 命令与工具面
+
+| 表面 | 类型 | 说明 |
+|---|---|---|
+| `/style` | command | 列出风格、切换或恢复项目默认 |
+| `/transcript` | command | 把当前会话渲染为 Markdown 或净化 HTML；`--save` 经审批写入 |
+| `output_style` | storage domain | 按 sessionId 隔离的会话级风格选择 |
+| `systemPrompt.section()` | contribution | 在每次组装时注入当前风格正文 |
+| `output.render.*` | renderer registry | `ctx.outputRenderers` + `output.render/before` waterfall |
+| `style` | projection | 从已落定命令折叠出的 `{ options, currentValue }` |
+| Web picker | client entry | `dsh-output-styles/client` 用弹出选择器装饰 `/style` |
+
+### 命令参考
+
+| 输入 | 结果 |
+|---|---|
+| `/style` | 列出当前选择 + 每个风格一行（名称 — 描述） |
+| `/style concise` | 切换（持久写入），`switched to concise` |
+| `/style Diagrams first` | 多词名称取整个余下部分 |
+| `/style off` | 恢复项目默认（settings 默认，其次 `defaultStyle`） |
+| `/style nope` | `error: unknown output style "nope" (available: …)` |
+| `/transcript` | 经渲染管线把当前会话渲染为 Markdown |
+| `/transcript md` | 渲染为 Markdown（`md` 是 `markdown` 的简写） |
+| `/transcript html` | 渲染为净化 HTML |
+| `/transcript --renderer=concise` | 强制指定一个渲染器渲染（跳过规则） |
+| `/transcript md --save report.md` | 渲染后经审批把净化文档写入 `report.md` |
+
+### 示例
+
+以下为插件真实入口；安装后调用一个即可。
+
+**详细示例** —— 命令 `/style concise`，输出：
+
+```text
 switched to concise
-~~~
+```
 
 *Observed from `plugins/dsh-output-styles/src/runtime.ts:474-478; asserted in tests/runtime.spec.ts:91; README §Command reference line 194`*
 
-#### Failure branch
+**失败分支** —— 输入 `/style nope`，输出：
 
-**Input**
-
-~~~text
-/style nope
-~~~
-
-**Output**
-
-~~~text
+```text
 unknown output style "nope" (available: concise, explanatory, formal, learning, proactive, step-by-step)
-~~~
+```
 
 *Observed from `plugins/dsh-output-styles/src/runtime.ts:213-214,474-475; plugins/dsh-output-styles/tests/runtime.spec.ts:118-125`*
 
-#### Brief examples
+**简短示例**：`/transcript` · `output_style`
 
-- `/transcript`
-- `output_style`
+### 风格库
 
-## Configuration
+每种风格一个 Markdown 文件；frontmatter 存元数据，正文即模型指令。`name` 默认取文件名，可含空格（`Diagrams first`）。
 
-All tunables are Schemastery `Config` fields (changeable from cordis.yml). Invalid values fail the load.
+| 字段 | 默认值 | 含义 |
+|---|---|---|
+| `name` | 文件名 | 切换目标；字母、数字、空格与连字符（`off` 为保留字） |
+| `description` | —（必填） | 列表与选择器中显示的一句话 |
+| `whenToUse` | — | 追加到列表的可选指引 |
+| `keep-coding-instructions` | `false` | 为 `true` 时保留 harness 提示；为 `false` 时整体替换（Claude Code 语义） |
+| `force-for-plugin` | `false` | 无条件应用，覆盖任何会话选择；`force` 为别名，至多一种风格可设置 |
 
-`defaultStyle` and `rules` are declared `volatile()`, so on a host that composes the settings forms seam they are **live, Web-editable fields**: edit them under **Plugins → dsh-output-styles** in the Web UI and the running plugin adopts the new value without a remount. Every other field stays composition-only and needs a reload. A committed value is validated before it is applied — an invalid one is rejected and the running values are left unchanged.
+启用 `compatJson: true` 后，Claude Code `outputStyles` JSON 条目（`{ name, description, prompt }`）与 Markdown 风格并列加载；无法解析的条目带警告跳过。
 
-| Key | Default | Web-editable | Meaning |
+### 渲染器协议
+
+`output.render.*` 协议把呈现层变为扩展点。渲染器是**纯 presenter** —— `presenter(text, context)` 把参数映射为展示数据、绝不触碰 DOM —— 按工具名与内容类型匹配，按优先级排序。
+
+- **Waterfall first**：每个渲染请求先经 `output.render/before`（`{ text, context }`）；监听器必须调用 `next()`。
+- **Rules**：`rules: [{ match: { tool: 'bash' }, style: 'concise' }]` 为匹配请求指定渲染器；冲突按 `priority` 再按规则顺序裁决。
+- **Built-ins**：`concise`（空白压缩 + 预算截断）与 `step-by-step`（一致的步骤编号）。
+- **Auditability**：每次渲染结果携带 `{ original, rendered, rendererId, changed }`；渲染文本是展示内容，原文始终可从会话日志重建。
+
+### Web 选择器
+
+`dsh.client` 条目装饰 host `/style` 命令的裸调用，弹出一个选择器：一个 "off" 行 + 每个库风格一行（`description · whenToUse`），当前行高亮。选择通过命令 Remote 提交 `/style <name>`，因此每次切换都保留 host 的持久命令生命周期。选择器跟随 Web UI 自带的 `zh`/`en` 语言对。
+
+## 配置
+
+所有可调项均为 Schemastery `Config` 字段（可在 cordis.yml 中修改）。非法值在加载期失败。
+
+`defaultStyle` 与 `rules` 声明为 `volatile()`，因此在组合了 settings forms seam 的宿主上它们是**可实时编辑的 Web 字段**：在 Web UI 的 **Plugins → dsh-output-styles** 中修改后，运行中的插件会直接采用新值，无需重新挂载。其余字段仍仅在组合期生效，需要重载。提交的值会先校验再应用 —— 非法值会被拒绝，运行中的值保持不变。
+
+最常用键：
+
+| 键 | 默认值 | Web 可编辑 | 含义 |
 |---|---|---|---|
-| `stylesDir` | `[]` | no | Style-library directories, resolved against cwd; later entries override earlier ones. `[]` = the bundled `styles/` only |
-| `maxStyleChars` | `4000` | no | Style-body budget (≥ 1); longer bodies are truncated with a marker |
-| `defaultStyle` | `''` | **yes** | Style for sessions that never selected one; `''` = no style. A name that is not in the live library is refused rather than injected |
-| `compatJson` | `true` | no | Load Claude Code `outputStyles` JSON entries (single objects or arrays) |
-| `sectionOrder` | `90` | no | Order of the injected section (0 = persona, 100–199 = tool guidance) |
-| `truncationMarker` | `"\n\n[style truncated]"` | no | Marker appended at the truncation point |
-| `includeBuiltins` | `true` | no | Include the package's bundled `styles/` as the lowest-priority layer |
-| `watchStyles` | `true` | no | Reload the library when a style file changes on disk |
-| `rules` | `[]` | **yes** | Per-session/per-tool render rules: `[{ match: { tool?, contentType?, session? }, style, priority? }]` |
-| `enableExport` | `true` | no | Register the `/transcript` command (Markdown/HTML session export, renderer-aware; `--save` writes with approval) |
-| `respectCoreOutputStyles` | `true` | no | When a core `outputStyles` service is detected, skip this plugin's prompt injection (keep hot-switch / rules / export) |
+| `stylesDir` | `[]` | 否 | 风格库目录，相对 cwd 解析；后者覆盖前者。`[]` = 仅内置 `styles/` |
+| `maxStyleChars` | `4000` | 否 | 风格正文预算（≥ 1）；超长正文带标记截断 |
+| `defaultStyle` | `''` | **是** | 从未选择过风格的会话所用风格；`''` = 无风格。不在实时库中的名称会被拒绝，而不会被注入 |
+| `compatJson` | `true` | 否 | 加载 Claude Code `outputStyles` JSON 条目（单对象或数组） |
+| `sectionOrder` | `90` | 否 | 注入段的顺序（0 = persona，100–199 = 工具指引） |
+| `includeBuiltins` | `true` | 否 | 将包内置 `styles/` 作为最低优先级层 |
+| `watchStyles` | `true` | 否 | 风格文件在磁盘上变化时重载库 |
+| `rules` | `[]` | **是** | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
 
-**Migrating from 0.1.6 or earlier.** Those versions kept two plugin-owned settings
-sections, `output-style` (`style`) and `output-style-rules` (`rules`). The 0.1.7
-host deleted the API they were built on, so both sections are gone. Move any value
-you had there into the corresponding `Config` field — `output-style.style` →
-`defaultStyle`, `output-style-rules.rules` → `rules` — in your profile patch
-(`cordis.yml`), or set it on the Plugins page. Per-session choices made with
-`/style` are unaffected: they live in the `output_style` storage domain.
+<details>
+<summary>完整配置表（11 个键）</summary>
 
-## Tools & surfaces
+| 键 | 默认值 | Web 可编辑 | 含义 |
+|---|---|---|---|
+| `stylesDir` | `[]` | 否 | 风格库目录，相对 cwd 解析；后者覆盖前者。`[]` = 仅内置 `styles/` |
+| `maxStyleChars` | `4000` | 否 | 风格正文预算（≥ 1）；超长正文带标记截断 |
+| `defaultStyle` | `''` | **是** | 从未选择过风格的会话所用风格；`''` = 无风格。不在实时库中的名称会被拒绝，而不会被注入 |
+| `compatJson` | `true` | 否 | 加载 Claude Code `outputStyles` JSON 条目（单对象或数组） |
+| `sectionOrder` | `90` | 否 | 注入段的顺序（0 = persona，100–199 = 工具指引） |
+| `truncationMarker` | `"\n\n[style truncated]"` | 否 | 追加在截断点的标记 |
+| `includeBuiltins` | `true` | 否 | 将包内置 `styles/` 作为最低优先级层 |
+| `watchStyles` | `true` | 否 | 风格文件在磁盘上变化时重载库 |
+| `rules` | `[]` | **是** | 按会话/按工具渲染规则：`[{ match: { tool?, contentType?, session? }, style, priority? }]` |
+| `enableExport` | `true` | 否 | 注册 `/transcript` 命令（Markdown/HTML 会话导出，感知渲染器；`--save` 经审批写入） |
+| `respectCoreOutputStyles` | `true` | 否 | 检测到核心 `outputStyles` 服务时跳过本插件的提示词注入（保留热切换 / rules / export） |
 
-| Surface | Kind | Notes |
-|---|---|---|
-| `/style` | command | List styles, switch, or restore the project default |
-| `/transcript` | command | Render the current session to Markdown or sanitized HTML; `--save` writes with approval |
-| `output_style` | storage domain | Session-scoped style choice, keyed by sessionId |
-| `systemPrompt.section()` | contribution | Injects the current style body at every assembly |
-| `output.render.*` | renderer registry | `ctx.outputRenderers` + the `output.render/before` waterfall |
-| `style` | projection | `{ options, currentValue }` folded from settled commands |
-| Web picker | client entry | `dsh-output-styles/client` decorates `/style` with a popup picker |
+</details>
 
-## Command reference
+profile patch 覆盖示例：
 
-| Input | Outcome |
+```yaml
+- insert:
+    - id: output-styles
+      name: dsh-output-styles
+      config:
+        defaultStyle: concise
+        rules:
+          - match: { tool: bash }
+            style: concise
+```
+
+**从 0.1.6 及更早版本迁移。** 那些版本保留了两个插件自有的设置区：`output-style`（`style`）与 `output-style-rules`（`rules`）。0.1.7 宿主删除了它们所依赖的 API，因此这两个设置区都不复存在。请把原先填在那里的值迁移到对应的 `Config` 字段 —— `output-style.style` → `defaultStyle`，`output-style-rules.rules` → `rules` —— 写在你的 profile patch（`cordis.yml`）中，或在 Plugins 页面上设置。用 `/style` 做出的按会话选择不受影响：它们存放在 `output_style` 存储域中。
+
+## FAQ
+
+<details>
+<summary>风格选择存在哪？重启会丢吗？</summary>
+
+选择存于 `output_style` 存储域、按 sessionId 隔离，重启后仍在；除此之外不持久化任何状态，也没有网络请求。风格正文来自 `styles/` 目录与 `stylesDir`，每次组装时重新读取（`watchStyles` 开启时还会热重载）。
+
+</details>
+
+<details>
+<summary>在 Web 上改了 `defaultStyle` 却没生效？</summary>
+
+`defaultStyle` 与 `rules` 是 `volatile()` 字段：只有宿主组合了 settings forms seam 时才是可实时编辑的 Web 字段；否则它们仅在组合期生效，需要重载 profile。提交的值会先校验 —— 非法名称被拒绝，运行中的值保持不变。
+
+</details>
+
+<details>
+<summary>官方以后内置 `outputStyles` 会冲突吗？</summary>
+
+不会静默冲突。插件检测到第一方 `outputStyles` 服务后自动降级到增量面（热切换 / rules / `/transcript`），提示注入交给核心；每次 `/style` 与 `/style off` 的回复都带 `degraded coexistence mode` 说明，`style` 会话 projection 也暴露 `promptInjection: 'enabled' | 'disabled'`，不会在风格未生效时暗示它已生效。逐条论证见 [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md)。
+
+</details>
+
+<details>
+<summary>性能开销多大？</summary>
+
+没有网络请求、没有模型调用。插件挂在 `system-prompt/assemble` 上，把当前风格的正文（截断到 `maxStyleChars`，默认 4000 字符）并入系统提示；每个监听器都经 `next()` 委托，不短路链条。
+
+</details>
+
+<details>
+<summary>子代理会话会继承风格吗？</summary>
+
+不会。风格只作用于主会话；子代理会话保留自己的提示，与 Claude Code 的行为一致。
+
+</details>
+
+## 安全边界
+
+- **仅公开服务。** 贡献 `systemPrompt`、命令、存储与 settings；不改 engine / agent-loop / apiproxy / 官方 UI。
+- **模型可见 ⟺ 已记录。** 模型所见的一切都能从会话日志重建 —— 无新增会话事件类型、无 agent-loop 改动。
+- **始终保留原文。** 每次渲染（含 `/transcript`）都保留原文与渲染结果并列；HTML 导出使用净化 HTML。
+- **写盘有门禁。** `/transcript --save` 仅在审批服务放行后写入，且写入内容先经 `sanitizeText` 纯函数净化；缺少审批或 fs 服务时一律不写入（fail-closed）。
+
+## 权限与数据
+
+- **权限**：workshop 清单声明 `fs:read`、`fs:write`、`fs:watch`、`storage:read`、`storage:write` 与 `settings:read`。
+- **数据**：风格选择存于 `output_style` 存储域（按 sessionId 隔离）；不持久化其他状态，无网络请求。
+- **会话日志**：风格名来自 `command/run`，精确注入文本来自 `system/message`；来源标记 `{ kind: 'dsh-output-styles' }` 随域记录携带。
+
+## 已知限制
+
+- **核心共存。** 若官方推出第一方 `outputStyles` 能力，本插件检测到其 `outputStyles` 服务后降级到增量面（热切换 / rules / `/transcript`），提示词注入交给核心 —— 见 [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) 与导出的 `detectCoreOutputStyles` / `coexistenceReport`。**降级状态会写在你看得到的地方**：每次 `/style <风格>` 与 `/style off` 的回复都带一条 `degraded coexistence mode` 说明，`style` 会话 projection 也暴露 `promptInjection: 'enabled' | 'disabled'`，任何界面都不会在风格未生效时暗示它已生效。（0.7.0 之前唯一的痕迹是一行 `ctx.logger.info`，它进不了会话转录。）
+- **仅主会话。** 风格只作用于主会话；子代理会话保留各自提示（与 Claude Code 一致）。
+- **截断。** 超过 `maxStyleChars` 的风格正文带标记截断。
+- **跳过坏文件。** 损坏的风格文件带警告跳过，绝不破坏 profile。
+
+## 与其他 DSH 插件的互操作性
+
+已对照 **DSH `0.2.0-rc.2`**（本 README 面向的运行时）与 2026-10-05 实测的高星插件集验证。
+
+本插件**不干扰**其他插件，包括广泛安装的高星插件：
+
+- **无工具名冲突。** 所有工具都带命名空间，不占用任何已被内置工具或其他插件持有的裸名。
+- **无服务键冲突。** 只提供 `outputRenderers`；该键既不是内置 seam，也没有被任何已调研的高星插件提供。
+- **无 slot 冲突。** 不注册客户端 slot key，因此不参与 `shadows-shipped-ui` 座位争抢。
+- **无 HTTP 路由冲突。** 不注册任何 `webServer` 前缀。
+- **无 patch 层冲突。** 组合包 patch 只 `insert` 自己那一行，从不覆写内置行的 `config`。
+- **无全局改写。** 不改原型、不改写 `process.env`、不替换全局 fetch dispatcher。
+
+**共享事件监听器在构造上就不互相干扰。** 它用 `ctx.on()` 监听顺序敏感事件 `system-prompt/assemble` —— Cordis 的**广播**语义：每个监听器都会运行，任何一个都无法饿死其他监听器。**此处每个监听器都通过 `next()` 委托**，因此链条绝不会被短路；改写作用在 `next()` 产出的值上，而不是用它顶替返回：
+
+- `system-prompt/assemble` — also used by `dsh-routing-suite` (7000★, 13 listeners).
+
+静态证据：`dsh-plugin-doctor` 的 K10–K13 在本仓全部为 `pass`。
+
+### 生态冲突排查
+
+开发前已对照 DSH 生态排查（2026-08 快照）：[topic:dsh-plugin](https://github.com/topics/dsh-plugin) 下无 `style`/`output-style` 仓库，四个主要 [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 中无 output-style 分类，[dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop) 中无条目。最接近的邻居——[dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md)（persona）与 [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace)（输出风格明确推迟到 v0.2+）——是相邻而非冲突。
+
+## 兼容性
+
+| 维度 | 状态 |
 |---|---|
-| `/style` | List the current selection + one line per style (name — description) |
-| `/style concise` | Switch (durable write), `switched to concise` |
-| `/style Diagrams first` | Multi-word names are the whole remainder |
-| `/style off` | Restore the project default (settings default, then `defaultStyle`) |
-| `/style nope` | `error: unknown output style "nope" (available: …)` |
-| `/transcript` | Render the current session to Markdown through the renderer pipeline |
-| `/transcript md` | Render to Markdown (`md` is the shorthand for `markdown`) |
-| `/transcript html` | Render to sanitized HTML |
-| `/transcript --renderer=concise` | Render with one renderer forced (rules bypassed) |
-| `/transcript md --save report.md` | Render, then write the sanitized document to `report.md` after approval |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-11 对照 dsh-v0.2.1-rc.2 checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
+| Node | `^22.19.0 \|\| >=24.9.0` |
+| 平台 | 全部（host + Web 客户端） |
+| 模型 | 任意（系统提示注入） |
 
-## Style library
-
-One Markdown file per style; frontmatter for metadata, body = the model directive. `name` defaults to the file name and may contain spaces (`Diagrams first`).
-
-| Field | Default | Meaning |
-|---|---|---|
-| `name` | file name | Switch target; letters, digits, spaces, and hyphens (`off` is reserved) |
-| `description` | — (required) | One sentence shown in listings and the picker |
-| `whenToUse` | — | Optional guidance appended to listings |
-| `keep-coding-instructions` | `false` | Keep the harness prompt when `true`; replace it when `false` (Claude Code semantics) |
-| `force-for-plugin` | `false` | Apply unconditionally, overriding any session selection; `force` is an alias, at most one style may set it |
-
-With `compatJson: true`, Claude Code `outputStyles` JSON entries (`{ name, description, prompt }`) load beside Markdown styles; unparseable entries are skipped with a warning.
-
-## Renderer protocol
-
-The `output.render.*` protocol turns presentation into an extension point. A renderer is a **pure presenter** — `presenter(text, context)` maps args to display data, never touches the DOM — matched by tool name and content type, ordered by priority.
-
-- **Waterfall first**: every render request passes through `output.render/before` (`{ text, context }`); listeners must call `next()`.
-- **Rules**: `rules: [{ match: { tool: 'bash' }, style: 'concise' }]` names the renderer for matching requests; ties break by `priority`, then rule order.
-- **Built-ins**: `concise` (whitespace compaction + budget truncation) and `step-by-step` (consistent step numbering).
-- **Auditability**: every render result carries `{ original, rendered, rendererId, changed }`; the rendered text is what surfaces, the original stays reconstructable from the session log.
-
-## Web picker
-
-The `dsh.client` entry decorates the host `/style` command's bare invocation with a popup picker: an "off" row plus one row per library style (`description · whenToUse`), the active row marked. Picking submits `/style <name>` through the command Remote, so every switch keeps the host's durable command lifecycle. The picker follows the Web UI's shipped `zh`/`en` locale pair.
-
-## Differences from Claude Code
+### 与 Claude Code 的差异
 
 | | Claude Code | dsh-output-styles |
 |---|---|---|
-| Style files | `.claude/output-styles` at user/project/managed levels | `stylesDir` directories + bundled `styles/`, later directory wins |
-| Custom styles | Markdown, frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | Same fields (`force-for-plugin` accepted verbatim, `force` as alias) + `whenToUse` |
-| Legacy JSON | `outputStyles` array in `settings.json` | Loaded verbatim (`compatJson: true`) |
-| Taking effect | After `/clear` or a new session | Immediately — the system prompt re-assembles per request |
-| Subagents | Styles do not apply | Same — subagent sessions keep their own prompts |
-| Switching | `/config` menu or `outputStyle` setting (the `/output-style` command was removed in v2.1.91) | `/style` command + Web picker + the `defaultStyle` field on the Web Plugins page |
+| 风格文件 | 用户/项目/受管层的 `.claude/output-styles` | `stylesDir` 目录 + 内置 `styles/`，后者目录优先 |
+| 自定义风格 | Markdown，frontmatter `name`/`description`/`keep-coding-instructions`/`force-for-plugin` | 相同字段（`force-for-plugin` 原样接受，`force` 为别名）+ `whenToUse` |
+| 旧版 JSON | `settings.json` 中的 `outputStyles` 数组 | 原样加载（`compatJson: true`） |
+| 生效时机 | `/clear` 之后或新会话 | 立即——系统提示按请求重新组装 |
+| 子代理 | 风格不适用 | 相同——子代理会话保留各自提示 |
+| 切换 | `/config` 菜单或 `outputStyle` 设置（`/output-style` 命令已在 v2.1.91 移除） | `/style` 命令 + Web picker + Web Plugins 页面的 `defaultStyle` 字段 |
 
-## Conflict check
+## 生态与质量
 
-Screened against the DSH ecosystem before development (2026-08 snapshot): no `style`/`output-style` repository under [topic:dsh-plugin](https://github.com/topics/dsh-plugin), no output-style category in the four major [awesome lists](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin), and no entry in the [dsh-hub catalog](https://github.com/omdsh-dev/dsh-hub-workshop). The closest neighbors — [dsh-soul-md](https://github.com/Scorp1o117/dsh-soul-md) (persona) and [dsh-claude-marketplace](https://github.com/ben7am1n/dsh-claude-marketplace) (output styles explicitly deferred to v0.2+) — are adjacent, not conflicting.
+- [Gitee 镜像](https://gitee.com/perrylink/dsh-output-styles)（同步镜像，以 GitHub 为准）
+- [dshfind 插件页](https://dshfind.com/plugins/PerryLink/dsh-output-styles)（安装量与排名）
+- [OpenSSF Scorecard 报告](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-output-styles)（由 [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml) 驱动）
+- [dsh-plugin-doctor 验证报告](https://github.com/PerryLink/dsh-plugin-doctor#verified-徽章)（K10–K13 全 `pass`）
+- [DSH Market](https://dsh.market/)（已上架）
+- **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-output-styles`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）
+- [生态实测知识库](https://perrylink.github.io/dsh-plugin-guide/)：插件开发指南 · 选型实测数据 · 维护取舍判据
 
-## Permissions & data
-
-- **Permissions**: declares `fs:read`, `fs:write`, `fs:watch`, `storage:read`, `storage:write`, and `settings:read` in its workshop manifest.
-- **Data**: the style choice lives in the `output_style` storage domain (keyed by sessionId); no other state is persisted, no network requests.
-- **Session log**: the style name comes from `command/run`, the exact injected text from `system/message`; the provenance marker `{ kind: 'dsh-output-styles' }` rides in the domain record.
-
-## Security boundaries
-
-- **Public services only.** Contributes `systemPrompt`, commands, storage, and settings; no engine / agent-loop / apiproxy / official-UI changes.
-- **Model-visible ⟺ logged.** Everything the model sees is reconstructable from the session log — no new session event type, no agent-loop changes.
-- **Original always kept.** Every render (and `/transcript`) keeps the original text beside the rendered one; sanitized HTML is used for HTML export.
-- **Disk writes gated.** `/transcript --save` writes only after the approval service grants it, and the written content passes through the `sanitizeText` pure function first; without an approval or fs service it writes nothing (fail-closed).
-
-## Known limitations
-
-- **Core coexistence.** If a first-party `outputStyles` capability lands, this plugin detects its `outputStyles` service and degrades to the incremental surface (hot-switch, rules, `/transcript`) while leaving prompt injection to the core — see [`docs/COEXISTENCE.md`](docs/COEXISTENCE.md) and the exported `detectCoreOutputStyles` / `coexistenceReport` functions. **Degraded mode is stated where you can see it**: every `/style` switch and `/style off` reply carries a `degraded coexistence mode` note, and the `style` session projection exposes `promptInjection: 'enabled' | 'disabled'`, so no surface implies the style is in force when it is not. (Before 0.7.0 the only trace was a `ctx.logger.info` line, which never reaches the session transcript.)
-- **Main conversation only.** Styles apply to the main conversation; subagent sessions keep their own prompts (matching Claude Code).
-- **Truncation.** Style bodies longer than `maxStyleChars` are truncated with a marker.
-- **Skipped style files.** A bad style file is skipped with a warning and never breaks the profile.
-
-## Development
+## 开发
 
 ```sh
 pnpm install
-pnpm run typecheck   # both tsc projects
-pnpm test            # vitest — 156 tests
-pnpm run verify      # typecheck + tests + self-contained (the prepublishOnly gate)
-pnpm run build       # lib/ artifacts (host + client bundles)
-pnpm pack            # tarball for dsh plugin add
+pnpm run typecheck    # 两个 tsc 工程
+pnpm test             # vitest —— 156 个测试
+pnpm run verify       # typecheck + tests + self-contained（prepublishOnly 门禁）
+pnpm run check:readmes  # 五语 README 一致性门禁
+pnpm run build        # lib/ 产物（host + client 包）
+pnpm pack             # 供 dsh plugin add 的 tarball
 ```
 
-Releases: pushing a `v*` tag whose suffix matches the `package.json` version triggers the Publish workflow — full verification, then an npm publish with provenance.
+发布：推送后缀与 `package.json` 版本一致的 `v*` 标签会触发 Publish workflow —— 完整验证后带 provenance 发布到 npm。
 
-## Interoperability with other DSH plugins
+配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow），重跑即可覆盖 `docs/assets/dsh-output-styles-flow-{light,dark}.svg`；本仓无 benchmark 数据，因此不出 evidence 图。
 
-Verified against **DSH `0.2.0-rc.2`** (the runtime this README ships for) and the high-star plugin set surveyed on 2026-10-05.
+Topics：`deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
 
-This plugin **does not interfere** with other plugins, including the widely installed high-star ones:
+## 家族与致谢
 
-- **No tool-name collision.** Every tool is namespaced; no bare name owned by a shipped tool or another plugin is registered.
-- **No service-key collision.** It provides `outputRenderers`; that key is not a built-in seam and is not provided by any surveyed high-star plugin.
-- **No slot collision.** It registers no client slot key, so it cannot contend for a `shadows-shipped-ui` seat.
-- **No HTTP route collision.** It registers no `webServer` prefix.
-- **No patch-layer collision.** The bundle patch only `insert`s its own row; it never overrides a built-in row's `config`.
-- **No global mutation.** It does not patch prototypes, rewrite `process.env`, or replace the global fetch dispatcher.
+本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员（全部 Apache-2.0）。如果这个插件帮到了你，**给个 star**——它不解锁任何功能，但会让下一个人更容易找到它。
 
-**Shared event listeners are non-interfering by construction.** It observes the ordering-sensitive event `system-prompt/assemble` with `ctx.on()` — Cordis's broadcast registration, where every listener runs and none can starve another. **Every listener here delegates through `next()`**, so the chain is never short-circuited, and a mutation is applied to the value `next()` produced rather than returned in its place:
-  - `system-prompt/assemble` — also used by `dsh-routing-suite` (7000★, 13 listeners).
-
-Static evidence: `dsh-plugin-doctor` K10–K13 report `pass` for every check on this repository.
-
-## Topics
-
-`deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
-
-## Contributors
-
-- [@kskazuha](https://github.com/kskazuha) — the Web style picker revival on 0.1.7 (#8).
-- [@Bingtang1019](https://github.com/Bingtang1019) — the module-table handoff report for `lib/client.js` (#10).
-- [@PerryLink](https://github.com/PerryLink) — author and maintainer: plugin architecture, style library, bundle install, Web picker, five-language docs, and CI/release tooling.
-
-## PerryLink DSH Plugin Family
-
-This project is part of the DeepSeek Harness plugin family from [PerryLink](https://github.com/PerryLink). The roster stays collapsed below so every README keeps a short first screen; expand it to see every row and its status.
+- [@kskazuha](https://github.com/kskazuha) —— 0.1.7 的 Web 风格选择器复活（#8）。
+- [@Bingtang1019](https://github.com/Bingtang1019) —— `lib/client.js` 的模块表交接报告（#10）。
+- [@PerryLink](https://github.com/PerryLink) —— 作者与维护者：插件架构、风格库、bundle 安装、Web picker、五语文档与 CI/发布工具链。
 
 <details>
-<summary>Expand all plugins</summary>
+<summary>展开全部插件</summary>
 
-| Plugin | Status |
+| 插件 | 状态 |
 |---|---|
 | **[dsh-aqua-input-check](https://github.com/PerryLink/dsh-aqua-input-check)** |  |
 | **[dsh-archive-check](https://github.com/PerryLink/dsh-archive-check)** |  |
 | **[dsh-auto-review](https://github.com/PerryLink/dsh-auto-review)** |  |
-| **[dsh-autotier](https://github.com/PerryLink/dsh-autotier)** | 🧊 FROZEN — see the repo README |
+| **[dsh-autotier](https://github.com/PerryLink/dsh-autotier)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-bid-ca-precheck](https://github.com/PerryLink/dsh-bid-ca-precheck)** |  |
 | **[dsh-bid-qual-check](https://github.com/PerryLink/dsh-bid-qual-check)** |  |
-| **[dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp)** | 🧊 FROZEN — see the repo README |
+| **[dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-checkpoint-rewind](https://github.com/PerryLink/dsh-checkpoint-rewind)** |  |
 | **[dsh-click](https://github.com/PerryLink/dsh-click)** |  |
 | **[dsh-composer-history](https://github.com/PerryLink/dsh-composer-history)** |  |
 | **[dsh-contract-stance](https://github.com/PerryLink/dsh-contract-stance)** |  |
 | **[dsh-customs-doc-check](https://github.com/PerryLink/dsh-customs-doc-check)** |  |
-| **[dsh-data-quality](https://github.com/PerryLink/dsh-data-quality)** |  |
+| **[dsh-data-quality](https://github.com/PerryLink/dsh-data-quality)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-demurrage-ledger](https://github.com/PerryLink/dsh-demurrage-ledger)** |  |
 | **[dsh-doublecheck](https://github.com/PerryLink/dsh-doublecheck)** |  |
 | **[dsh-drill-script-check](https://github.com/PerryLink/dsh-drill-script-check)** |  |
@@ -386,7 +446,7 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-mask](https://github.com/PerryLink/dsh-mask)** |  |
 | **[dsh-mcp-panel](https://github.com/PerryLink/dsh-mcp-panel)** |  |
 | **[dsh-medrec-qc](https://github.com/PerryLink/dsh-medrec-qc)** |  |
-| **[dsh-memento](https://github.com/PerryLink/dsh-memento)** |  |
+| **[dsh-memento](https://github.com/PerryLink/dsh-memento)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-nsfc-form-check](https://github.com/PerryLink/dsh-nsfc-form-check)** |  |
 | **[dsh-nurse-record-check](https://github.com/PerryLink/dsh-nurse-record-check)** |  |
 | **[dsh-observe](https://github.com/PerryLink/dsh-observe)** |  |
@@ -398,10 +458,10 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-permit-report-check](https://github.com/PerryLink/dsh-permit-report-check)** |  |
 | **[dsh-pipeline-check](https://github.com/PerryLink/dsh-pipeline-check)** |  |
 | **[dsh-pleading-draft](https://github.com/PerryLink/dsh-pleading-draft)** |  |
-| **[dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor)** |  |
+| **[dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor)** | 🚫 已退役（仓库已归档） |
 | **[dsh-plugin-guide](https://github.com/PerryLink/dsh-plugin-guide)** |  |
-| **[dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit)** |  |
-| **[dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade)** |  |
+| **[dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit)** | 🚫 已退役（仓库已归档） |
+| **[dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade)** | 🚫 已退役（仓库已归档） |
 | **[dsh-policy-brief-draft](https://github.com/PerryLink/dsh-policy-brief-draft)** |  |
 | **[dsh-power-loss-split](https://github.com/PerryLink/dsh-power-loss-split)** |  |
 | **[dsh-power-ticket-check](https://github.com/PerryLink/dsh-power-ticket-check)** |  |
@@ -413,7 +473,7 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-review-reply-check](https://github.com/PerryLink/dsh-review-reply-check)** |  |
 | **[dsh-rulefile-check](https://github.com/PerryLink/dsh-rulefile-check)** |  |
 | **[dsh-safety-brief-check](https://github.com/PerryLink/dsh-safety-brief-check)** |  |
-| **[dsh-score](https://github.com/PerryLink/dsh-score)** |  |
+| **[dsh-score](https://github.com/PerryLink/dsh-score)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-session-sync](https://github.com/PerryLink/dsh-session-sync)** |  |
 | **[dsh-site-log-check](https://github.com/PerryLink/dsh-site-log-check)** |  |
 | **[dsh-skill-pack-security](https://github.com/PerryLink/dsh-skill-pack-security)** |  |
@@ -425,20 +485,22 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-tender-extract](https://github.com/PerryLink/dsh-tender-extract)** |  |
 | **[dsh-tender-matrix](https://github.com/PerryLink/dsh-tender-matrix)** |  |
 | **[dsh-test-drive](https://github.com/PerryLink/dsh-test-drive)** |  |
-| **[dsh-ticktick](https://github.com/PerryLink/dsh-ticktick)** |  |
+| **[dsh-ticktick](https://github.com/PerryLink/dsh-ticktick)** | 🚫 已退役（仓库已归档） |
 | **[dsh-translate](https://github.com/PerryLink/dsh-translate)** |  |
 | **[dsh-warranty-calc](https://github.com/PerryLink/dsh-warranty-calc)** |  |
-| **[dsh-budget](https://github.com/PerryLink/dsh-budget)** | 🧊 FROZEN — see the repo README |
-| **[dsh-claude-move](https://github.com/PerryLink/dsh-claude-move)** | 🧊 FROZEN — see the repo README |
-| **[dsh-defend](https://github.com/PerryLink/dsh-defend)** | 🧊 FROZEN — see the repo README |
-| **[dsh-draw](https://github.com/PerryLink/dsh-draw)** | 🧊 FROZEN — see the repo README |
-| **[dsh-reach](https://github.com/PerryLink/dsh-reach)** | 🧊 FROZEN — see the repo README |
-| **[dsh-background-agents](https://github.com/PerryLink/dsh-background-agents)** | 🚫 RETIRED — see the repo README |
-| **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 RETIRED — see the repo README |
-| **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 RETIRED — see the repo README |
+| **[dsh-budget](https://github.com/PerryLink/dsh-budget)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-claude-move](https://github.com/PerryLink/dsh-claude-move)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-defend](https://github.com/PerryLink/dsh-defend)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-draw](https://github.com/PerryLink/dsh-draw)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-reach](https://github.com/PerryLink/dsh-reach)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-background-agents](https://github.com/PerryLink/dsh-background-agents)** | 🚫 已退役（仓库已归档） |
+| **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 已退役（仓库已归档） |
+| **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 已退役（仓库已归档） |
 
 </details>
 
 ## License
 
-[Apache License 2.0](LICENSE) © 2026 dsh-output-styles contributors
+[LICENSE](LICENSE)（Apache License 2.0）© 2026 dsh-output-styles contributors
+
+<p align="center"><sub>Apache-2.0 · 社区插件，与 DeepSeek 无关。</sub></p>
