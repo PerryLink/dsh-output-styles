@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-dark.svg">
-  <img src="docs/assets/dsh-output-styles-flow-light.svg" width="100%" alt="Flujo de dsh-output-styles: /style concise escribe el dominio output_style; systemPrompt.section() inyecta en el orden 90; la petición al modelo queda como system/message; /transcript renderiza a través de output.render/before">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-hero-en-dark.webp">
+  <img src="docs/assets/dsh-output-styles-hero-en-light.webp" width="100%" alt="Banner de dsh-output-styles: un /style concise se guarda por sesión en el dominio output_style; seis estilos integrados; cada ensamblado inyecta el cuerpo del estilo como sección del prompt en el orden 90, truncado a maxStyleChars.">
 </picture>
 
 # dsh-output-styles
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-output-styles
 ## Qué es
 
 `/style concise` — y a partir de ahora toda respuesta es concisa; `/style off` — de vuelta al valor por defecto del proyecto. `dsh-output-styles` lleva `outputStyles` de Claude Code a DeepSeek Harness: un estilo es un archivo Markdown (frontmatter para metadatos, cuerpo como directiva del modelo), seis vienen integrados, la elección vive en el dominio de almacenamiento `output_style` indexada por sessionId y sobrevive a los reinicios, y el cuerpo actual se inyecta en el prompt del sistema en cada ensamblado, truncado a un presupuesto configurable. Los estilos se aplican solo a la conversación principal; las sesiones de subagente conservan sus propios prompts (igual que Claude Code).
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-v5-dark.svg">
+    <img src="docs/assets/dsh-output-styles-flow-v5-light.svg" width="100%" alt="Estructura de dsh-output-styles: una sola biblioteca de estilos alimenta dos canales. Canal de inyección del prompt — /style escribe el dominio output_style (por sessionId), effectiveStyle() resuelve force-for-plugin, la selección de sesión y luego defaultStyle, y systemPrompt.section() inyecta en el orden 90 truncando en maxStyleChars; el texto inyectado queda como system/message y, si se detecta el servicio core outputStyles, la inyección se omite (promptInjection: disabled). Canal de renderizado/exportación — /transcript pasa por la cascada output.render/before, la primera regla de rules y un presenter puro hasta { original, rendered }, y sale en md o html; --save se saneia y requiere aprobación. Ambos canales cierran sobre la línea base de auditoría del registro de sesión.">
+  </picture>
+</p>
 
 ### Cómo funciona
 
@@ -384,7 +391,7 @@ pnpm pack              # tarball para dsh plugin add
 
 Lanzamientos: empujar una etiqueta `v*` cuyo sufijo coincide con la versión de `package.json` dispara el workflow Publish — verificación completa y luego publicación a npm con procedencia.
 
-Las imágenes del README se generan de forma programática con [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow); volver a ejecutarlo sobrescribe `docs/assets/dsh-output-styles-flow-{light,dark}.svg`. Este repositorio no tiene datos de benchmark, así que no hay gráfico de evidencia.
+Las imágenes del README se generan de forma programática con [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py): el banner es un WebP de 1440×576 dibujado con Pillow (zh/en × claro/oscuro) y el diagrama de estructura es un SVG escrito a mano de 1100×660 (claro/oscuro). Volver a ejecutarlo sobrescribe `docs/assets/dsh-output-styles-hero-*` y `docs/assets/dsh-output-styles-flow-v5-{light,dark}.svg`. Este repositorio no tiene datos de benchmark, así que no hay gráfico de evidencia.
 
 Topics: `deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
 

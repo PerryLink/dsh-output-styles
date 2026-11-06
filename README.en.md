@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-dark.svg">
-  <img src="docs/assets/dsh-output-styles-flow-light.svg" width="100%" alt="dsh-output-styles pipeline: /style concise writes the output_style storage domain; systemPrompt.section() injects at order 90; the model request is recorded as system/message; /transcript renders through output.render/before">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-hero-en-dark.webp">
+  <img src="docs/assets/dsh-output-styles-hero-en-light.webp" width="100%" alt="dsh-output-styles banner: one /style concise is persisted per session in the output_style domain; six built-in styles; every assembly injects the current style body as a system prompt section at order 90, truncated at maxStyleChars.">
 </picture>
 
 # dsh-output-styles
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-output-styles
 ## What it is
 
 `/style concise` — and every reply from now on is terse; `/style off` — back to the project default. `dsh-output-styles` brings Claude Code's `outputStyles` to DeepSeek Harness: a style is a Markdown file (frontmatter for metadata, body as the model directive), six built-ins ship in the box, the choice lives in the `output_style` storage domain keyed by sessionId and survives restarts, and the current body is injected into the system prompt at every assembly, truncated at a configurable budget. Styles apply to the main conversation only; subagent sessions keep their own prompts (matching Claude Code).
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-v5-dark.svg">
+    <img src="docs/assets/dsh-output-styles-flow-v5-light.svg" width="100%" alt="dsh-output-styles structure: one style library feeds two channels. Prompt-injection channel — /style writes the output_style domain (keyed by sessionId), effectiveStyle() resolves force-for-plugin, the session selection, then defaultStyle, and systemPrompt.section() injects at order 90 truncated at maxStyleChars; the injected text is recorded as system/message, and a detected core outputStyles capability skips injection (promptInjection: disabled). Render/export channel — /transcript runs the output.render/before waterfall, the first matching rules row and a pure presenter to produce { original, rendered }, then md or html, with --save sanitized and approval-gated. Both channels close on the session-log audit baseline.">
+  </picture>
+</p>
 
 ### How it works
 
@@ -384,7 +391,7 @@ pnpm pack              # tarball for dsh plugin add
 
 Releases: pushing a `v*` tag whose suffix matches the `package.json` version triggers the Publish workflow — full verification, then an npm publish with provenance.
 
-The README images are generated programmatically by [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow); re-running it overwrites `docs/assets/dsh-output-styles-flow-{light,dark}.svg`. This repository carries no benchmark data, so there is no evidence chart.
+The README images are generated programmatically by [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py): the hero is a 1440×576 WebP drawn with Pillow (zh/en × light/dark) and the structure diagram is a hand-written 1100×660 SVG (light/dark). Re-running it overwrites `docs/assets/dsh-output-styles-hero-*` and `docs/assets/dsh-output-styles-flow-v5-{light,dark}.svg`. This repository carries no benchmark data, so there is no evidence chart.
 
 Topics: `deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
 

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="660" viewBox="0 0 1100 660" role="img" aria-label="dsh-output-styles structure: one style library, a prompt-injection lane (selection, priority ladder, section at order 90, model request) and a render/export lane (transcript, output.render/before waterfall, rule table, presenter, RenderedText), both closing on a session-log audit baseline">
+<title>dsh-output-styles structure</title>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9f6fd"/><stop offset="1" stop-color="#e4eaf8"/></linearGradient><filter id="soft" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#0b1220" flood-opacity="0.1"/></filter><marker id="aSub" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#525d75"/></marker><marker id="aAcc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4B67B4"/></marker></defs>
+<rect width="1100" height="660" fill="url(#bg)"/>
+<style>.h1{font-family:'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif;font-size:29px;font-weight:700;fill:#1b2233}.sub{font-family:'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif;font-size:13px;fill:#525d75}</style>
+<text x="40" y="50" fill="#7c869c" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">DSH PLUGIN · OUTPUT STYLES</text>
+<text x="40" y="88" fill="#1b2233" font-size="29" font-weight="700" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">Pick once, inject every assembly, render every export</text>
+<text x="40" y="112" fill="#525d75" font-size="13" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">Six Markdown styles form one library: the selection becomes a prompt section at order 90; rules and presenters render exports.</text>
+<line x1="40" y1="128" x2="1060" y2="128" stroke="#dbe2f3" stroke-width="1" stroke-linecap="round"/>
+<rect x="40" y="144" width="240" height="432" rx="18" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="58" y="172" fill="#7c869c" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">STYLE LIBRARY</text>
+<text x="58" y="194" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">one definition, both lanes</text>
+<rect x="58" y="210" width="100" height="26" rx="13" fill="#4B67B4"/>
+<text x="108.0" y="227" fill="#ffffff" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">concise</text>
+<rect x="162" y="210" width="100" height="26" rx="13" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="212.0" y="227" fill="#525d75" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">explanatory</text>
+<rect x="58" y="242" width="100" height="26" rx="13" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="108.0" y="259" fill="#525d75" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">formal</text>
+<rect x="162" y="242" width="100" height="26" rx="13" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="212.0" y="259" fill="#525d75" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">learning</text>
+<rect x="58" y="274" width="100" height="26" rx="13" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="108.0" y="291" fill="#525d75" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">proactive</text>
+<rect x="162" y="274" width="100" height="26" rx="13" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="212.0" y="291" fill="#525d75" font-size="13" font-weight="600" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="middle">step-by-step</text>
+<line x1="58" y1="316" x2="258" y2="316" stroke="#dbe2f3" stroke-width="1" stroke-linecap="round"/>
+<text x="58" y="338" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">load order · later wins</text>
+<rect x="58" y="350" width="200" height="24" rx="8" fill="#e9edfa" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="68" y="366" fill="#1b2233" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">stylesDir[n] · yours</text>
+<text x="248" y="366" fill="#7c869c" font-size="10.5" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">top</text>
+<rect x="58" y="378" width="200" height="24" rx="8" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="68" y="394" fill="#525d75" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">stylesDir[1] · yours</text>
+<rect x="58" y="406" width="200" height="24" rx="8" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="68" y="422" fill="#525d75" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">styles/ · bundled</text>
+<text x="248" y="422" fill="#7c869c" font-size="10.5" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">low</text>
+<text x="58" y="452" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">+ outputStyles JSON · compatJson</text>
+<line x1="58" y1="466" x2="258" y2="466" stroke="#dbe2f3" stroke-width="1" stroke-linecap="round"/>
+<text x="58" y="486" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">name · description</text>
+<text x="58" y="504" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">whenToUse</text>
+<text x="58" y="522" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">keep-coding-instructions</text>
+<text x="58" y="540" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">force-for-plugin ≤ 1</text>
+<text x="58" y="558" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">watchStyles · hot reload</text>
+<line x1="286" y1="202" x2="286" y2="446" stroke="#c9d4ee" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="280" y1="202" x2="288" y2="202" stroke="#c9d4ee" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="280" y1="446" x2="288" y2="446" stroke="#c9d4ee" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3 4"/>
+<circle cx="286" cy="202" r="3" fill="#4B67B4"/>
+<circle cx="286" cy="446" r="3" fill="#4B67B4"/>
+<rect x="288" y="144" width="772" height="236" rx="18" fill="#f1f5fd" stroke="#d3dcf1" stroke-width="1.3"/>
+<rect x="296" y="152" width="4" height="14" rx="2" fill="#4B67B4"/>
+<text x="308" y="166" fill="#7c869c" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">PROMPT CHANNEL</text>
+<text x="1060" y="166" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">systemPrompt.section() · order 90</text>
+<rect x="296" y="178" width="172" height="48" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="312" y="199" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">/style &lt;name&gt;</text>
+<text x="312" y="217" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">durable write</text>
+<line x1="382" y1="226" x2="382" y2="244" stroke="#525d75" stroke-width="1.3" stroke-linecap="round" marker-end="url(#aSub)"/>
+<rect x="296" y="244" width="172" height="48" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="312" y="265" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">output_style</text>
+<text x="312" y="283" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">keyed by sessionId</text>
+<text x="296" y="312" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">survives restart</text>
+<text x="296" y="330" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">command/run logs input</text>
+<rect x="490" y="178" width="276" height="120" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="506" y="200" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">effectiveStyle() · first match wins</text>
+<rect x="502" y="206" width="226" height="24" rx="8" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1" stroke-dasharray="4 3"/>
+<text x="512" y="222" fill="#525d75" font-size="13" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">force-for-plugin</text>
+<text x="718" y="222" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="end">forced</text>
+<rect x="510" y="232" width="226" height="24" rx="8" fill="#4B67B4"/>
+<text x="520" y="248" fill="#ffffff" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">session selection</text>
+<text x="726" y="248" fill="#ffffff" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="end">selected</text>
+<rect x="518" y="258" width="226" height="24" rx="8" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1" stroke-dasharray="4 3"/>
+<text x="528" y="274" fill="#525d75" font-size="13" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">defaultStyle</text>
+<text x="734" y="274" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="end">project</text>
+<line x1="628" y1="298" x2="628" y2="306" stroke="#4B67B4" stroke-width="1.4" stroke-linecap="round" marker-end="url(#aAcc)"/>
+<rect x="490" y="306" width="570" height="40" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="506" y="331" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">systemPrompt.section()</text>
+<rect x="694" y="314" width="74" height="22" rx="11" fill="#e9edfa" stroke="#c9d4ee" stroke-width="1.2"/>
+<text x="731" y="329" fill="#33488d" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="middle">order 90</text>
+<line x1="778" y1="326" x2="800" y2="326" stroke="#4B67B4" stroke-width="1.4" stroke-linecap="round" marker-end="url(#aAcc)"/>
+<text x="810" y="331" fill="#1b2233" font-size="13" font-weight="700" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">model request</text>
+<text x="912" y="331" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">→ system/message</text>
+<text x="490" y="366" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">maxStyleChars 4000 · [style truncated]</text>
+<rect x="790" y="178" width="270" height="92" rx="12" fill="#f3f6fd" stroke="#c9d4ee" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="806" y="200" fill="#33488d" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">degraded coexistence</text>
+<text x="806" y="222" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">core outputStyles present</text>
+<text x="806" y="240" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">→ injection skipped</text>
+<text x="806" y="258" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">promptInjection: disabled</text>
+<line x1="1030" y1="272" x2="1030" y2="302" stroke="#525d75" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#aSub)"/>
+<rect x="288" y="388" width="772" height="194" rx="18" fill="#f1f5fd" stroke="#d3dcf1" stroke-width="1.3"/>
+<rect x="296" y="396" width="4" height="14" rx="2" fill="#4B67B4"/>
+<text x="308" y="410" fill="#7c869c" font-size="11" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">RENDER / EXPORT CHANNEL</text>
+<text x="1060" y="410" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">output.render.* · /transcript · md | html</text>
+<rect x="296" y="418" width="172" height="48" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="312" y="439" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">/transcript</text>
+<text x="312" y="457" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">md | html</text>
+<rect x="296" y="474" width="172" height="28" rx="10" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1" stroke-dasharray="4 3"/>
+<text x="382" y="492" fill="#525d75" font-size="13" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="middle">--renderer=&lt;id&gt;</text>
+<text x="296" y="526" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">skips rules · explicit</text>
+<rect x="490" y="418" width="276" height="154" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="506" y="436" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">output.render.* · rules first hit wins</text>
+<rect x="506" y="444" width="244" height="34" rx="8" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="516" y="458" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">output.render/before</text>
+<text x="516" y="471" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">every listener must call next()</text>
+<line x1="628" y1="478" x2="628" y2="486" stroke="#525d75" stroke-width="1.2" stroke-linecap="round" marker-end="url(#aSub)"/>
+<rect x="506" y="490" width="244" height="15" rx="4" fill="#e9edfa"/>
+<rect x="506" y="490" width="3" height="15" rx="1.5" fill="#4B67B4"/>
+<text x="518" y="501" fill="#1b2233" font-size="12" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">match.tool</text>
+<text x="740" y="501" fill="#1b2233" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">bash</text>
+<text x="518" y="517" fill="#525d75" font-size="12" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">match.contentType</text>
+<text x="740" y="517" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">html</text>
+<text x="518" y="533" fill="#525d75" font-size="12" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">match.session</text>
+<text x="740" y="533" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">&lt;sid&gt;</text>
+<rect x="506" y="542" width="244" height="24" rx="8" fill="#e9edfa" stroke="#c9d4ee" stroke-width="1.2"/>
+<text x="516" y="558" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">presenter(text, ctx)</text>
+<text x="740" y="558" fill="#33488d" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" text-anchor="end">pure</text>
+<path d="M750 554 H776 V446 H788" fill="none" stroke="#c9d4ee" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" marker-end="url(#aAcc)"/>
+<rect x="790" y="418" width="270" height="56" rx="14" fill="#ffffff" stroke="#dbe2f3" stroke-width="1.2"/>
+<text x="806" y="444" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">{ original, rendered }</text>
+<text x="806" y="462" fill="#525d75" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">changed · rendererId</text>
+<rect x="790" y="482" width="80" height="28" rx="14" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="830" y="500" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="middle">md</text>
+<rect x="878" y="482" width="80" height="28" rx="14" fill="#f3f6fd" stroke="#dbe2f3" stroke-width="1.1"/>
+<text x="918" y="500" fill="#1b2233" font-size="13" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="middle">html</text>
+<path d="M918 510 V516" fill="none" stroke="#dbe2f3" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#aSub)"/>
+<rect x="790" y="516" width="270" height="44" rx="10" fill="#f3f6fd" stroke="#c9d4ee" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="806" y="535" fill="#1b2233" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">--save: sanitizeText → approval</text>
+<text x="806" y="552" fill="#7c869c" font-size="11" font-weight="400" font-family="'Segoe UI','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif">missing approval → no write</text>
+<rect x="40" y="592" width="1036" height="36" rx="12" fill="#e9edfa" stroke="#c9d4ee" stroke-width="1.2"/>
+<circle cx="62" cy="610" r="4" fill="#4B67B4"/>
+<text x="76" y="614" fill="#33488d" font-size="11.5" font-weight="600" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">SESSION LOG</text>
+<text x="186" y="614" fill="#525d75" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace">→ model-visible is reconstructable · command/run · system/message · original kept</text>
+<text x="1056" y="614" fill="#7c869c" font-size="11" font-weight="400" font-family="'Consolas','SFMono-Regular',ui-monospace,monospace" text-anchor="end">{ kind: &#x27;dsh-output-styles&#x27; }</text>
+</svg>

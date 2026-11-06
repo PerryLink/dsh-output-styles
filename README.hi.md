@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-dark.svg">
-  <img src="docs/assets/dsh-output-styles-flow-light.svg" width="100%" alt="dsh-output-styles प्रवाह: /style concise output_style डोमेन में लिखता है; systemPrompt.section() क्रम 90 पर इंजेक्ट करता है; मॉडल अनुरोध system/message के रूप में दर्ज होता है; /transcript, output.render/before से रेंडर होता है">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-hero-en-dark.webp">
+  <img src="docs/assets/dsh-output-styles-hero-en-light.webp" width="100%" alt="dsh-output-styles बैनर: एक /style concise सत्र के अनुसार output_style डोमेन में सहेजा जाता है; छह अंतर्निहित शैलियाँ; हर संयोजन में शैली का मुख्य भाग order 90 पर सिस्टम प्रॉम्प्ट अनुभाग के रूप में जोड़ा जाता है और maxStyleChars पर काटा जाता है।">
 </picture>
 
 # dsh-output-styles
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-output-styles
 ## यह क्या है
 
 `/style concise` — और अब से हर उत्तर संक्षिप्त; `/style off` — परियोजना के डिफ़ॉल्ट पर वापस। `dsh-output-styles` Claude Code के `outputStyles` को DeepSeek Harness में लाता है: एक शैली एक Markdown फ़ाइल है (मेटाडेटा के लिए frontmatter, मुख्य भाग = मॉडल निर्देश), छह शैलियाँ अंतर्निहित हैं, चयन `output_style` स्टोरेज डोमेन में sessionId से अनुक्रमित रहता है और पुनःआरंभ के बाद भी बना रहता है, और वर्तमान शैली का मुख्य भाग हर संयोजन पर सिस्टम प्रॉम्प्ट में इंजेक्ट होता है, विन्यास-योग्य बजट पर काटा गया। शैलियाँ केवल मुख्य बातचीत पर लागू होती हैं; सबएजेंट सत्र अपने प्रॉम्प्ट रखते हैं (Claude Code जैसा)।
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-v5-dark.svg">
+    <img src="docs/assets/dsh-output-styles-flow-v5-light.svg" width="100%" alt="dsh-output-styles संरचना आरेख: एक ही शैली-लाइब्रेरी दो चैनलों को भेजती है। प्रॉम्प्ट इंजेक्शन चैनल — /style चयन को output_style डोमेन में सहेजता है (sessionId के अनुसार), effectiveStyle() क्रमशः force-for-plugin, सत्र-चयन और defaultStyle देखता है, तथा systemPrompt.section() क्रम 90 पर इंजेक्ट करता है और maxStyleChars पर काटता है; इंजेक्ट किया गया पाठ system/message के रूप में दर्ज होता है, और core outputStyles मिलने पर इंजेक्शन छोड़ दिया जाता है (promptInjection: disabled)। रेंडर/निर्यात चैनल — /transcript, output.render/before कैस्केड, rules का पहला मिलान और शुद्ध presenter से { original, rendered } बनाता है, फिर md या html; --save सैनिटाइज़ होकर स्वीकृति के बाद लिखा जाता है। दोनों चैनल सत्र-लॉग ऑडिट बेसलाइन पर मिलते हैं।">
+  </picture>
+</p>
 
 ### यह कैसे काम करता है
 
@@ -384,7 +391,7 @@ pnpm pack              # dsh plugin add के लिए tarball
 
 रिलीज़: ऐसा `v*` टैग पुश करें जिसका सफ़िक्स `package.json` संस्करण से मेल खाता हो — Publish workflow पूर्ण सत्यापन के बाद provenance के साथ npm पर प्रकाशित करता है।
 
-README की छवियाँ [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow) से प्रोग्रामेटिक रूप से बनती हैं; दोबारा चलाने पर `docs/assets/dsh-output-styles-flow-{light,dark}.svg` फिर से लिखी जाती हैं। इस रेपो में benchmark डेटा नहीं है, इसलिए evidence चार्ट नहीं है।
+README की छवियाँ [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) से प्रोग्रामेटिक रूप से बनती हैं: बैनर Pillow से बना 1440×576 WebP है (zh/en × हल्का/गहरा) और संरचना आरेख 1100×660 का हस्तलिखित SVG है (हल्का/गहरा)। दोबारा चलाने पर `docs/assets/dsh-output-styles-hero-*` और `docs/assets/dsh-output-styles-flow-v5-{light,dark}.svg` फिर से लिखी जाती हैं। इस रेपो में benchmark डेटा नहीं है, इसलिए evidence चार्ट नहीं है।
 
 Topics: `deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
 

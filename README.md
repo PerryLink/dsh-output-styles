@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-dark.svg">
-  <img src="docs/assets/dsh-output-styles-flow-light.svg" width="100%" alt="dsh-output-styles 工作流：/style concise 写入 output_style 存储域，systemPrompt.section() 按 order 90 注入，模型请求记录为 system/message；/transcript 经 output.render/before 渲染">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-hero-zh-dark.webp">
+  <img src="docs/assets/dsh-output-styles-hero-zh-light.webp" width="100%" alt="dsh-output-styles 横幅：一次 /style concise 把选择按会话写入 output_style 域；六种内置风格，每次组装都在 order 90 注入当前风格正文并按 maxStyleChars 截断。">
 </picture>
 
 # dsh-output-styles
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-output-styles
 ## 它是什么
 
 `/style concise` —— 从此每条回复都简洁；`/style off` —— 回到项目默认。`dsh-output-styles` 把 Claude Code 的 `outputStyles` 搬到 DeepSeek Harness：风格是 Markdown 文件（frontmatter 存元数据，正文即模型指令），六种内置开箱可用；选择存在 `output_style` 存储域里、按会话隔离、重启不丢；每次提示组装都会把当前风格的正文注入系统提示，并按预算截断。它只作用于主会话，子代理会话保留自己的提示（与 Claude Code 一致）。
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-v5-dark.svg">
+    <img src="docs/assets/dsh-output-styles-flow-v5-light.svg" width="100%" alt="dsh-output-styles 结构图：一份风格库同时供给两条通道。提示注入通道——/style 写入 output_style 域（按 sessionId 持久），effectiveStyle() 按 force-for-plugin、会话选择、defaultStyle 依次解析，systemPrompt.section() 在 order 90 注入并按 maxStyleChars 截断，注入原文记为 system/message；检测到核心 outputStyles 时跳过注入（promptInjection: disabled）。渲染导出通道——/transcript 经 output.render/before 瀑布、rules 首个命中与纯 presenter，得到 { original, rendered }，输出 md 或 html，--save 先净化再经审批写盘。两条通道都落在会话日志审计基线上。">
+  </picture>
+</p>
 
 ### 工作方式
 
@@ -384,7 +391,7 @@ pnpm pack             # 供 dsh plugin add 的 tarball
 
 发布：推送后缀与 `package.json` 版本一致的 `v*` 标签会触发 Publish workflow —— 完整验证后带 provenance 发布到 npm。
 
-配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow），重跑即可覆盖 `docs/assets/dsh-output-styles-flow-{light,dark}.svg`；本仓无 benchmark 数据，因此不出 evidence 图。
+配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成：hero 横幅是 Pillow 绘制的 1440×576 WebP（zh/en × 明/暗），结构图是手写 SVG（1100×660，明/暗）；重跑即可覆盖 `docs/assets/dsh-output-styles-hero-*` 与 `docs/assets/dsh-output-styles-flow-v5-{light,dark}.svg`。本仓无 benchmark 数据，因此不出 evidence 图。
 
 Topics：`deepseek-harness`, `dsh`, `dsh-plugin`, `output-style`, `output-styles`, `claude-code`
 
