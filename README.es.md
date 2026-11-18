@@ -351,7 +351,7 @@ Filtrado contra el ecosistema DSH antes del desarrollo (instantánea 2026-08): n
 
 | Superficie | Estado |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (adaptado el 2026-09-09): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados — Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-09-11 contra el checkout dsh-v0.2.1-rc.2 (cadena de puertas completa + smoke de instalación del perfil). |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (adaptado el 2026-11-18): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados — Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-11-18 contra el checkout dsh-v0.2.2-rc.4 (cadena de puertas completa + smoke de instalación del perfil). |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | Plataformas | Todas (host + cliente web) |
 | Modelo | Cualquiera (inyección en el prompt del sistema) |

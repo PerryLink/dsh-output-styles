@@ -351,7 +351,7 @@ profile patch 覆盖示例：
 
 | 维度 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2`（2026-09-09 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-09-11 对照 dsh-v0.2.1-rc.2 checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4`（2026-11-18 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。2026-11-18 对照 dsh-v0.2.2-rc.4 checkout 已核验（完整门禁链 + profile 安装冒烟）。 |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | 平台 | 全部（host + Web 客户端） |
 | 模型 | 任意（系统提示注入） |

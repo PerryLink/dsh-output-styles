@@ -351,7 +351,7 @@ Filtrado contra o ecossistema DSH antes do desenvolvimento (instantâneo de 2026
 
 | Superfície | Estado |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (adaptado em 2026-09-09): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados — Session.append ainda não consegue estampá-lo, então o comportamento do portão não muda. Verificado em 2026-09-11 contra o checkout dsh-v0.2.1-rc.2 (cadeia completa de portões + smoke de instalação do perfil). |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (adaptado em 2026-11-18): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados — Session.append ainda não consegue estampá-lo, então o comportamento do portão não muda. Verificado em 2026-11-18 contra o checkout dsh-v0.2.2-rc.4 (cadeia completa de portões + smoke de instalação do perfil). |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | Plataformas | Todas (host + cliente web) |
 | Modelo | Qualquer (injeção no prompt do sistema) |
