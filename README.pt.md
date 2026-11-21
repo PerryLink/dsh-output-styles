@@ -62,6 +62,10 @@ Tudo o que o modelo vê é reconstruível a partir do registro de sessão: sem n
 
 ### Demonstração
 
+![dsh-output-styles: execução real de terminal](docs/assets/dsh-output-styles-demo.gif)
+
+*Repetição animada de uma execução real registrada neste repositório.*
+
 ```text
 You > /style
       output style off

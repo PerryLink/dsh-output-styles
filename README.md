@@ -36,6 +36,10 @@ dsh plugin --profile <name> add dsh-output-styles
 
 ## 它是什么
 
+![dsh-output-styles 真实终端运行](docs/assets/dsh-output-styles-demo.gif)
+
+*本仓库一次真实运行的动图回放。*
+
 `/style concise` —— 从此每条回复都简洁；`/style off` —— 回到项目默认。`dsh-output-styles` 把 Claude Code 的 `outputStyles` 搬到 DeepSeek Harness：风格是 Markdown 文件（frontmatter 存元数据，正文即模型指令），六种内置开箱可用；选择存在 `output_style` 存储域里、按会话隔离、重启不丢；每次提示组装都会把当前风格的正文注入系统提示，并按预算截断。它只作用于主会话，子代理会话保留自己的提示（与 Claude Code 一致）。
 
 <p align="center">

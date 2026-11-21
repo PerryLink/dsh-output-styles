@@ -43,6 +43,11 @@ dsh plugin --profile <name> add dsh-output-styles
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-output-styles-flow-v5-dark.svg">
     <img src="docs/assets/dsh-output-styles-flow-v5-light.svg" width="100%" alt="dsh-output-styles संरचना आरेख: एक ही शैली-लाइब्रेरी दो चैनलों को भेजती है। प्रॉम्प्ट इंजेक्शन चैनल — /style चयन को output_style डोमेन में सहेजता है (sessionId के अनुसार), effectiveStyle() क्रमशः force-for-plugin, सत्र-चयन और defaultStyle देखता है, तथा systemPrompt.section() क्रम 90 पर इंजेक्ट करता है और maxStyleChars पर काटता है; इंजेक्ट किया गया पाठ system/message के रूप में दर्ज होता है, और core outputStyles मिलने पर इंजेक्शन छोड़ दिया जाता है (promptInjection: disabled)। रेंडर/निर्यात चैनल — /transcript, output.render/before कैस्केड, rules का पहला मिलान और शुद्ध presenter से { original, rendered } बनाता है, फिर md या html; --save सैनिटाइज़ होकर स्वीकृति के बाद लिखा जाता है। दोनों चैनल सत्र-लॉग ऑडिट बेसलाइन पर मिलते हैं।">
   </picture>
+
+![dsh-output-styles का असली टर्मिनल रन](docs/assets/dsh-output-styles-demo.gif)
+
+*इस रिपॉज़िटरी में दर्ज असली रन का एनिमेटेड रीप्ले।*
+
 </p>
 
 ### यह कैसे काम करता है

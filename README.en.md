@@ -62,6 +62,10 @@ Everything the model sees is reconstructable from the session log — no new ses
 
 ### Demo
 
+![dsh-output-styles: real terminal run](docs/assets/dsh-output-styles-demo.gif)
+
+*Animated replay of a real run recorded in this repository.*
+
 ```text
 You > /style
       output style off
