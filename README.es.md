@@ -11,6 +11,8 @@
 
 El equivalente de `outputStyles` de Claude Code para DeepSeek Harness: los estilos son archivos Markdown, la elección se persiste por sesión y el cuerpo se inyecta en cada ensamblado del prompt.
 
+Última verificación: DeepSeek Harness `dsh-v0.2.3-alpha.1` (2026-11-22).
+
 [Instalar](#instalación-en-tres-pasos) · [Configuración](#configuración) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-3366CC?style=flat-square&labelColor=2B3245)](LICENSE)

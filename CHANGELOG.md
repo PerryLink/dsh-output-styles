@@ -24,6 +24,8 @@
 
 ## [Unreleased]
 
+- Compatibility: declare DeepSeek Harness 0.2.3-alpha.1 support (>=0.2.3-0 <0.3.0-0 in engines.dsh and every @deepseek-ai/dsh-* peer range) and refresh README verification stamps.
+
 ### Changed
 
 - Compatibility docs: five READMEs now name `dsh-v0.2.1-rc.2` and the current 156-test count; `dshVersions` records `0.2.1-rc.2`.
