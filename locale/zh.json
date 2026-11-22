@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "输出风格",
+    "description": "在运行时切换模型的输出风格——一次 /style concise，之后每条回复都简洁。"
+  }
+}

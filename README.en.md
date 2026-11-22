@@ -7,6 +7,8 @@
 
 # dsh-output-styles
 
+Current version `0.8.5`.
+
 **Switch the model's output style at runtime — one `/style concise` and every reply from now on is terse.**
 
 The Claude Code `outputStyles` equivalent for DeepSeek Harness: styles are Markdown files, the choice is persisted per session, and the body is injected at every prompt assembly.

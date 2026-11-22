@@ -1,6 +1,6 @@
 {
   "name": "dsh-output-styles",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Claude Code outputStyles-equivalent runtime output-style switching for DeepSeek Harness",
   "type": "module",
   "sideEffects": false,
@@ -38,7 +38,8 @@
       "default": "./lib/client.js"
     },
     "./cordis.patch.yml": "./cordis.patch.yml",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
@@ -60,7 +61,8 @@
     "README.hi.md",
     "docs",
     "PRIVACY.md",
-    "icon.svg"
+    "icon.svg",
+    "locale/*.json"
   ],
   "keywords": [
     "deepseek-harness",

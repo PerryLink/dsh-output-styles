@@ -7,6 +7,8 @@
 
 # dsh-output-styles
 
+当前版本 `0.8.5`。
+
 **在运行时切换模型的输出风格——一次 `/style concise`，之后每条回复都简洁。**
 
 DeepSeek Harness 的 Claude Code `outputStyles` 等价实现：风格写成 Markdown 文件，选择按会话持久化，并在每次提示组装时注入。

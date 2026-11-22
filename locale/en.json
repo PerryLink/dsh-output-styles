@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Output Styles",
+    "description": "Switch the model's output style at runtime — one /style concise and every reply from now on is terse."
+  }
+}
